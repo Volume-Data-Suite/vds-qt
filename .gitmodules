@@ -1,0 +1,3 @@
+[submodule "external/Volume-Data-Toolkit"]
+	path = external/Volume-Data-Toolkit
+	url = https://github.com/FreddyFunk/Volume-Data-Toolkit.git
