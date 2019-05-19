@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindowClass</class>
+ <widget class="QMainWindow" name="MainWindowClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>639</width>
+    <height>497</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <item>
+     <widget class="VolumeViewGL" name="volumeViewWidget"/>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tabSliceView">
+       <attribute name="title">
+        <string>Slice View</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QOpenGLWidget" name="openGLWidget_4"/>
+        </item>
+        <item>
+         <widget class="QOpenGLWidget" name="openGLWidget_2"/>
+        </item>
+        <item>
+         <widget class="QOpenGLWidget" name="openGLWidget_3"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab3DViewOptions">
+       <attribute name="title">
+        <string>3D View Options</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QPushButton" name="pushButtonResetViewPort">
+          <property name="text">
+           <string>Reset Viewport</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>639</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionImport_Raw"/>
+    <addaction name="actionImport_Series_of_bitmap_images"/>
+    <addaction name="actionImport_Series_of_binary_slices"/>
+    <addaction name="separator"/>
+    <addaction name="actionExport_3D_RAW"/>
+    <addaction name="actionExport_Series_of_bitmap_images"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionImport_Raw">
+   <property name="text">
+    <string>Import 3D RAW</string>
+   </property>
+  </action>
+  <action name="actionImport_Series_of_bitmap_images">
+   <property name="text">
+    <string>Import Series of bitmap images</string>
+   </property>
+  </action>
+  <action name="actionImport_Series_of_binary_slices">
+   <property name="text">
+    <string>Import Series of binary slices</string>
+   </property>
+  </action>
+  <action name="actionExport_3D_RAW">
+   <property name="text">
+    <string>Export 3D RAW</string>
+   </property>
+  </action>
+  <action name="actionExport_Series_of_bitmap_images">
+   <property name="text">
+    <string>Export Series of bitmap images</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>VolumeViewGL</class>
+   <extends>QOpenGLWidget</extends>
+   <header>volume_view_GL.h</header>
+  </customwidget>
+ </customwidgets>
+ <connections/>
+</ui>
