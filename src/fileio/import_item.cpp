@@ -1,21 +1,35 @@
 #include "import_item.h"
 
-const std::filesystem::path VDS::Import::ImportItem::getFilePath() const
+namespace VDS
+{
+const std::filesystem::path ImportItem::getFilePath() const
 {
 	return m_path;
 }
 
-VDS::Import::ImportItem::ImportItem(const std::filesystem::path path) : m_path(path)
+ImportItem::ImportItem(const std::filesystem::path path) : m_path(path)
 {
 }
 
-
-VDS::Import::ImportItemRaw::ImportItemRaw(const std::filesystem::path filePath, const uint8_t bitsPerVoxel, const QVector3D size, const QVector3D spacing)
+ImportItemRaw::ImportItemRaw(const std::filesystem::path filePath, const uint8_t bitsPerVoxel, const QVector3D size, const QVector3D spacing)
 	: ImportItem(filePath), m_bitsPerVoxel(bitsPerVoxel), m_size(size), m_spacing(spacing)
 {
 }
 
-const QString VDS::Import::ImportItemRaw::getFileName() const
+const QString ImportItemRaw::getFileName() const
 {
 	return QString::fromStdString(m_path.filename().string());
+}
+const QVector3D ImportItemRaw::getSize()
+{
+	return m_size;
+}
+const QVector3D ImportItemRaw::getSpacing()
+{
+	return m_spacing;
+}
+uint8_t ImportItemRaw::getBitsPerVoxel()
+{
+	return m_bitsPerVoxel;
+}
 }

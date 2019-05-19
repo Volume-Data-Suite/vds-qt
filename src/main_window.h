@@ -5,19 +5,27 @@
 
 #include <VDTK/VolumeDataHandler.h>
 
+#include "fileio/import_item.h"
 
-
-class MainWindow : public QMainWindow
+namespace VDS
 {
-	Q_OBJECT
+	class MainWindow : public QMainWindow
+	{
+		Q_OBJECT
 
-public:
-	MainWindow(QWidget *parent = Q_NULLPTR);
+	public:
+		MainWindow(QWidget *parent = Q_NULLPTR);
 
-	void openImportRawDialog();
 
-private:
-	Ui::MainWindowClass ui;
+	public slots:
+		void openImportRawDialog();
 
-	VDTK::VolumeDataHandler m_vdh;
-};
+
+	private:
+		Ui::MainWindowClass ui;
+
+		VDTK::VolumeDataHandler m_vdh;
+	};
+}
+
+
