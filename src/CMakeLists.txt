@@ -10,18 +10,18 @@ find_package(Qt5 COMPONENTS REQUIRED Core Gui Widgets)
 
 add_executable(VDS 
 	main.cpp
+	main_window.ui
+	main_window.h
+	main_window.cpp
 
 	common/vdtk_helper_functions.h
 	
 	fileio/import_item.h
 	fileio/import_item.cpp
 
-	gui/main_window.ui
-	gui/main_window.h
-	gui/main_window.cpp
 	
-	gui/volume_view_GL.h
-	gui/volume_view_GL.cpp
+	widgets/volume_view_GL.h
+	widgets/volume_view_GL.cpp
 )
 
 target_link_libraries(VDS PRIVATE vdtk_lib Qt5::Core Qt5::Gui Qt5::Widgets)

@@ -125,7 +125,7 @@
   <customwidget>
    <class>VolumeViewGL</class>
    <extends>QOpenGLWidget</extends>
-   <header>volume_view_GL.h</header>
+   <header>widgets/volume_view_GL.h</header>
   </customwidget>
  </customwidgets>
  <connections/>
