@@ -18,6 +18,8 @@ add_executable(VDS
 	
 	fileio/import_item.h
 	fileio/import_item.cpp
+	fileio/import_item_list.h
+	fileio/import_item_list.cpp
 	fileio/import_raw_3D_dialog.h
 	fileio/import_raw_3D_dialog.cpp
 

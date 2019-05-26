@@ -72,18 +72,6 @@
      <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
-    </property>
-    <addaction name="actionImport_Raw"/>
-    <addaction name="actionImport_Series_of_bitmap_images"/>
-    <addaction name="actionImport_Series_of_binary_slices"/>
-    <addaction name="separator"/>
-    <addaction name="actionExport_3D_RAW"/>
-    <addaction name="actionExport_Series_of_bitmap_images"/>
-   </widget>
-   <addaction name="menuFile"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -128,5 +116,6 @@
    <header>widgets/volume_view_GL.h</header>
   </customwidget>
  </customwidgets>
+ <resources/>
  <connections/>
 </ui>
