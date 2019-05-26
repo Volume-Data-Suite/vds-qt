@@ -6,20 +6,44 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>639</width>
-    <height>497</height>
+    <width>1120</width>
+    <height>771</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="minimumSize">
+    <size>
+     <width>450</width>
+     <height>450</height>
+    </size>
+   </property>
    <layout class="QHBoxLayout" name="horizontalLayout_3">
     <item>
      <widget class="VolumeViewGL" name="volumeViewWidget"/>
     </item>
     <item>
-     <widget class="QTabWidget" name="tabWidget">
+     <widget class="QGroupBox" name="groupBoxSliceView">
+      <property name="title">
+       <string>Slice View</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QOpenGLWidget" name="openGLWidget_4"/>
+       </item>
+       <item>
+        <widget class="QOpenGLWidget" name="openGLWidget_2"/>
+       </item>
+       <item>
+        <widget class="QOpenGLWidget" name="openGLWidget_3"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTabWidget" name="tabSettings">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
         <horstretch>0</horstretch>
@@ -29,27 +53,11 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="tabSliceView">
+      <widget class="QWidget" name="tabSettingsRayCasting">
        <attribute name="title">
-        <string>Slice View</string>
+        <string>Ray Casting</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QOpenGLWidget" name="openGLWidget_4"/>
-        </item>
-        <item>
-         <widget class="QOpenGLWidget" name="openGLWidget_2"/>
-        </item>
-        <item>
-         <widget class="QOpenGLWidget" name="openGLWidget_3"/>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab3DViewOptions">
-       <attribute name="title">
-        <string>3D View Options</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QPushButton" name="pushButtonResetViewPort">
           <property name="text">
@@ -58,6 +66,12 @@
          </widget>
         </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="tabSettingsVolumeData">
+       <attribute name="title">
+        <string>Volume Data</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2"/>
       </widget>
      </widget>
     </item>
@@ -68,7 +82,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>639</width>
+     <width>1120</width>
      <height>21</height>
     </rect>
    </property>
