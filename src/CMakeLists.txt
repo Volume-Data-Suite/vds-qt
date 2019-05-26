@@ -28,6 +28,8 @@ add_executable(VDS
 	widgets/volume_view_GL.cpp
 )
 
+replicate_directory_structure(VDS)
+
 target_link_libraries(VDS PRIVATE vdtk_lib Qt5::Core Qt5::Gui Qt5::Widgets)
 
 
