@@ -20,21 +20,7 @@ namespace VDS {
 	}
 	void RayCastRenderer::render()
 	{
-		// uncomment this call to draw in wireframe polygons.
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-
-		glUseProgram(m_shaderProgram);
-
-		// Bind vertex data
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_elements);
-		glBindVertexArray(m_vao_cube_vertices);
-
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-		// Unbind vertex data
-		glBindVertexArray(0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		renderVolumeBorders();
 	}
 
 	bool RayCastRenderer::setup()
@@ -42,7 +28,7 @@ namespace VDS {
 		initializeOpenGLFunctions();
 
 		setupBuffers();
-		setupVertexArray();
+		setupVertexArray(RenderModes::Borders);
 
 		if (!setupVertexShader() || !setupFragmentShader())
 		{
@@ -57,6 +43,39 @@ namespace VDS {
 		resetModelMatrix();
 
 		return true;
+	}
+	void RayCastRenderer::renderMesh()
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		glUseProgram(m_shaderProgram);
+
+		// Bind vertex data
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_elements);
+		glBindVertexArray(m_vao_cube_vertices);
+
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+		// Unbind vertex data
+		glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		// reset ploygon mode
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+	void RayCastRenderer::renderVolumeBorders()
+	{
+		glUseProgram(m_shaderProgram);
+
+		// Bind vertex data
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_lines_elements);
+		glBindVertexArray(m_vao_cube_vertices);
+
+		glDrawElements(GL_LINES, 36, GL_UNSIGNED_INT, 0);
+
+		// Unbind vertex data
+		glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 	void RayCastRenderer::resetModelMatrix()
 	{
@@ -101,7 +120,7 @@ namespace VDS {
 			1.0f,  1.0f, -1.0f, // 6
 			-1.0f,  1.0f, -1.0  // 7
 		};
-		GLuint indices[] = {
+		GLuint indices_cube[] = {
 			// front
 			0, 1, 2,
 			2, 3, 0,
@@ -121,29 +140,64 @@ namespace VDS {
 			3, 2, 6,
 			6, 7, 3
 		};
+		GLuint indices_cube_lines[] = {
+			// front
+			0, 1,
+			0, 3,
+			2, 1,
+			2, 3,
 
+			// back
+			4, 5,
+			4, 7,
+			6, 5,
+			6, 7,
+
+			// connect front an back
+			0, 4,
+			1, 5,
+			2, 6,
+			3, 7
+		};
 
 		glGenBuffers(1, &m_vbo_cube_vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cube_vertices);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		glGenBuffers(1, &m_ibo_cube_elements);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_elements);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_cube), indices_cube, GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-		// unbind
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glGenBuffers(1, &m_ibo_cube_lines_elements);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_lines_elements);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_cube_lines), indices_cube_lines, GL_STATIC_DRAW);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	void RayCastRenderer::setupVertexArray()
+	void RayCastRenderer::setupVertexArray(RenderModes renderMode)
 	{
+		GLuint ibo;
+
+		switch (renderMode)
+		{
+		case VDS::RenderModes::Mesh:
+			ibo = m_ibo_cube_elements;
+			break;
+		case VDS::RenderModes::Borders:
+			ibo = m_ibo_cube_lines_elements;
+			break;
+		default:
+			break;
+		}
+
 		glGenVertexArrays(1, &m_vao_cube_vertices);
 
 		glBindVertexArray(m_vao_cube_vertices);
 
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cube_vertices);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_elements);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 
 		// set the vertex attributes pointers
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);

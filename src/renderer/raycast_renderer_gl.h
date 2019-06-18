@@ -13,6 +13,13 @@
 
 namespace VDS {
 
+	enum class RenderModes
+	{
+		Mesh,
+		Borders,
+	};
+
+
 	class RayCastRenderer : public QObject, protected QOpenGLFunctions_4_3_Core
 	{
 
@@ -33,10 +40,13 @@ namespace VDS {
 		void translate(float x, float y, float z);
 
 	private:
+		void renderMesh();
+		void renderVolumeBorders();
+
 		void resetModelMatrix();
 
 		void setupBuffers();
-		void setupVertexArray();
+		void setupVertexArray(RenderModes renderMode);
 		bool setupVertexShader();
 		bool setupFragmentShader();
 		bool setupShaderProgram();
@@ -49,6 +59,7 @@ namespace VDS {
 		GLuint m_vao_cube_vertices;
 		GLuint m_vbo_cube_vertices;
 		GLuint m_ibo_cube_elements;
+		GLuint m_ibo_cube_lines_elements;
 		// global shader hanldes
 		GLuint m_vertexShader;
 		GLuint m_fragmentShader;

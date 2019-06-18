@@ -21,14 +21,14 @@ void VolumeViewGL::initializeGL()
 
 
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_ALWAYS);
+	glDepthFunc(GL_LEQUAL);
 
 
 	// Enable blending so you can see different alpha
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glCullFace(GL_FRONT_AND_BACK);
+	glCullFace(GL_FRONT);
 
 	glClearDepth(1.0f);
 	// Change the reference of the GL_COLOR_BUFFER_BIT
