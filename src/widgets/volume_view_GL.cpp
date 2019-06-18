@@ -18,7 +18,7 @@ void VolumeViewGL::initializeGL()
 
 
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glDepthFunc(GL_ALWAYS);
 
 
 	// Enable blending so you can see different alpha
@@ -79,7 +79,7 @@ void VolumeViewGL::setProjectionMatrix()
 void VolumeViewGL::setViewMatrix()
 {
 	// Where is the camera
-	constexpr QVector3D eye(0.0, 0.0, 0.0);
+	constexpr QVector3D eye(0.0, 0.0, 2.0);
 	// At which point should it look
 	constexpr QVector3D lookAt(0.0, 0.0, -1.0);
 	// Wich direction is up

@@ -39,11 +39,7 @@ namespace VDS {
 
 		bool checkShaderCompileStatus(GLuint shader);
 		bool checkShaderProgramLinkStatus(GLuint shaderProgram);
-
-		// buffers
-		std::vector<GLfloat> m_cube_vertices;
-		std::vector<GLushort> m_cube_quad_indices;
-
+		
 		// global buffer handles
 		GLuint m_vao_cube_vertices;
 		GLuint m_vbo_cube_vertices;
