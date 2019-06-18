@@ -13,7 +13,6 @@ namespace VDS {
 	RayCastRenderer::RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix)
 		: m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix)
 	{
-		m_position = QVector3D(0.0, 1.0, -5.0);
 	}
 
 	RayCastRenderer::~RayCastRenderer()
@@ -23,6 +22,7 @@ namespace VDS {
 	{
 		// uncomment this call to draw in wireframe polygons.
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		
 
 		glUseProgram(m_shaderProgram);
 
@@ -54,17 +54,13 @@ namespace VDS {
 			return false;
 		}
 
-		setModelMatrix();
-		applyMatrices();
+		resetModelMatrix();
 
 		return true;
 	}
-	void RayCastRenderer::setModelMatrix()
+	void RayCastRenderer::resetModelMatrix()
 	{
 		m_modelMatrix.setToIdentity();
-		m_modelMatrix.translate(m_position);
-		//m_modelMatrix.rotate(m_rotation_angle, 0.0f, 0.0f, 0.0f);
-
 		applyMatrices();
 	}
 	void RayCastRenderer::applyMatrices()
@@ -80,6 +76,16 @@ namespace VDS {
 		glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, m_projectionMatrix->data());
 
 		checkShaderProgramLinkStatus(m_shaderProgram);
+	}
+	void RayCastRenderer::rotate(float x, float y)
+	{
+		const QVector3D rotation = QVector3D(x, y, 0.0f);
+		m_modelMatrix.rotate(rotation.length(), rotation);
+		applyMatrices();
+	}
+	void RayCastRenderer::translate(float x, float y, float z)
+	{
+		m_modelMatrix.translate(x, y, z);
 	}
 	void RayCastRenderer::setupBuffers()
 	{

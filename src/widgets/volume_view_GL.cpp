@@ -8,6 +8,9 @@ VolumeViewGL::VolumeViewGL(QWidget *parent) : QOpenGLWidget(parent), m_rayCastRe
 {
 	setProjectionMatrix();
 	setViewMatrix();
+
+	m_leftButtonPressed = false;
+	m_prevPos = {};
 }
 
 void VolumeViewGL::initializeGL()
@@ -32,12 +35,11 @@ void VolumeViewGL::initializeGL()
 	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
 
 	m_rayCastRenderer.setup();
+	m_rayCastRenderer.translate(0.0f, 0.0f, -5.0f);
 }
 
 void VolumeViewGL::resizeGL(int w, int h)
 {
-	glViewport(0, 0, w, h);
-
 	setProjectionMatrix();
 	m_rayCastRenderer.applyMatrices();
 }
@@ -46,9 +48,42 @@ void VolumeViewGL::paintGL()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-
 	m_rayCastRenderer.render();
+}
+
+void VolumeViewGL::mousePressEvent(QMouseEvent * e)
+{
+	if (e->button() == Qt::LeftButton)
+	{
+		m_leftButtonPressed = true;
+		m_prevPos = e->pos();
+		e->accept();
+	}
+}
+
+void VolumeViewGL::mouseReleaseEvent(QMouseEvent * e)
+{
+	m_leftButtonPressed = false;
+	m_prevPos = {};
+	e->accept();
+}
+
+void VolumeViewGL::mouseMoveEvent(QMouseEvent * e)
+{	
+	if (!m_leftButtonPressed) {
+		return;
+	}
+
+	QVector2D direction = QVector2D(e->pos()) - QVector2D(m_prevPos);
+
+	// we want to rotate around the opposite axis of the mouse movement
+	m_rayCastRenderer.rotate(direction.y(), direction.x());
+	
+	m_prevPos = e->pos();
+
+	e->accept();
+
+	this->update();
 }
 
 

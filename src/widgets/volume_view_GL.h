@@ -5,6 +5,8 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_4_3_Core>
 #include <QMatrix4x4>
+#include <QMouseEvent>
+#include <QPoint>
 
 class VolumeViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
 {
@@ -17,7 +19,10 @@ protected:
 	void resizeGL(int w, int h);
 
 	void paintGL() override;
-	
+
+	void  mousePressEvent(QMouseEvent * e);
+	void  mouseReleaseEvent(QMouseEvent * e);
+	void  mouseMoveEvent(QMouseEvent * e);
 
 private:
 	void logQSurfaceFormat() const;
@@ -30,4 +35,7 @@ private:
 	QMatrix4x4 m_projectionMatrix;
 	QMatrix4x4 m_viewMatrix;
 
+	// mouse drag rotation
+	bool m_leftButtonPressed;
+	QPoint m_prevPos;
 };

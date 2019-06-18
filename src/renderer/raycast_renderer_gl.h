@@ -28,8 +28,12 @@ namespace VDS {
 
 		void applyMatrices();
 
+		void rotate(float x, float y);
+
+		void translate(float x, float y, float z);
+
 	private:
-		void setModelMatrix();
+		void resetModelMatrix();
 
 		void setupBuffers();
 		void setupVertexArray();
@@ -40,6 +44,7 @@ namespace VDS {
 		bool checkShaderCompileStatus(GLuint shader);
 		bool checkShaderProgramLinkStatus(GLuint shaderProgram);
 		
+
 		// global buffer handles
 		GLuint m_vao_cube_vertices;
 		GLuint m_vbo_cube_vertices;
@@ -54,8 +59,5 @@ namespace VDS {
 		const QMatrix4x4* const m_viewMatrix;
 		QMatrix4x4 m_modelMatrix;
 
-		// Volume properties
-		QVector3D m_position;
-		float m_rotation_angle;
 	};
 }
