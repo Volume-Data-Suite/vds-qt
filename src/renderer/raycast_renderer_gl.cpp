@@ -22,7 +22,7 @@ namespace VDS {
 	{
 		// uncomment this call to draw in wireframe polygons.
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		
+
 
 		glUseProgram(m_shaderProgram);
 
@@ -30,7 +30,7 @@ namespace VDS {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_elements);
 		glBindVertexArray(m_vao_cube_vertices);
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
 		// Unbind vertex data
 		glBindVertexArray(0);
@@ -48,7 +48,7 @@ namespace VDS {
 		{
 			return false;
 		}
-		
+
 		if (!setupShaderProgram())
 		{
 			return false;
@@ -90,25 +90,47 @@ namespace VDS {
 	void RayCastRenderer::setupBuffers()
 	{
 		GLfloat vertices[] = {
-			 0.5f,  0.5f, 0.0f,  // top right
-			 0.5f, -0.5f, 0.0f,  // bottom right
-			-0.5f, -0.5f, 0.0f,  // bottom left
-			-0.5f,  0.5f, 0.0f   // top left 
+			// front
+			-1.0f, -1.0f,  1.0f, // 0
+			1.0f, -1.0f,  1.0f, // 1
+			1.0f,  1.0f,  1.0f, // 2
+			-1.0f,  1.0f,  1.0f, // 3
+			// back
+			-1.0f, -1.0f, -1.0f, // 4
+			1.0f, -1.0f, -1.0f, // 5
+			1.0f,  1.0f, -1.0f, // 6
+			-1.0f,  1.0f, -1.0  // 7
 		};
 		GLuint indices[] = {
-			0, 1, 3,  // first Triangle
-			1, 2, 3   // second Triangle
+			// front
+			0, 1, 2,
+			2, 3, 0,
+			// right
+			1, 5, 6,
+			6, 2, 1,
+			// back
+			7, 6, 5,
+			5, 4, 7,
+			// left
+			4, 0, 3,
+			3, 7, 4,
+			// bottom
+			4, 5, 1,
+			1, 0, 4,
+			// top
+			3, 2, 6,
+			6, 7, 3
 		};
 
 
-		glGenBuffers(1, &m_vbo_cube_vertices);		
+		glGenBuffers(1, &m_vbo_cube_vertices);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cube_vertices);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 		glGenBuffers(1, &m_ibo_cube_elements);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_elements);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-		
+
 		// unbind
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
