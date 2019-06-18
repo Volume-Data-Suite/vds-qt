@@ -20,6 +20,11 @@ add_executable(VDS
 	fileio/import_raw_3D_dialog.h
 	fileio/import_raw_3D_dialog.cpp
 	
+	renderer/raycast_renderer_gl.h
+	renderer/raycast_renderer_gl.cpp
+	renderer/volume_data_3D_texture.h
+	renderer/volume_data_3D_texture.cpp
+
 	widgets/volume_view_GL.h
 	widgets/volume_view_GL.cpp
 )
