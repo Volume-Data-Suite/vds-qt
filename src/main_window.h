@@ -25,6 +25,8 @@ namespace VDS
 
 		void importRecentFile(std::size_t index);
 
+		void updateVolumeData();
+
 	private:
 		void setupFileMenu();
 		void refreshRecentFiles();
@@ -41,6 +43,7 @@ namespace VDS
 		QAction* m_actionExportBitmapSeries;
 
 		VDTK::VolumeDataHandler m_vdh;
+
 
 		ImportItemList m_importList;
 	};

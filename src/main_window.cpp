@@ -21,7 +21,9 @@ namespace VDS
 		setWindowTitle(QString("Volume Data Suite"));
 
 		setupFileMenu();
-		
+
+		// as long as its not functional
+		ui.groupBoxSliceView->hide();
 	}
 
 	void MainWindow::openImportRawDialog()
@@ -75,7 +77,7 @@ namespace VDS
 		const VDTK::VolumeSpacing spacing = Helper::QVector3DToVolumeSpacing(item3D.getSpacing());
 		if (m_vdh.importRawFile(item3D.getFilePath(), item3D.getBitsPerVoxel(), size, spacing))
 		{
-			// TODO: Update volume renderer
+			updateVolumeData();
 
 			// add to recent files
 			const ImportItem* item = &item3D;
@@ -121,6 +123,23 @@ namespace VDS
 			break;
 		}
 		}
+	}
+
+	void MainWindow::updateVolumeData()
+	{
+		const std::array<uint32_t, 3> size = { 
+			m_vdh.getVolumeData().getSize().getX(),
+			m_vdh.getVolumeData().getSize().getY(),
+			m_vdh.getVolumeData().getSize().getZ()
+		};
+
+		const std::array<float, 3> spacing = {
+			m_vdh.getVolumeData().getSpacing().getX(),
+			m_vdh.getVolumeData().getSpacing().getY(),
+			m_vdh.getVolumeData().getSpacing().getZ()
+		};
+
+		ui.volumeViewWidget->updateVolumeData(size, spacing, m_vdh.getVolumeData().getRawVolumeData());
 	}
 
 	void MainWindow::setupFileMenu()

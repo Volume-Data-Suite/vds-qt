@@ -1,41 +1,81 @@
+
 #include "volume_data_3D_texture.h"
+
 
 
 namespace VDS
 {
-	VolumeData3DTexture::VolumeData3DTexture(const VDTK::VolumeData & volumeData) 
-		: m_texture { QOpenGLTexture::Target3D }, m_volumeData{volumeData}
+	VolumeData3DTexture::VolumeData3DTexture() 
 	{
-		updateTexture();
+		m_size = { 1, 1, 1};
+		m_spacing = { 1.0f, 1.0f, 1.0f};
 	}
 	VolumeData3DTexture::~VolumeData3DTexture()
 	{
 	}
-	void VolumeData3DTexture::updateVolumeData(const VDTK::VolumeData & volumeData)
+	void VolumeData3DTexture::setup()
 	{
-		m_volumeData = volumeData;
-		updateTexture();
+		// generate dummy data
+		std::vector<uint16_t> dummyData = std::vector<uint16_t>(m_size[0] * m_size[1] * m_size[2]);
+
+		initializeOpenGLFunctions();
+
+		glGenTextures(1, &m_texture);
+		glBindTexture(GL_TEXTURE_3D, m_texture);
+
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_R16, getSizeX(), getSizeY(), getSizeZ(), 0, GL_RED, GL_UNSIGNED_SHORT, dummyData.data());
+
+		// unbind
+		glBindTexture(GL_TEXTURE_3D, 0);
 	}
-	void VolumeData3DTexture::updateTexture()
+	uint32_t VolumeData3DTexture::getSizeX() const
 	{
-		m_texture.setMinificationFilter(QOpenGLTexture::Linear);
-		m_texture.setMagnificationFilter(QOpenGLTexture::Linear);
-		m_texture.setWrapMode(QOpenGLTexture::ClampToEdge);
-		m_texture.setFormat(QOpenGLTexture::R16_UNorm);
+		return m_size[0];
+	}
+	uint32_t VolumeData3DTexture::getSizeY() const
+	{
+		return m_size[1];
+	}
+	uint32_t VolumeData3DTexture::getSizeZ() const
+	{
+		return m_size[2];
+	}
+	float VolumeData3DTexture::getSpacingX() const
+	{
+		return m_spacing[0];
+	}
+	float VolumeData3DTexture::getSpacingY() const
+	{
+		return m_spacing[1];
+	}
+	float VolumeData3DTexture::getSpacingZ() const
+	{
+		return m_spacing[2];
+	}
+	GLuint VolumeData3DTexture::getTextureHandle() const
+	{
+		return m_texture;
+	}
+	void VolumeData3DTexture::updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
+	{
+		m_size = size;
+		m_spacing = spacing;
 
-		// TODO: figure out whats going on with swizzle
-		const QOpenGLTexture::SwizzleValue red = QOpenGLTexture::RedValue;
-		m_texture.setSwizzleMask(red, red, red, red);
+		glBindTexture(GL_TEXTURE_3D, m_texture);
 
-		const int sizeX = static_cast<int>(m_volumeData.getSize().getX());
-		const int sizeY = static_cast<int>(m_volumeData.getSize().getY());
-		const int sizeZ = static_cast<int>(m_volumeData.getSize().getZ());
-		m_texture.setSize(sizeX, sizeY, sizeZ);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_R16, getSizeX(), getSizeY(), getSizeZ(), 0, GL_RED, GL_UNSIGNED_SHORT, volumeData.data());
 
-		m_texture.allocateStorage();
-
-		m_texture.setData(QOpenGLTexture::Red, QOpenGLTexture::UInt16, m_volumeData.getRawVolumeData().data());
-
-		m_texture.bind();
+		// unbind
+		glBindTexture(GL_TEXTURE_3D, 0);
 	}
 }

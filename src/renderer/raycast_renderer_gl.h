@@ -19,6 +19,11 @@ namespace VDS {
 		Borders,
 	};
 
+	enum class TextureUnits
+	{
+		VolumeData = GL_TEXTURE0,
+		NormalData = GL_TEXTURE1,
+	};
 
 	class RayCastRenderer : public QObject, protected QOpenGLFunctions_4_3_Core
 	{
@@ -39,7 +44,10 @@ namespace VDS {
 
 		void translate(float x, float y, float z);
 
+		void updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData);
+
 	private:
+		void renderVolume();
 		void renderMesh();
 		void renderVolumeBorders();
 
@@ -70,5 +78,7 @@ namespace VDS {
 		const QMatrix4x4* const m_viewMatrix;
 		QMatrix4x4 m_modelMatrix;
 
+		// stores the volume data
+		VolumeData3DTexture m_texture;
 	};
 }

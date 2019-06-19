@@ -13,18 +13,22 @@ class VolumeViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
 public:
 	VolumeViewGL(QWidget *parent);
 
+	void updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData);
+
 protected:
 	void initializeGL() override;
 
-	void resizeGL(int w, int h);
+	void resizeGL(int w, int h) override;
 
 	void paintGL() override;
 
-	void  mousePressEvent(QMouseEvent * e);
-	void  mouseReleaseEvent(QMouseEvent * e);
-	void  mouseMoveEvent(QMouseEvent * e);
+	void mousePressEvent(QMouseEvent * e) override;
+	void mouseReleaseEvent(QMouseEvent * e) override;
+	void mouseMoveEvent(QMouseEvent * e) override;
+	void wheelEvent(QWheelEvent * e) override;
 
 private:
+	void render();
 	void logQSurfaceFormat() const;
 
 	void setProjectionMatrix();

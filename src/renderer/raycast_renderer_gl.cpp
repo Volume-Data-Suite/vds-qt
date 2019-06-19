@@ -20,7 +20,17 @@ namespace VDS {
 	}
 	void RayCastRenderer::render()
 	{
-		renderVolumeBorders();
+		//renderVolumeBorders();
+		renderVolume();
+
+#ifdef _DEBUG
+		// check OpenGL error
+		GLenum err;
+		while ((err = glGetError()) != GL_NO_ERROR) {
+			qDebug() << "OpenGL error: " << err << endl;
+		}
+#endif // _DEBUG
+
 	}
 
 	bool RayCastRenderer::setup()
@@ -28,7 +38,7 @@ namespace VDS {
 		initializeOpenGLFunctions();
 
 		setupBuffers();
-		setupVertexArray(RenderModes::Borders);
+		setupVertexArray(RenderModes::Mesh);
 
 		if (!setupVertexShader() || !setupFragmentShader())
 		{
@@ -42,7 +52,30 @@ namespace VDS {
 
 		resetModelMatrix();
 
+		m_texture.setup();
+
 		return true;
+	}
+	void RayCastRenderer::renderVolume()
+	{
+		glUseProgram(m_shaderProgram);
+
+		// Bind vertex data
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_elements);
+		glBindVertexArray(m_vao_cube_vertices);
+
+		// Bind volume data
+		glActiveTexture(GLenum(TextureUnits::VolumeData));
+		glBindTexture(GL_TEXTURE_3D, m_texture.getTextureHandle());
+
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+
+		// Unbind volume data
+		glBindTexture(GL_TEXTURE_3D, 0);
+
+		// Unbind vertex data
+		glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 	void RayCastRenderer::renderMesh()
 	{
@@ -105,6 +138,22 @@ namespace VDS {
 	void RayCastRenderer::translate(float x, float y, float z)
 	{
 		m_modelMatrix.translate(x, y, z);
+		applyMatrices();
+	}
+	void RayCastRenderer::updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
+	{
+		m_texture.updateVolumeData(size, spacing, volumeData);
+
+		// update texture for shader program
+		glUseProgram(m_fragmentShader);
+		// Bind volume data
+		glBindTexture(GL_TEXTURE_3D, m_texture.getTextureHandle());
+		glUniform1i(glGetUniformLocation(m_fragmentShader, "dataTex"), 0);
+		// Unbind volume data
+		glBindTexture(GL_TEXTURE_3D, 0);
+
+
+		// TODO: Resize volume box
 	}
 	void RayCastRenderer::setupBuffers()
 	{
@@ -241,12 +290,12 @@ namespace VDS {
 		constexpr char* fragmentShaderSource =
 			"#version 450 core \n"
 
-			"// uniform vec4 color; \n"
+			"uniform sampler3D dataTex; \n"
 			"out vec4 FragColor; \n"
 
 			"void main() \n"
 			"{ \n"
-			"	FragColor = vec4(1.0f); //color; \n"
+			"	FragColor = vec4(1.0f); \n"
 			"} \n";
 
 
