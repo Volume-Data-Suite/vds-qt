@@ -154,6 +154,7 @@ namespace VDS {
 
 
 		// TODO: Resize volume box
+
 	}
 	void RayCastRenderer::setupBuffers()
 	{
@@ -295,7 +296,9 @@ namespace VDS {
 
 			"void main() \n"
 			"{ \n"
-			"	FragColor = vec4(1.0f); \n"
+			"	const vec3 position = vec3(0.5f); \n"
+			"	const float dataValue = texture(dataTex, position).x; \n"
+			"	FragColor = vec4(vec3(dataValue), 1.0f); //vec4(1.0f); \n"
 			"} \n";
 
 

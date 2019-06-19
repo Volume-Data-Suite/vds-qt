@@ -16,7 +16,7 @@ namespace VDS
 	void VolumeData3DTexture::setup()
 	{
 		// generate dummy data
-		std::vector<uint16_t> dummyData = std::vector<uint16_t>(m_size[0] * m_size[1] * m_size[2]);
+		std::vector<uint16_t> dummyData = std::vector<uint16_t>(m_size[0] * m_size[1] * m_size[2], UINT16_MAX / 2);
 
 		initializeOpenGLFunctions();
 

@@ -41,17 +41,16 @@ namespace VDS {
 		void applyMatrices();
 
 		void rotate(float x, float y);
-
 		void translate(float x, float y, float z);
+		void resetModelMatrix();
 
 		void updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData);
+
 
 	private:
 		void renderVolume();
 		void renderMesh();
 		void renderVolumeBorders();
-
-		void resetModelMatrix();
 
 		void setupBuffers();
 		void setupVertexArray(RenderModes renderMode);

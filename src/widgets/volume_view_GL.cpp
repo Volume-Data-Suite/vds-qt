@@ -18,6 +18,10 @@ VolumeViewGL::VolumeViewGL(QWidget *parent) : QOpenGLWidget(parent), m_rayCastRe
 void VolumeViewGL::updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
 {
 	m_rayCastRenderer.updateVolumeData(size, spacing, volumeData);
+
+	m_rayCastRenderer.resetModelMatrix();
+
+	this->update();
 }
 
 void VolumeViewGL::initializeGL()
