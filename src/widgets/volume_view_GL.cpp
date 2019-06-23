@@ -13,15 +13,30 @@ VolumeViewGL::VolumeViewGL(QWidget *parent) : QOpenGLWidget(parent), m_rayCastRe
 
 	m_leftButtonPressed = false;
 	m_prevPos = {};
+
+	m_renderloop = false;
+
+	m_lastFrameTimePoint = std::chrono::high_resolution_clock::now();
 }
 
 void VolumeViewGL::updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
 {
 	m_rayCastRenderer.updateVolumeData(size, spacing, volumeData);
-
-	m_rayCastRenderer.resetModelMatrix();
-
+	
 	this->update();
+}
+
+void VolumeViewGL::setRenderLoop(bool onlyRerenderOnChange)
+{
+	m_renderloop = !onlyRerenderOnChange;
+	if (m_renderloop)
+	{
+		update();
+	}
+	else
+	{
+		emit updateFrametime(0.0f, 0.0f, 0.0f);
+	}
 }
 
 void VolumeViewGL::initializeGL()
@@ -29,7 +44,9 @@ void VolumeViewGL::initializeGL()
 	initializeOpenGLFunctions();
 
 	logQSurfaceFormat();
-
+	logRenderDeviceInfo(QString("GPU Vendor"), GL_VENDOR);
+	logRenderDeviceInfo(QString("OpenGL Renderer"), GL_RENDERER);
+	logRenderDeviceInfo(QString("OpenGL Version"), GL_VERSION);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -59,17 +76,38 @@ void VolumeViewGL::resizeGL(int w, int h)
 
 void VolumeViewGL::paintGL()
 {
-	const auto start = std::chrono::high_resolution_clock::now();
+	const auto startRender = std::chrono::high_resolution_clock::now();
 
-	render();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	const auto end = std::chrono::high_resolution_clock::now();
-	const std::chrono::duration<double> duration = end - start;
-	const std::chrono::nanoseconds nanoSeconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
+	const auto startRenderVolume = std::chrono::high_resolution_clock::now();
+	m_rayCastRenderer.render();
+	const auto endRenderVolume = std::chrono::high_resolution_clock::now();
 
-	const double milliSeconds = static_cast<double>(nanoSeconds.count()) / 1000000.0;
+	const auto endRender = std::chrono::high_resolution_clock::now();
+	
+	const float renderTime = calculateFrameTime(startRender, endRender);
+	const float renderTimeVolume = calculateFrameTime(startRenderVolume, endRenderVolume);
+	float frameTime = calculateFrameTime(m_lastFrameTimePoint, endRender);
 
-	qDebug() << "Milli Seconds to render: " << milliSeconds << "which equals to " << 1000.0 / milliSeconds << " FPS";
+	m_lastFrameTimePoint = endRender;
+
+	// dont spam with events for fps counter updates
+	if (calculateFrameTime(m_lastFrameTimeGUIUpdate, endRender) >= 200.0f)
+	{
+		if (!m_renderloop)
+		{
+			// do not show FPS, since it would confuse users
+			frameTime = 0.0f;
+		}
+		emit updateFrametime(frameTime, renderTime, renderTimeVolume);
+		m_lastFrameTimeGUIUpdate = endRender;
+	}
+		
+	if (m_renderloop)
+	{
+		update();
+	}
 }
 
 void VolumeViewGL::mousePressEvent(QMouseEvent * e)
@@ -86,6 +124,12 @@ void VolumeViewGL::mouseReleaseEvent(QMouseEvent * e)
 {
 	m_leftButtonPressed = false;
 	m_prevPos = {};
+
+	if (!m_renderloop)
+	{
+		emit updateFrametime(0.0f, 0.0f, 0.0f);
+	}
+
 	e->accept();
 }
 
@@ -122,13 +166,6 @@ void VolumeViewGL::wheelEvent(QWheelEvent * e)
 }
 
 
-void VolumeViewGL::render()
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	m_rayCastRenderer.render();
-}
-
 void VolumeViewGL::logQSurfaceFormat() const
 {
 	const QSurfaceFormat fmt = this->format();
@@ -141,6 +178,19 @@ void VolumeViewGL::logQSurfaceFormat() const
 	qDebug().noquote() << "Swap Behavior:"
 		<< QMetaEnum::fromType<QSurfaceFormat::SwapBehavior>().valueToKey(fmt.swapBehavior());
 	qDebug() << "Swap Interval:" << fmt.swapInterval();
+}
+
+void VolumeViewGL::logRenderDeviceInfo(const QString& title, GLenum name)
+{
+	const GLubyte* info = glGetString(name);
+
+	//glGetString returns a null pointer on error.
+	if (info)
+	{
+		//cast from const unsigned char* to const char*
+		const QString string(reinterpret_cast<const char*>(info));
+		qDebug().noquote() << title << ": " << string;
+	}
 }
 
 void VolumeViewGL::setProjectionMatrix()
@@ -164,4 +214,12 @@ void VolumeViewGL::setViewMatrix()
 
 	m_viewMatrix.setToIdentity();
 	m_viewMatrix.lookAt(eye, lookAt, up);
+}
+
+float VolumeViewGL::calculateFrameTime(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) const
+{
+	const std::chrono::duration<float> duration = end - start;
+	const std::chrono::nanoseconds nanoSeconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
+
+	return static_cast<float>(nanoSeconds.count()) / 1000000.0;
 }

@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QMessageBox>
+#include <QCheckBox>
 
 
 
@@ -24,6 +25,12 @@ namespace VDS
 
 		// as long as its not functional
 		ui.groupBoxSliceView->hide();
+
+
+		connect(ui.volumeViewWidget, &VolumeViewGL::updateFrametime,
+			this, &MainWindow::updateFrametime);
+		connect(ui.checkBoxRenderLoop, &QCheckBox::stateChanged,
+			ui.volumeViewWidget, &VolumeViewGL::setRenderLoop);
 	}
 
 	void MainWindow::openImportRawDialog()
@@ -123,6 +130,13 @@ namespace VDS
 			break;
 		}
 		}
+	}
+
+	void MainWindow::updateFrametime(float frameTime, float renderEverything, float volumeRendering)
+	{
+		ui.labelFPSValue->setText(QString::fromStdString(std::to_string(static_cast<uint16_t>(std::round(1000.0f / frameTime))) + " FPS"));
+		ui.labelFrameTimeGlobalValue->setText(QString::fromStdString(std::to_string(renderEverything) + " ms"));
+		ui.labelFrameTimeVolumeValue->setText(QString::fromStdString(std::to_string(volumeRendering) + " ms"));
 	}
 
 	void MainWindow::updateVolumeData()

@@ -8,6 +8,8 @@
 #include <QDebug>
 #include <QMetaEnum>
 
+#include <algorithm>
+
 namespace VDS {
 
 	RayCastRenderer::RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix)
@@ -76,6 +78,9 @@ namespace VDS {
 		// Unbind vertex data
 		glBindVertexArray(0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		// unbind shader programm
+		glUseProgram(0);
 	}
 	void RayCastRenderer::renderMesh()
 	{
@@ -93,6 +98,9 @@ namespace VDS {
 		glBindVertexArray(0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+		// unbind shader programm
+		glUseProgram(0);
+
 		// reset ploygon mode
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
@@ -109,6 +117,9 @@ namespace VDS {
 		// Unbind vertex data
 		glBindVertexArray(0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		// unbind shader programm
+		glUseProgram(0);
 	}
 	void RayCastRenderer::resetModelMatrix()
 	{
@@ -152,9 +163,14 @@ namespace VDS {
 		// Unbind volume data
 		glBindTexture(GL_TEXTURE_3D, 0);
 
+		resetModelMatrix();
 
-		// TODO: Resize volume box
 
+		// unbind shader programm
+		glUseProgram(0);
+
+		// Resize volume box
+		//scaleVolumeAndNormalizeSize();
 	}
 	void RayCastRenderer::setupBuffers()
 	{
@@ -364,5 +380,20 @@ namespace VDS {
 		}
 
 		return isLinked;
+	}
+	void RayCastRenderer::scaleVolumeAndNormalizeSize()
+	{
+		const float xInCentiMeter = m_texture.getSizeX() * m_texture.getSpacingX();
+		const float yInCentiMeter = m_texture.getSizeY() * m_texture.getSpacingY();
+		const float zInCentiMeter = m_texture.getSizeZ() * m_texture.getSpacingZ();
+
+		const float longestSide = std::max(xInCentiMeter, std::max(yInCentiMeter, zInCentiMeter));
+
+		const float scaleX = xInCentiMeter / longestSide;
+		const float scaleY = yInCentiMeter / longestSide;
+		const float scaleZ = zInCentiMeter / longestSide;
+
+		m_modelMatrix.scale(xInCentiMeter, yInCentiMeter, zInCentiMeter);
+		applyMatrices();
 	}
 }

@@ -6,7 +6,6 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_3_Core>
 
-#include <QObject>
 
 #include "volume_data_3D_texture.h"
 #include <array>
@@ -27,9 +26,7 @@ namespace VDS {
 
 	class RayCastRenderer : public QObject, protected QOpenGLFunctions_4_3_Core
 	{
-
-		Q_OBJECT
-
+		
 	public:
 		RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix);
 		~RayCastRenderer();
@@ -60,6 +57,8 @@ namespace VDS {
 
 		bool checkShaderCompileStatus(GLuint shader);
 		bool checkShaderProgramLinkStatus(GLuint shaderProgram);
+
+		void scaleVolumeAndNormalizeSize();
 		
 
 		// global buffer handles

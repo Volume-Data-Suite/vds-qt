@@ -25,9 +25,10 @@ namespace VDS
 
 		void importRecentFile(std::size_t index);
 
-		void updateVolumeData();
+		void updateFrametime(float frameTime, float renderEverything, float volumeRendering);
 
 	private:
+		void updateVolumeData();
 		void setupFileMenu();
 		void refreshRecentFiles();
 
