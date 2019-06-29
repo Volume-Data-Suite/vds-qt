@@ -20,6 +20,9 @@ add_executable(VDS
 	fileio/import_raw_3D_dialog.h
 	fileio/import_raw_3D_dialog.cpp
 	
+	renderer/shader/shader_code_constants.h
+	renderer/shader/shader_generator.h
+	renderer/shader/shader_generator.cpp
 	renderer/raycast_renderer_gl.h
 	renderer/raycast_renderer_gl.cpp
 	renderer/volume_data_3D_texture.h

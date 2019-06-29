@@ -1,4 +1,5 @@
 #include "raycast_renderer_gl.h"
+#include "shader/shader_generator.h"
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
@@ -9,6 +10,7 @@
 #include <QMetaEnum>
 
 #include <algorithm>
+#include <string>
 
 namespace VDS {
 
@@ -58,6 +60,7 @@ namespace VDS {
 
 		return true;
 	}
+
 	void RayCastRenderer::renderVolume()
 	{
 		glUseProgram(m_shaderProgram);
@@ -278,48 +281,23 @@ namespace VDS {
 
 	bool RayCastRenderer::setupVertexShader()
 	{
-		constexpr char* vertexShaderSource =
-			"#version 450 core \n"
-
-			"layout(location = 0) in vec3 inPos; \n"
-			"// Model Matrix \n"
-			"layout(location = 1) uniform mat4 mMatrix; \n"
-			"// View Matrix \n"
-			"layout(location = 2) uniform mat4 vMatrix; \n"
-			"// Projection Matrix \n"
-			"layout(location = 3) uniform mat4 pMatrix; \n"
-
-			"void main() \n"
-			"{ \n"
-			"	gl_Position = pMatrix * vMatrix * mMatrix * vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
-			"} \n";
-
+		const std::string vertexShaderSource = VDS::ShaderGenerator::getVertexShaderCode();
+		const GLchar* const shaderGLSL = 	vertexShaderSource.c_str();
 
 		m_vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(m_vertexShader, 1, &vertexShaderSource, NULL);
+		glShaderSource(m_vertexShader, 1, &shaderGLSL, NULL);
 		glCompileShader(m_vertexShader);
-
+		
 		return checkShaderCompileStatus(m_vertexShader);
 	}
 
 	bool RayCastRenderer::setupFragmentShader()
 	{
-		constexpr char* fragmentShaderSource =
-			"#version 450 core \n"
-
-			"uniform sampler3D dataTex; \n"
-			"out vec4 FragColor; \n"
-
-			"void main() \n"
-			"{ \n"
-			"	const vec3 position = vec3(0.5f); \n"
-			"	const float dataValue = texture(dataTex, position).x; \n"
-			"	FragColor = vec4(vec3(dataValue), 1.0f); //vec4(1.0f); \n"
-			"} \n";
-
+		const std::string fragmentShaderSource = VDS::ShaderGenerator::getFragmentShaderCode();
+		const GLchar* const shaderGLSL = fragmentShaderSource.c_str();
 
 		m_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(m_fragmentShader, 1, &fragmentShaderSource, NULL);
+		glShaderSource(m_fragmentShader, 1, &shaderGLSL, NULL);
 		glCompileShader(m_fragmentShader);
 
 		return checkShaderCompileStatus(m_fragmentShader);
