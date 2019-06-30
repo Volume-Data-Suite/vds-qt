@@ -149,7 +149,7 @@ namespace VDS {
 		// TODO use the same fov from the projection matirx
 		// TODO better handle pi
 		// TODO better handle focal length variable
-		const GLfloat m_fov = 45.0f;
+		const GLfloat m_fov = 60.0f;
 		constexpr double pi = 3.14159265358979323846;
 		const GLfloat m_focalLength = 1.0 / std::tan(pi / 180.0 * m_fov / 2.0);
 		const GLuint focalPosition = glGetUniformLocation(m_shaderProgram, "focal_length");

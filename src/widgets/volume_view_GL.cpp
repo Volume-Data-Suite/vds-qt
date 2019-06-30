@@ -57,12 +57,13 @@ void VolumeViewGL::initializeGL()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK); 
+	// so we can go inside the volume and dont have to accumulated raycasts (because we do a single pass raycasting)
+	glCullFace(GL_FRONT); 
 	glFrontFace(GL_CCW);
 
 	glClearDepth(1.0f);
 	// Change the reference of the GL_COLOR_BUFFER_BIT
-	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	m_rayCastRenderer.setup();
 	m_viewMatrix.translate(0.0f, 0.0f, -5.0f);
@@ -201,7 +202,7 @@ void VolumeViewGL::setProjectionMatrix(float aspectRatio)
 {
 	constexpr GLfloat nearPlane = 0.0f;
 	constexpr GLfloat farPlane = 10.0f;
-	constexpr GLfloat verticalAngle = 45.0f;
+	constexpr GLfloat verticalAngle = 60.0f;
 
 	m_projectionMatrix.setToIdentity();
 	m_projectionMatrix.perspective(verticalAngle, aspectRatio, nearPlane, farPlane);
