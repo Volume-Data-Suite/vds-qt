@@ -8,7 +8,7 @@ namespace VDS
 
 	const std::string ShaderGenerator::getFragmentShaderCode()
 	{
-		std::string fragmentShader = VDS::GLSL::fragmentBase;
+		std::string fragmentShader = GLSL::fragmentBase;
 
 		insertGLSLVerion(fragmentShader);
 
@@ -16,7 +16,7 @@ namespace VDS
 	}
 	const std::string ShaderGenerator::getVertexShaderCode()
 	{
-		std::string vertexShader = VDS::GLSL::vertrexBase;
+		std::string vertexShader = GLSL::vertrexBase;
 
 		insertGLSLVerion(vertexShader);
 
@@ -25,6 +25,6 @@ namespace VDS
 
 	void ShaderGenerator::insertGLSLVerion(std::string & shader)
 	{
-		shader.replace(shader.find(VDS::GLSL::glslVersion.first), VDS::GLSL::glslVersion.first.length(), VDS::GLSL::glslVersion.second);
+		shader.replace(shader.find(GLSL::glslVersion.first), GLSL::glslVersion.first.length(), GLSL::glslVersion.second);
 	}
 }

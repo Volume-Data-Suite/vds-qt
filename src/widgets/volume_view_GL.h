@@ -42,7 +42,7 @@ private:
 	void logQSurfaceFormat() const;
 	void logRenderDeviceInfo(const QString& title, GLenum name);
 
-	void setProjectionMatrix();
+	void setProjectionMatrix(float aspectRatio);
 	void setViewMatrix();
 
 	float calculateFrameTime(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) const;

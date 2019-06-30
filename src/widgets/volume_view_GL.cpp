@@ -8,7 +8,7 @@
 
 VolumeViewGL::VolumeViewGL(QWidget *parent) : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix)
 {
-	setProjectionMatrix();
+	setProjectionMatrix(1.0f);
 	setViewMatrix();
 
 	m_leftButtonPressed = false;
@@ -70,8 +70,12 @@ void VolumeViewGL::initializeGL()
 
 void VolumeViewGL::resizeGL(int w, int h)
 {
-	setProjectionMatrix();
+	const float aspectRatio = static_cast<float>(w) / static_cast<float>(h);
+
+	setProjectionMatrix(aspectRatio);
 	m_rayCastRenderer.applyMatrices();
+	m_rayCastRenderer.updateAspectRation(aspectRatio);
+	m_rayCastRenderer.updateViewPortSize(w, h);
 }
 
 void VolumeViewGL::paintGL()
@@ -193,9 +197,8 @@ void VolumeViewGL::logRenderDeviceInfo(const QString& title, GLenum name)
 	}
 }
 
-void VolumeViewGL::setProjectionMatrix()
+void VolumeViewGL::setProjectionMatrix(float aspectRatio)
 {
-	const GLfloat aspectRatio = (GLfloat)this->width() / (GLfloat)this->height();
 	constexpr GLfloat nearPlane = 0.0f;
 	constexpr GLfloat farPlane = 10.0f;
 	constexpr GLfloat verticalAngle = 45.0f;

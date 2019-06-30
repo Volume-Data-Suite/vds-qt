@@ -133,13 +133,57 @@ namespace VDS {
 	{
 		glUseProgram(m_shaderProgram);
 
-		const GLuint modelMatrixID = glGetUniformLocation(m_shaderProgram, "mMatrix");
-		const GLuint viewMatrixID = glGetUniformLocation(m_shaderProgram, "vMatrix");
-		const GLuint projectionMatrixID = glGetUniformLocation(m_shaderProgram, "pMatrix");
+		const GLuint modelMatrixID = glGetUniformLocation(m_shaderProgram, "modelMatrix");
+		const GLuint viewMatrixID = glGetUniformLocation(m_shaderProgram, "viewMatrix");
+		const GLuint projectionMatrixID = glGetUniformLocation(m_shaderProgram, "projectionMatrix");
 
 		glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, m_modelMatrix.data());
 		glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, m_viewMatrix->data());
 		glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, m_projectionMatrix->data());
+
+
+
+
+
+
+		// TODO use the same fov from the projection matirx
+		// TODO better handle pi
+		// TODO better handle focal length variable
+		const GLfloat m_fov = 45.0f;
+		constexpr double pi = 3.14159265358979323846;
+		const GLfloat m_focalLength = 1.0 / std::tan(pi / 180.0 * m_fov / 2.0);
+		const GLuint focalPosition = glGetUniformLocation(m_shaderProgram, "focal_length");
+		glUniform1f(focalPosition, m_focalLength);
+
+
+		const QMatrix4x4 test = *m_viewMatrix * m_modelMatrix;
+		
+		const QVector3D m_rayOrigin = test.inverted() * QVector3D({ 0.0, 0.0, 0.0 });
+		const GLuint rayorigin = glGetUniformLocation(m_shaderProgram, "ray_origin");
+		glUniform3f(rayorigin, m_rayOrigin[0], m_rayOrigin[1], m_rayOrigin[2]);
+
+
+		
+
+		QVector3D extent;
+		extent.setX(m_texture.getSizeX() * m_texture.getSpacingX());
+		extent.setY(m_texture.getSizeY() * m_texture.getSpacingY());
+		extent.setZ(m_texture.getSizeZ() * m_texture.getSpacingZ());
+		const float extentMax = std::max({extent.x(), extent.y(), extent.z()});
+		extent.setX(extent.x() / extentMax);
+		extent.setY(extent.y() / extentMax);
+		extent.setZ(extent.z() / extentMax);
+
+		QVector3D top = extent;
+		QVector3D bottom = -extent;
+
+		const GLuint topPosition = glGetUniformLocation(m_shaderProgram, "top");
+		glUniform3f(topPosition, top[0], top[1], top[2]);
+		const GLuint bottomPosition = glGetUniformLocation(m_shaderProgram, "bottom");
+		glUniform3f(bottomPosition, bottom[0], bottom[1], bottom[2]);
+
+
+		
 
 		checkShaderProgramLinkStatus(m_shaderProgram);
 	}
@@ -173,7 +217,22 @@ namespace VDS {
 		glUseProgram(0);
 
 		// Resize volume box
-		//scaleVolumeAndNormalizeSize();
+		scaleVolumeAndNormalizeSize();
+	}
+	void RayCastRenderer::updateAspectRation(float ratio)
+	{
+		m_aspectRationOpenGLWindow = ratio;
+
+		const GLuint aspectRatioPosition = glGetUniformLocation(m_shaderProgram, "aspect_ratio");
+		glUniform1f(aspectRatioPosition, m_aspectRationOpenGLWindow);
+	}
+	void RayCastRenderer::updateViewPortSize(int width, int heigth)
+	{
+		m_viewportSize[0] = static_cast<float>(width);
+		m_viewportSize[1] = static_cast<float>(heigth);
+
+		const GLuint viewPortSizePosition = glGetUniformLocation(m_shaderProgram, "viewport_size");
+		glUniform2f(viewPortSizePosition, m_viewportSize[0], m_viewportSize[1]);
 	}
 	void RayCastRenderer::setupBuffers()
 	{
@@ -365,13 +424,13 @@ namespace VDS {
 		const float yInCentiMeter = m_texture.getSizeY() * m_texture.getSpacingY();
 		const float zInCentiMeter = m_texture.getSizeZ() * m_texture.getSpacingZ();
 
-		const float longestSide = std::max(xInCentiMeter, std::max(yInCentiMeter, zInCentiMeter));
+		const float longestSide = std::max({ xInCentiMeter, yInCentiMeter, zInCentiMeter });
 
 		const float scaleX = xInCentiMeter / longestSide;
 		const float scaleY = yInCentiMeter / longestSide;
 		const float scaleZ = zInCentiMeter / longestSide;
 
-		m_modelMatrix.scale(xInCentiMeter, yInCentiMeter, zInCentiMeter);
+		m_modelMatrix.scale(scaleX, scaleY, scaleZ);
 		applyMatrices();
 	}
 }

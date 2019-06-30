@@ -43,6 +43,11 @@ namespace VDS {
 
 		void updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData);
 
+		// TODO: Dont need a function for that. get the data from projection matrix on projection matrix update
+		void updateAspectRation(float ratio);
+
+		void updateViewPortSize(int width, int heigth);
+
 
 	private:
 		void renderVolume();
@@ -78,5 +83,8 @@ namespace VDS {
 
 		// stores the volume data
 		VolumeData3DTexture m_texture;
+
+		float m_aspectRationOpenGLWindow;
+		std::array<float, 2> m_viewportSize;
 	};
 }
