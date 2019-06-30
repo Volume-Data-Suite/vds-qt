@@ -5,7 +5,6 @@
 
 #include <chrono>
 
-
 VolumeViewGL::VolumeViewGL(QWidget *parent) : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix)
 {
 	setProjectionMatrix(1.0f);
@@ -17,6 +16,8 @@ VolumeViewGL::VolumeViewGL(QWidget *parent) : QOpenGLWidget(parent), m_rayCastRe
 	m_renderloop = false;
 
 	m_lastFrameTimePoint = std::chrono::high_resolution_clock::now();
+
+	m_rotationSpeed = 200.0f;
 }
 
 void VolumeViewGL::updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
@@ -63,10 +64,11 @@ void VolumeViewGL::initializeGL()
 
 	glClearDepth(1.0f);
 	// Change the reference of the GL_COLOR_BUFFER_BIT
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	m_rayCastRenderer.setup();
-	m_viewMatrix.translate(0.0f, 0.0f, -5.0f);
+	m_viewMatrix.translate(0.0f, 0.0f, -0.2f);
+	
 }
 
 void VolumeViewGL::resizeGL(int w, int h)
@@ -144,14 +146,22 @@ void VolumeViewGL::mouseMoveEvent(QMouseEvent * e)
 		return;
 	}
 
-	QVector2D direction = QVector2D(e->pos()) - QVector2D(m_prevPos);
+	const QVector3D oldPosition = getArcBallVector(m_prevPos);
+	const QVector3D newPosition = getArcBallVector(e->pos());
 
-	// we want to rotate around the opposite axis of the mouse movement
-	m_rayCastRenderer.rotate(direction.y(), direction.x());
-	
+	const float dot = QVector3D::dotProduct(oldPosition, newPosition);
+	const float rotationAngle = std::acos(std::min(1.0f, dot)) * m_rotationSpeed;
+
+	const QVector3D axisInCameraCoordinates = QVector3D::crossProduct(oldPosition, newPosition);
+	const QVector3D axisInObjectCoordinates = m_rayCastRenderer.getModelMatrix().inverted() * axisInCameraCoordinates;
+
+	m_rayCastRenderer.rotate(rotationAngle, axisInObjectCoordinates.x(), axisInObjectCoordinates.y(), axisInObjectCoordinates.z());
+
+		
 	m_prevPos = e->pos();
 
 	e->accept();
+
 
 	// does not cause an immediate repaint; instead it schedules a paint event for processing 
 	// when Qt returns to the main event loop. This permits Qt to optimize for more speed and
@@ -162,8 +172,7 @@ void VolumeViewGL::mouseMoveEvent(QMouseEvent * e)
 void VolumeViewGL::wheelEvent(QWheelEvent * e)
 {
 	const float translateAmount = static_cast<float>(e->delta()) / 150.0f;
-	m_viewMatrix.translate(0.0f, 0.0f, translateAmount);
-
+	m_viewMatrix.translate(0, 0, translateAmount);
 	m_rayCastRenderer.applyMatrices();
 
 	e->accept();
@@ -202,7 +211,7 @@ void VolumeViewGL::setProjectionMatrix(float aspectRatio)
 {
 	constexpr GLfloat nearPlane = 0.0f;
 	constexpr GLfloat farPlane = 10.0f;
-	constexpr GLfloat verticalAngle = 60.0f;
+	constexpr GLfloat verticalAngle = 90.0f;
 
 	m_projectionMatrix.setToIdentity();
 	m_projectionMatrix.perspective(verticalAngle, aspectRatio, nearPlane, farPlane);
@@ -218,6 +227,31 @@ void VolumeViewGL::setViewMatrix()
 
 	m_viewMatrix.setToIdentity();
 	m_viewMatrix.lookAt(eye, lookAt, up);
+}
+
+QVector3D VolumeViewGL::getArcBallVector(QPoint p)
+{
+	QVector3D arcBallVector(
+		1.0f * p.x() / this->width() * 2.0f - 1.0f,
+		1.0f * p.y() / this->height() * 2.0f - 1.0f,
+		0.0f);
+
+	arcBallVector.setY(-arcBallVector.y());
+
+	const float OPSquared = arcBallVector.x() * arcBallVector.x() + arcBallVector.y() * arcBallVector.y();
+
+	if (OPSquared <= 1.0f)
+	{
+		// Pythagoras
+		arcBallVector.setZ(std::sqrt(1 - OPSquared));
+	}
+	else
+	{
+		// nearest point
+		arcBallVector.normalize();
+	}
+
+	return arcBallVector;
 }
 
 float VolumeViewGL::calculateFrameTime(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) const

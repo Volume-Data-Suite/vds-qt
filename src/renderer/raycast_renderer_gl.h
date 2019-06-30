@@ -37,8 +37,9 @@ namespace VDS {
 
 		void applyMatrices();
 
-		void rotate(float x, float y);
+		void rotate(float angle, float x, float y, float z);
 		void translate(float x, float y, float z);
+		void scale(float factor);
 		void resetModelMatrix();
 
 		void updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData);
@@ -47,6 +48,9 @@ namespace VDS {
 		void updateAspectRation(float ratio);
 
 		void updateViewPortSize(int width, int heigth);
+
+		const std::array<float, 3> getPosition() const;
+		const QMatrix4x4 getModelMatrix() const;
 
 
 	private:
@@ -59,11 +63,14 @@ namespace VDS {
 		bool setupVertexShader();
 		bool setupFragmentShader();
 		bool setupShaderProgram();
+		void setAxisAlignedBoundingBox(const QVector3D& extent);
 
 		bool checkShaderCompileStatus(GLuint shader);
 		bool checkShaderProgramLinkStatus(GLuint shaderProgram);
 
 		void scaleVolumeAndNormalizeSize();
+
+		void updateFieldOfView();
 		
 
 		// global buffer handles

@@ -9,22 +9,19 @@ namespace VDS::GLSL
 		glslVersion.first + "\n"
 		
 		"in vec3 inPos; \n"
-		"uniform mat4 modelMatrix; \n"
-		"uniform mat4 viewMatrix; \n"
-		"uniform mat4 projectionMatrix; \n"
+		"uniform mat4 projectionViewModelMatrix; \n"
 
 		"void main() \n"
 		"{ \n"
-		"	gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
+		"	gl_Position = projectionViewModelMatrix * vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
 		"} \n";
 
 
 	static const std::string fragmentBase =
 		glslVersion.first + "\n"
 
-		"uniform mat4 viewMatrix; \n"
-		"uniform mat4 modelMatrix; \n"
-		"uniform mat4 projectionMatrix; \n"
+		"uniform mat4 viewModelMatrix; \n"
+		"uniform mat4 projectionViewModelMatrix; \n"
 
 		"uniform float focal_length; \n"
 		"uniform float aspect_ratio; \n"
@@ -84,8 +81,7 @@ namespace VDS::GLSL
 		"ray_direction.xy = 2.0 * gl_FragCoord.xy / viewport_size - 1.0; \n"
 		"ray_direction.x *= aspect_ratio; \n"
 		"ray_direction.z = -focal_length; \n"
-		"mat4 pvm = viewMatrix * modelMatrix; \n"
-		"ray_direction = (vec4(ray_direction, 0) * pvm).xyz; \n"
+		"ray_direction = (vec4(ray_direction, 0) * viewModelMatrix).xyz; \n"
 
 		"float t_0, t_1; \n"
 		"Ray casting_ray = Ray(ray_origin, ray_direction); \n"
@@ -122,7 +118,8 @@ namespace VDS::GLSL
 		//"	i -= 1; \n"
 		"} \n"
 
-		"fragColor = vec4(maximum_intensity); \n"
+		"fragColor.xyz = vec3(maximum_intensity); \n"
+		"fragColor.w = 1.0f; \n"
 
 		"} \n";
 

@@ -45,6 +45,8 @@ private:
 	void setProjectionMatrix(float aspectRatio);
 	void setViewMatrix();
 
+	QVector3D getArcBallVector(QPoint p);
+
 	float calculateFrameTime(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) const;
 
 	VDS::RayCastRenderer m_rayCastRenderer;
@@ -55,6 +57,7 @@ private:
 	// mouse drag rotation
 	bool m_leftButtonPressed;
 	QPoint m_prevPos;
+	float m_rotationSpeed;
 
 	bool m_renderloop;
 	std::chrono::steady_clock::time_point m_lastFrameTimePoint;

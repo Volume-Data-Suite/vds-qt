@@ -57,6 +57,8 @@ namespace VDS {
 		resetModelMatrix();
 
 		m_texture.setup();
+		// Resize volume to texture
+		scaleVolumeAndNormalizeSize();
 
 		return true;
 	}
@@ -133,69 +135,39 @@ namespace VDS {
 	{
 		glUseProgram(m_shaderProgram);
 
-		const GLuint modelMatrixID = glGetUniformLocation(m_shaderProgram, "modelMatrix");
-		const GLuint viewMatrixID = glGetUniformLocation(m_shaderProgram, "viewMatrix");
-		const GLuint projectionMatrixID = glGetUniformLocation(m_shaderProgram, "projectionMatrix");
 
-		glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, m_modelMatrix.data());
-		glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, m_viewMatrix->data());
-		glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, m_projectionMatrix->data());
-
-
-
+		const QMatrix4x4 projectionViewModelMatrix = *m_projectionMatrix * *m_viewMatrix * m_modelMatrix;
+		const QMatrix4x4 viewModelMatrix = *m_viewMatrix * m_modelMatrix;
+			   
+		const GLuint projectionViewModelMatrixID = glGetUniformLocation(m_shaderProgram, "projectionViewModelMatrix");
+		const GLuint viewModelMatrixID = glGetUniformLocation(m_shaderProgram, "viewModelMatrix");
+		glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE, projectionViewModelMatrix.data());
+		glUniformMatrix4fv(viewModelMatrixID, 1, GL_FALSE, viewModelMatrix.data());
 
 
+		const QVector3D rayOrigin = viewModelMatrix.inverted() * QVector3D({ 0.0, 0.0, 0.0 });
 
-		// TODO use the same fov from the projection matirx
-		// TODO better handle pi
-		// TODO better handle focal length variable
-		const GLfloat m_fov = 60.0f;
-		constexpr double pi = 3.14159265358979323846;
-		const GLfloat m_focalLength = 1.0 / std::tan(pi / 180.0 * m_fov / 2.0);
-		const GLuint focalPosition = glGetUniformLocation(m_shaderProgram, "focal_length");
-		glUniform1f(focalPosition, m_focalLength);
-
-
-		const QMatrix4x4 test = *m_viewMatrix * m_modelMatrix;
+		const GLuint rayOriginID = glGetUniformLocation(m_shaderProgram, "ray_origin");
+		glUniform3f(rayOriginID, rayOrigin[0], rayOrigin[1], rayOrigin[2]);
+	
 		
-		const QVector3D m_rayOrigin = test.inverted() * QVector3D({ 0.0, 0.0, 0.0 });
-		const GLuint rayorigin = glGetUniformLocation(m_shaderProgram, "ray_origin");
-		glUniform3f(rayorigin, m_rayOrigin[0], m_rayOrigin[1], m_rayOrigin[2]);
+		glUseProgram(0);
 
-
-		
-
-		QVector3D extent;
-		extent.setX(m_texture.getSizeX() * m_texture.getSpacingX());
-		extent.setY(m_texture.getSizeY() * m_texture.getSpacingY());
-		extent.setZ(m_texture.getSizeZ() * m_texture.getSpacingZ());
-		const float extentMax = std::max({extent.x(), extent.y(), extent.z()});
-		extent.setX(extent.x() / extentMax);
-		extent.setY(extent.y() / extentMax);
-		extent.setZ(extent.z() / extentMax);
-
-		QVector3D top = extent;
-		QVector3D bottom = -extent;
-
-		const GLuint topPosition = glGetUniformLocation(m_shaderProgram, "top");
-		glUniform3f(topPosition, top[0], top[1], top[2]);
-		const GLuint bottomPosition = glGetUniformLocation(m_shaderProgram, "bottom");
-		glUniform3f(bottomPosition, bottom[0], bottom[1], bottom[2]);
-
-
-		
-
-		checkShaderProgramLinkStatus(m_shaderProgram);
+		updateFieldOfView();
 	}
-	void RayCastRenderer::rotate(float x, float y)
+	void RayCastRenderer::rotate(float angle, float x, float y, float z)
 	{
-		const QVector3D rotation = QVector3D(x, y, 0.0f);
-		m_modelMatrix.rotate(rotation.length(), rotation);
+		m_modelMatrix.rotate(angle, x, y, z);
 		applyMatrices();
 	}
 	void RayCastRenderer::translate(float x, float y, float z)
 	{
 		m_modelMatrix.translate(x, y, z);
+		applyMatrices();
+	}
+	void RayCastRenderer::scale(float factor)
+	{
+		m_modelMatrix.scale(factor);
 		applyMatrices();
 	}
 	void RayCastRenderer::updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
@@ -223,16 +195,49 @@ namespace VDS {
 	{
 		m_aspectRationOpenGLWindow = ratio;
 
+		glUseProgram(m_shaderProgram);
+
 		const GLuint aspectRatioPosition = glGetUniformLocation(m_shaderProgram, "aspect_ratio");
 		glUniform1f(aspectRatioPosition, m_aspectRationOpenGLWindow);
+
+		glUseProgram(0);
 	}
 	void RayCastRenderer::updateViewPortSize(int width, int heigth)
 	{
 		m_viewportSize[0] = static_cast<float>(width);
 		m_viewportSize[1] = static_cast<float>(heigth);
 
+		glUseProgram(m_shaderProgram);
+
 		const GLuint viewPortSizePosition = glGetUniformLocation(m_shaderProgram, "viewport_size");
 		glUniform2f(viewPortSizePosition, m_viewportSize[0], m_viewportSize[1]);
+
+		glUseProgram(0);
+	}
+	const std::array<float, 3> RayCastRenderer::getPosition() const
+	{
+		// OpenGL is column major
+		return std::array<float, 3>{
+			m_modelMatrix.constData()[3 * 4 + 0],
+			m_modelMatrix.constData()[3 * 4 + 1],
+			m_modelMatrix.constData()[3 * 4 + 2]};
+	}
+	const QMatrix4x4 RayCastRenderer::getModelMatrix() const
+	{
+		return m_modelMatrix;
+	}
+	void RayCastRenderer::updateFieldOfView()
+	{
+		const float projectionMatrixValue1x1 = m_projectionMatrix->constData()[1 * 4 + 1];
+		const float fov = std::atan(1.0f / projectionMatrixValue1x1);
+		const GLfloat focalLength = 1.0f / std::tan(fov);
+
+		glUseProgram(m_shaderProgram);
+
+		const GLuint focalPosition = glGetUniformLocation(m_shaderProgram, "focal_length");
+		glUniform1f(focalPosition, focalLength);
+
+		glUseProgram(0);
 	}
 	void RayCastRenderer::setupBuffers()
 	{
@@ -373,6 +378,22 @@ namespace VDS {
 		return checkShaderProgramLinkStatus(m_shaderProgram);
 	}
 
+	void RayCastRenderer::setAxisAlignedBoundingBox(const QVector3D& extent)
+	{
+		const QVector3D top = extent;
+		const QVector3D bottom = -extent;
+
+
+		glUseProgram(m_shaderProgram);
+
+		const GLuint topPosition = glGetUniformLocation(m_shaderProgram, "top");
+		glUniform3f(topPosition, top[0], top[1], top[2]);
+		const GLuint bottomPosition = glGetUniformLocation(m_shaderProgram, "bottom");
+		glUniform3f(bottomPosition, bottom[0], bottom[1], bottom[2]);
+
+		glUseProgram(0);
+	}
+
 	bool RayCastRenderer::checkShaderCompileStatus(GLuint shader)
 	{
 		GLint isCompiled = 0;
@@ -432,5 +453,8 @@ namespace VDS {
 
 		m_modelMatrix.scale(scaleX, scaleY, scaleZ);
 		applyMatrices();
+
+		const QVector3D extent(scaleX, scaleY, scaleZ);
+		setAxisAlignedBoundingBox(extent);
 	}
 }
