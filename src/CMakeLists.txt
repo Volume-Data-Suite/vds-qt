@@ -23,10 +23,13 @@ add_executable(VDS
 	renderer/shader/shader_code_constants.h
 	renderer/shader/shader_generator.h
 	renderer/shader/shader_generator.cpp
+	renderer/textures/noise_texture_2D.h
+	renderer/textures/noise_texture_2D.cpp
+	renderer/textures/volume_data_3D_texture.h
+	renderer/textures/volume_data_3D_texture.cpp
+	renderer/textures/texture_units.h
 	renderer/raycast_renderer_gl.h
 	renderer/raycast_renderer_gl.cpp
-	renderer/volume_data_3D_texture.h
-	renderer/volume_data_3D_texture.cpp
 
 	widgets/volume_view_GL.h
 	widgets/volume_view_GL.cpp

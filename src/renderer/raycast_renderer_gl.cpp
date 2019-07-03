@@ -15,8 +15,9 @@
 namespace VDS {
 
 	RayCastRenderer::RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix)
-		: m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix)
+		: m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix), m_noiseTexture(10)
 	{
+		//m_initialized = false;
 	}
 
 	RayCastRenderer::~RayCastRenderer()
@@ -26,6 +27,8 @@ namespace VDS {
 	{
 		//renderVolumeBorders();
 		renderVolume();
+
+		m_noiseTexture.updateNoise(8);
 
 #ifdef _DEBUG
 		// check OpenGL error
@@ -57,8 +60,12 @@ namespace VDS {
 		resetModelMatrix();
 
 		m_texture.setup();
+		m_noiseTexture.setup();
+
 		// Resize volume to texture
 		scaleVolumeAndNormalizeSize();
+
+		//m_initialized = true;
 
 		return true;
 	}
@@ -74,11 +81,20 @@ namespace VDS {
 		// Bind volume data
 		glActiveTexture(GLenum(TextureUnits::VolumeData));
 		glBindTexture(GL_TEXTURE_3D, m_texture.getTextureHandle());
+		// Bind noise texture
+		glActiveTexture(GLenum(TextureUnits::JitterNoise));
+		glBindTexture(GL_TEXTURE_2D, m_noiseTexture.getTextureHandle());
 
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
+
+		// Unbind noise texture
+		glBindTexture(GL_TEXTURE_2D, 0);
 		// Unbind volume data
 		glBindTexture(GL_TEXTURE_3D, 0);
+
+		// reset active texture
+		glActiveTexture(GL_TEXTURE0);
 
 		// Unbind vertex data
 		glBindVertexArray(0);
@@ -175,15 +191,14 @@ namespace VDS {
 		m_texture.updateVolumeData(size, spacing, volumeData);
 
 		// update texture for shader program
-		glUseProgram(m_fragmentShader);
+		glUseProgram(m_shaderProgram);
 		// Bind volume data
 		glBindTexture(GL_TEXTURE_3D, m_texture.getTextureHandle());
-		glUniform1i(glGetUniformLocation(m_fragmentShader, "dataTex"), 0);
+		glUniform1i(glGetUniformLocation(m_shaderProgram, "dataTex"), 0);
 		// Unbind volume data
 		glBindTexture(GL_TEXTURE_3D, 0);
 
 		resetModelMatrix();
-
 
 		// unbind shader programm
 		glUseProgram(0);
@@ -191,6 +206,27 @@ namespace VDS {
 		// Resize volume box
 		scaleVolumeAndNormalizeSize();
 	}
+	//void RayCastRenderer::updateNoise(const std::array<uint32_t, 2> size)
+	//{
+	//	if (!m_initialized)
+	//	{
+	//		// if parent OpenGL Window gets resized before the ray caster gets initialized
+	//		return;
+	//	}
+
+	//	m_noiseTexture.updateNoise(size);
+
+	//	// update texture for shader program
+	//	glUseProgram(m_shaderProgram);
+	//	// Bind volume data
+	//	glBindTexture(GL_TEXTURE_2D, m_noiseTexture.getTextureHandle());
+	//	glUniform1i(glGetUniformLocation(m_shaderProgram, "noiseTex"), 0);
+	//	// Unbind volume data
+	//	glBindTexture(GL_TEXTURE_2D, 0);
+
+	//	// unbind shader programm
+	//	glUseProgram(0);
+	//}
 	void RayCastRenderer::updateAspectRation(float ratio)
 	{
 		m_aspectRationOpenGLWindow = ratio;
@@ -213,6 +249,10 @@ namespace VDS {
 		glUniform2f(viewPortSizePosition, m_viewportSize[0], m_viewportSize[1]);
 
 		glUseProgram(0);
+
+		std::array<uint32_t, 2> viewPortSizeInPixel{ width, heigth };
+
+		//updateNoise(viewPortSizeInPixel);
 	}
 	const std::array<float, 3> RayCastRenderer::getPosition() const
 	{

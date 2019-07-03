@@ -7,7 +7,9 @@
 #include <QOpenGLFunctions_4_3_Core>
 
 
-#include "volume_data_3D_texture.h"
+#include "textures/volume_data_3D_texture.h"
+#include "textures/noise_texture_2D.h"
+#include "textures/texture_units.h"
 #include <array>
 
 namespace VDS {
@@ -18,11 +20,6 @@ namespace VDS {
 		Borders,
 	};
 
-	enum class TextureUnits
-	{
-		VolumeData = GL_TEXTURE0,
-		NormalData = GL_TEXTURE1,
-	};
 
 	class RayCastRenderer : public QObject, protected QOpenGLFunctions_4_3_Core
 	{
@@ -71,7 +68,9 @@ namespace VDS {
 		void scaleVolumeAndNormalizeSize();
 
 		void updateFieldOfView();
+		//void updateNoise(const std::array<uint32_t, 2> size);
 		
+		//bool m_initialized;
 
 		// global buffer handles
 		GLuint m_vao_cube_vertices;
@@ -90,6 +89,9 @@ namespace VDS {
 
 		// stores the volume data
 		VolumeData3DTexture m_texture;
+
+		// stores random jitter noise
+		NoiseTexture2D m_noiseTexture;
 
 		float m_aspectRationOpenGLWindow;
 		std::array<float, 2> m_viewportSize;

@@ -1,5 +1,6 @@
 
 #include "volume_data_3D_texture.h"
+#include "texture_units.h"
 
 
 
@@ -12,6 +13,7 @@ namespace VDS
 	}
 	VolumeData3DTexture::~VolumeData3DTexture()
 	{
+		glDeleteTextures(1, &m_texture);
 	}
 	void VolumeData3DTexture::setup()
 	{
@@ -21,6 +23,7 @@ namespace VDS
 		initializeOpenGLFunctions();
 
 		glGenTextures(1, &m_texture);
+		glActiveTexture(GLenum(TextureUnits::VolumeData));
 		glBindTexture(GL_TEXTURE_3D, m_texture);
 
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -32,6 +35,7 @@ namespace VDS
 
 		// unbind
 		glBindTexture(GL_TEXTURE_3D, 0);
+		glActiveTexture(GL_TEXTURE0);
 	}
 	uint32_t VolumeData3DTexture::getSizeX() const
 	{

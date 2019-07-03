@@ -31,6 +31,7 @@ namespace VDS::GLSL
 		"uniform vec3 bottom; \n"
 
 		"uniform sampler3D dataTex; \n"
+		"uniform sampler2D noiseTex; \n"
 
 		"uniform float samples; \n"
 
@@ -95,6 +96,8 @@ namespace VDS::GLSL
 		"float ray_length = length(ray); \n"
 		"vec3 step_vector = step_length * ray / ray_length; \n"
 
+		"// Random jitter \n"
+		"ray_start += step_vector * texture(noiseTex, gl_FragCoord.xy / pow(2,8)).r; \n"
 		
 		"vec3 position = ray_start; \n"
 
@@ -119,6 +122,8 @@ namespace VDS::GLSL
 		"} \n"
 
 		"fragColor.xyz = vec3(maximum_intensity); \n"
+		//"fragColor.xyz = vec3(texture(noiseTex, gl_FragCoord.xy / viewport_size).r); \n"
+		"fragColor.xyz = vec3(texture(noiseTex, gl_FragCoord.xy / pow(2,10)).r); \n"
 		"fragColor.w = 1.0f; \n"
 
 		"} \n";
