@@ -29,7 +29,6 @@ namespace VDS {
 		//renderVolumeBorders();
 		renderVolume();
 
-		m_noiseTexture.updateNoise();
 
 #ifdef _DEBUG
 		// check OpenGL error
@@ -206,8 +205,6 @@ namespace VDS {
 
 		// Resize volume box
 		scaleVolumeAndNormalizeSize();
-
-		updateNoise();
 	}
 	void RayCastRenderer::updateAspectRation(float ratio)
 	{
@@ -232,9 +229,7 @@ namespace VDS {
 
 		glUseProgram(0);
 
-		std::array<uint32_t, 2> viewPortSizeInPixel{ width, heigth };
-
-		//updateNoise(viewPortSizeInPixel);
+		updateNoise();
 	}
 	const std::array<float, 3> RayCastRenderer::getPosition() const
 	{
