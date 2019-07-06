@@ -7,7 +7,7 @@ namespace VDS
 	enum class TextureUnits
 	{
 		VolumeData = GL_TEXTURE0,
-		NormalData = GL_TEXTURE1,
-		JitterNoise = GL_TEXTURE2,
+		JitterNoise = GL_TEXTURE1,
+		NormalData = GL_TEXTURE2,
 	};
 }

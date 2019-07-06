@@ -14,7 +14,7 @@ namespace VDS
 		~NoiseTexture2D();
 
 		void setup();
-		void updateNoise(uint8_t pow2);
+		void updateNoise();
 
 		uint32_t getSizeX() const;
 		uint32_t getSizeY() const;

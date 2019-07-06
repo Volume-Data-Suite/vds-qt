@@ -15,7 +15,7 @@ namespace VDS
 
 		void setup();
 		// need to call setup at least once before the first call of updateVolumeData
-		void updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData);
+		void update(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData);
 
 		uint32_t getSizeX() const;
 		uint32_t getSizeY() const;

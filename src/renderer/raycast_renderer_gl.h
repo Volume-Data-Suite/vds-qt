@@ -9,7 +9,6 @@
 
 #include "textures/volume_data_3D_texture.h"
 #include "textures/noise_texture_2D.h"
-#include "textures/texture_units.h"
 #include <array>
 
 namespace VDS {
@@ -68,6 +67,7 @@ namespace VDS {
 		void scaleVolumeAndNormalizeSize();
 
 		void updateFieldOfView();
+		void updateNoise();
 		//void updateNoise(const std::array<uint32_t, 2> size);
 		
 		//bool m_initialized;
