@@ -45,9 +45,12 @@ namespace VDS {
 
 		void updateViewPortSize(int width, int heigth);
 
+		void updateSampleStepLength(float stepLength);
+
 		const std::array<float, 3> getPosition() const;
 		const QMatrix4x4 getModelMatrix() const;
-
+		// returns the sample step length which is required, if we do not want to skip any voxels
+		const float getMinimalSampleStepLength() const;
 
 	private:
 		void renderVolume();
@@ -68,10 +71,7 @@ namespace VDS {
 
 		void updateFieldOfView();
 		void updateNoise();
-		//void updateNoise(const std::array<uint32_t, 2> size);
 		
-		//bool m_initialized;
-
 		// global buffer handles
 		GLuint m_vao_cube_vertices;
 		GLuint m_vbo_cube_vertices;
@@ -95,5 +95,7 @@ namespace VDS {
 
 		float m_aspectRationOpenGLWindow;
 		std::array<float, 2> m_viewportSize;
+
+		float m_sampleStepLength;
 	};
 }

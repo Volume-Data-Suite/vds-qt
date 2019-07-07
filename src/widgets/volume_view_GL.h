@@ -22,6 +22,8 @@ public:
 
 public slots:
 	void setRenderLoop(bool onlyRerenderOnChange);
+	void setSampleStepLength(double stepLength);
+	void setRecommendedSampleStepLength(int factor);
 
 protected:
 	void initializeGL() override;
@@ -37,6 +39,7 @@ protected:
 
 signals:
 	void updateFrametime(float frameTime, float renderEverything, float volumeRendering);
+	void updateSampleStepLength(double stepLength);
 
 private:
 	void logQSurfaceFormat() const;

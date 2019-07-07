@@ -9,6 +9,8 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 #include <QCheckBox>
+#include <QDoubleSpinBox>
+#include <QComboBox>
 
 
 
@@ -26,11 +28,20 @@ namespace VDS
 		// as long as its not functional
 		ui.groupBoxSliceView->hide();
 
-
+		// connect debug infos
 		connect(ui.volumeViewWidget, &VolumeViewGL::updateFrametime,
 			this, &MainWindow::updateFrametime);
 		connect(ui.checkBoxRenderLoop, &QCheckBox::stateChanged,
 			ui.volumeViewWidget, &VolumeViewGL::setRenderLoop);
+
+		// connect sample step length
+		connect(ui.doubleSpinBoxSampleRate, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged),
+			ui.volumeViewWidget, &VolumeViewGL::setSampleStepLength);
+		connect(ui.comboBoxSampleRateRecommended, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+			ui.volumeViewWidget, &VolumeViewGL::setRecommendedSampleStepLength);
+		connect(ui.volumeViewWidget, &VolumeViewGL::updateSampleStepLength,
+			ui.doubleSpinBoxSampleRate, &QDoubleSpinBox::setValue);
+		
 	}
 
 	void MainWindow::openImportRawDialog()

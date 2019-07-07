@@ -18,7 +18,7 @@ namespace VDS {
 	RayCastRenderer::RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix)
 		: m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix), m_noiseTexture(9)
 	{
-		//m_initialized = false;
+		m_sampleStepLength = 0.01f;
 	}
 
 	RayCastRenderer::~RayCastRenderer()
@@ -65,7 +65,7 @@ namespace VDS {
 		// Resize volume to texture
 		scaleVolumeAndNormalizeSize();
 
-		//m_initialized = true;
+		updateSampleStepLength(m_sampleStepLength);
 
 		return true;
 	}
@@ -231,6 +231,17 @@ namespace VDS {
 
 		updateNoise();
 	}
+	void RayCastRenderer::updateSampleStepLength(float stepLength)
+	{
+		m_sampleStepLength = stepLength;
+
+		glUseProgram(m_shaderProgram);
+
+		const GLuint sampleStepLengthPosition = glGetUniformLocation(m_shaderProgram, "sample_step_length");
+		glUniform1f(sampleStepLengthPosition, m_sampleStepLength);
+
+		glUseProgram(0);
+	}
 	const std::array<float, 3> RayCastRenderer::getPosition() const
 	{
 		// OpenGL is column major
@@ -242,6 +253,11 @@ namespace VDS {
 	const QMatrix4x4 RayCastRenderer::getModelMatrix() const
 	{
 		return m_modelMatrix;
+	}
+	const float RayCastRenderer::getMinimalSampleStepLength() const
+	{
+		const uint32_t longestSide = std::max({m_texture.getSizeX(), m_texture.getSizeY(), m_texture.getSizeZ()});
+		return 1.0f / static_cast<float>(longestSide);
 	}
 	void RayCastRenderer::updateFieldOfView()
 	{

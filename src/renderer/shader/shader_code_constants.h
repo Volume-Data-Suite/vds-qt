@@ -33,7 +33,7 @@ namespace VDS::GLSL
 		"uniform sampler3D dataTex; \n"
 		"uniform sampler2D noiseTex; \n"
 
-		"uniform float samples; \n"
+		"uniform float sample_step_length; \n"
 
 		"out vec4 fragColor; \n"
 
@@ -68,16 +68,6 @@ namespace VDS::GLSL
 
 		"void main() \n"
 		"{ \n"
-		//"	 const vec3 position = vec3(0.5f); \n"
-		//"	 const float dataValue = texture(dataTex, position).x; \n"
-		//"	 fragColor = vec4(vec3(dataValue), 1.0f); //vec4(1.0f); \n"
-
-
-
-		"float step_length = 0.01f; \n"
-
-
-
 		"vec3 ray_direction; \n"
 		"ray_direction.xy = 2.0 * gl_FragCoord.xy / viewport_size - 1.0; \n"
 		"ray_direction.x *= aspect_ratio; \n"
@@ -94,7 +84,7 @@ namespace VDS::GLSL
 
 		"vec3 ray = ray_stop - ray_start; \n"
 		"float ray_length = length(ray); \n"
-		"vec3 step_vector = step_length * ray / ray_length; \n"
+		"vec3 step_vector = sample_step_length * ray / ray_length; \n"
 
 		"// Random jitter \n"
 		"ray_start += step_vector * texture(noiseTex, gl_FragCoord.xy / viewport_size).r; \n"
@@ -105,26 +95,17 @@ namespace VDS::GLSL
 
 		"// Ray march until reaching the end of the volume \n"
 		"while (ray_length > 0) { \n"
-		//"int i = 100; \n"
-		//"while (i > 0) { \n"
-
 		"	float intensity = texture(dataTex, position).r; \n"
 
 		"	if (intensity > maximum_intensity) { \n"
 		"		maximum_intensity = intensity; \n"
 		"	} \n"
 
-		"	ray_length -= step_length; \n"
+		"	ray_length -= sample_step_length; \n"
 		"	position += step_vector; \n"
-
-
-		//"	i -= 1; \n"
 		"} \n"
 
-		//"maximum_intensity = texture(noiseTex, gl_FragCoord.xy / viewport_size).r; \n"
 		"fragColor.xyz = vec3(maximum_intensity); \n"
-		//"fragColor.xyz = vec3(texture(noiseTex, gl_FragCoord.xy / viewport_size).r); \n"
-		//"fragColor.xyz = vec3(texture(noiseTex, gl_FragCoord.xy / pow(2,10) / 2).r); \n"
 		"fragColor.w = 1.0f; \n"
 
 		"} \n";

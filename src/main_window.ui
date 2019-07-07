@@ -75,7 +75,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabSettingsRayCasting">
        <attribute name="title">
@@ -83,14 +83,81 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QPushButton" name="pushButtonResetViewPort">
-          <property name="autoFillBackground">
-           <bool>false</bool>
+         <widget class="QGroupBox" name="groupBoxSampleRate">
+          <property name="title">
+           <string>Sample Rate in Step Length</string>
           </property>
-          <property name="text">
-           <string>Reset Viewport</string>
-          </property>
+          <layout class="QFormLayout" name="formLayout_2">
+           <property name="topMargin">
+            <number>17</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="labelSampleRate">
+             <property name="text">
+              <string>Step Length:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QDoubleSpinBox" name="doubleSpinBoxSampleRate">
+             <property name="decimals">
+              <number>6</number>
+             </property>
+             <property name="minimum">
+              <double>0.000001000000000</double>
+             </property>
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.010000000000000</double>
+             </property>
+             <property name="value">
+              <double>0.010000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="labelSampleRateRecommended">
+             <property name="text">
+              <string>Recommended:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="comboBoxSampleRateRecommended">
+             <item>
+              <property name="text">
+               <string>1x</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>2x</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>3x</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
          </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>

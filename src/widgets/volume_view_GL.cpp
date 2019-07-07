@@ -24,6 +24,9 @@ void VolumeViewGL::updateVolumeData(const std::array<uint32_t, 3> size, const st
 {
 	m_rayCastRenderer.updateVolumeData(size, spacing, volumeData);
 	
+	// set sample step length to 1x optimal samples per ray
+	setRecommendedSampleStepLength(0);
+
 	this->update();
 }
 
@@ -38,6 +41,19 @@ void VolumeViewGL::setRenderLoop(bool onlyRerenderOnChange)
 	{
 		emit updateFrametime(0.0f, 0.0f, 0.0f);
 	}
+}
+
+void VolumeViewGL::setSampleStepLength(double stepLength)
+{
+	m_rayCastRenderer.updateSampleStepLength(static_cast<float>(stepLength));
+	update();
+}
+
+void VolumeViewGL::setRecommendedSampleStepLength(int factor)
+{
+	// factor is the drop down menu index (0 --> 1x, 1 --> 2x, 2 --> 3x, ...)
+	const float stepLenth = m_rayCastRenderer.getMinimalSampleStepLength() / static_cast<float>(factor + 1);
+	emit updateSampleStepLength(static_cast<double>(stepLenth));
 }
 
 void VolumeViewGL::initializeGL()
