@@ -40,28 +40,28 @@ namespace VDS::GLSL
 
 		"// Ray \n"
 		"struct Ray { \n"
-		"vec3 origin; \n"
-		"vec3 direction; \n"
+		"	const vec3 origin; \n"
+		"	const vec3 direction; \n"
 		"}; \n"
 
 		"// Axis-aligned bounding box \n"
 		"struct AABB { \n"
-		"	vec3 top; \n"
-		"	vec3 bottom; \n"
+		"	const vec3 top; \n"
+		"	const vec3 bottom; \n"
 		"}; \n"
 
 
 		"// Slab method for ray-box intersection \n"
 		"void ray_box_intersection(Ray ray, AABB box, out float t_0, out float t_1) \n"
 		"{ \n"
-		"	vec3 direction_inv = 1.0 / ray.direction; \n"
-		"	vec3 t_top = direction_inv * (box.top - ray.origin); \n"
-		"	vec3 t_bottom = direction_inv * (box.bottom - ray.origin); \n"
-		"	vec3 t_min = min(t_top, t_bottom); \n"
+		"	const vec3 direction_inv = 1.0 / ray.direction; \n"
+		"	const vec3 t_top = direction_inv * (box.top - ray.origin); \n"
+		"	const vec3 t_bottom = direction_inv * (box.bottom - ray.origin); \n"
+		"	const vec3 t_min = min(t_top, t_bottom); \n"
 		"	vec2 t = max(t_min.xx, t_min.yz); \n"
 		"	// clamp to zero for the near intersection, since negative values correspond to positions behind the camera \n"
 		"	t_0 = max(0.0, max(t.x, t.y)); \n"
-		"	vec3 t_max = max(t_top, t_bottom); \n"
+		"	const vec3 t_max = max(t_top, t_bottom); \n"
 		"	t = min(t_max.xx, t_max.yz); \n"
 		"	t_1 = min(t.x, t.y); \n"
 		"} \n"
@@ -75,40 +75,40 @@ namespace VDS::GLSL
 		"ray_direction = (vec4(ray_direction, 0) * viewModelMatrix).xyz; \n"
 
 		"float t_0, t_1; \n"
-		"Ray casting_ray = Ray(ray_origin, ray_direction); \n"
-		"AABB bounding_box = AABB(top, bottom); \n"
+		"const Ray casting_ray = Ray(ray_origin, ray_direction); \n"
+		"const AABB bounding_box = AABB(top, bottom); \n"
 		"ray_box_intersection(casting_ray, bounding_box, t_0, t_1); \n"
 
 		"vec3 ray_start = (ray_origin + ray_direction * t_0 - bottom) / (top - bottom); \n"
-		"vec3 ray_stop = (ray_origin + ray_direction * t_1 - bottom) / (top - bottom); \n"
+		"const vec3 ray_stop = (ray_origin + ray_direction * t_1 - bottom) / (top - bottom); \n"
 
 		"vec3 ray = ray_stop - ray_start; \n"
-		"float ray_length = length(ray); \n"
-		"vec3 step_vector = sample_step_length * ray / ray_length; \n"
+		"vec3 step_vector = normalize(ray) * sample_step_length; \n"
 
 		"// Random jitter \n"
 		"ray_start += step_vector * texture(noiseTex, gl_FragCoord.xy / viewport_size).r; \n"
 		
 		"vec3 position = ray_start; \n"
 
-		"float maximum_intensity = 0.0; \n"
-
-		"// Ray march until reaching the end of the volume \n"
-		"while (ray_length > 0) { \n"
-		"	float intensity = texture(dataTex, position).r; \n"
-
-		"	if (intensity > maximum_intensity) { \n"
-		"		maximum_intensity = intensity; \n"
-		"	} \n"
-
-		"	ray_length -= sample_step_length; \n"
-		"	position += step_vector; \n"
-		"} \n"
-
+		"{{ raycastingMethod }} \n"
+			   
 		"fragColor.xyz = vec3(maximum_intensity); \n"
 		"fragColor.w = 1.0f; \n"
 
 		"} \n";
+
+
+	static const std::pair<std::string, std::string> raycastinMethodMID = std::make_pair("{{ raycastingMethod }}", 
+		"float maximum_intensity = 0.0; \n"
+		
+		"const int steps = int(length(ray) / sample_step_length); \n"
+		"// Ray march until reaching the end of the volume \n"
+		"for (int i = 0; i <= steps; i++) { \n"
+		"	maximum_intensity = max(maximum_intensity, texture(dataTex, position).r); \n"
+
+		"	position += step_vector; \n"
+		"} \n"		
+		);
 
 
 

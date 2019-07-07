@@ -9,6 +9,7 @@
 
 #include "textures/volume_data_3D_texture.h"
 #include "textures/noise_texture_2D.h"
+#include "shader/shader_generator.h"
 #include <array>
 
 namespace VDS {
@@ -97,5 +98,7 @@ namespace VDS {
 		std::array<float, 2> m_viewportSize;
 
 		float m_sampleStepLength;
+
+		RaycastShaderSettings m_settings;
 	};
 }

@@ -1,5 +1,4 @@
 #include "raycast_renderer_gl.h"
-#include "shader/shader_generator.h"
 #include "textures/texture_units.h"
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
@@ -405,7 +404,7 @@ namespace VDS {
 
 	bool RayCastRenderer::setupFragmentShader()
 	{
-		const std::string fragmentShaderSource = VDS::ShaderGenerator::getFragmentShaderCode();
+		const std::string fragmentShaderSource = VDS::ShaderGenerator::getFragmentShaderCode(m_settings);
 		const GLchar* const shaderGLSL = fragmentShaderSource.c_str();
 
 		m_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
