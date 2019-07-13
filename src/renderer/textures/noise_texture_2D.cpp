@@ -9,6 +9,7 @@ namespace VDS
 	NoiseTexture2D::NoiseTexture2D(uint8_t pow2)
 	{
 		m_pow2 = pow2;
+		m_texture = 0;
 	}
 	NoiseTexture2D::~NoiseTexture2D()
 	{
@@ -40,11 +41,13 @@ namespace VDS
 
 		GLint viewport[4];
 		glGetIntegerv(GL_VIEWPORT, viewport);
-		const int width = viewport[2];
-		const int height = viewport[3];
+		int width = viewport[2];
+		width += width % 4;
+		int heigth = viewport[3];
+		heigth += heigth % 4;
 
 
-		const uint32_t size = width * height;
+		const uint32_t size = width * heigth;
 
 		static std::uniform_int_distribution<uint16_t> distribution(
 			std::numeric_limits<uint16_t>::min(),
@@ -64,7 +67,7 @@ namespace VDS
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R16, width, height, 0, GL_RED, GL_UNSIGNED_SHORT, noise.data());
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R16, width, heigth, 0, GL_RED, GL_UNSIGNED_SHORT, noise.data());
 
 		// unbind
 		glBindTexture(GL_TEXTURE_2D, 0);
