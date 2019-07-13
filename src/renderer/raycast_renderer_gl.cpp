@@ -156,20 +156,15 @@ namespace VDS {
 
 
 		const QMatrix4x4 projectionViewModelMatrix = *m_projectionMatrix * *m_viewMatrix * (m_rotationMatrix * m_translationMatrix * m_scaleMatrix);
-
-		QMatrix4x4 tmp;
-		tmp.setToIdentity();
-		tmp.scale(QVector3D(1,1,1) / getExtent());
-
-		const QMatrix4x4 viewModelMatrix = *m_viewMatrix * (m_rotationMatrix * m_translationMatrix);
+		const QMatrix4x4 viewModelMatrixWithoutModleScale = *m_viewMatrix * (m_rotationMatrix * m_translationMatrix);
 			   
 		const GLuint projectionViewModelMatrixID = glGetUniformLocation(m_shaderProgram, "projectionViewModelMatrix");
-		const GLuint viewModelMatrixID = glGetUniformLocation(m_shaderProgram, "viewModelMatrix");
+		const GLuint viewModelMatrixWithoutModleScaleID = glGetUniformLocation(m_shaderProgram, "viewModelMatrixWithoutModleScale");
 		glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE, projectionViewModelMatrix.data());
-		glUniformMatrix4fv(viewModelMatrixID, 1, GL_FALSE, viewModelMatrix.data());
+		glUniformMatrix4fv(viewModelMatrixWithoutModleScaleID, 1, GL_FALSE, viewModelMatrixWithoutModleScale.data());
 
 
-		const QVector3D rayOrigin = viewModelMatrix.inverted() * QVector3D({ 0.0, 0.0, 0.0 });
+		const QVector3D rayOrigin = viewModelMatrixWithoutModleScale.inverted() * QVector3D({ 0.0, 0.0, 0.0 });
 
 		const GLuint rayOriginID = glGetUniformLocation(m_shaderProgram, "rayOrigin");
 		glUniform3f(rayOriginID, rayOrigin[0], rayOrigin[1], rayOrigin[2]);
