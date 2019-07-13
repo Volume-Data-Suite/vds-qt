@@ -87,7 +87,11 @@ namespace VDS {
 		// Matrices
 		const QMatrix4x4* const m_projectionMatrix;
 		const QMatrix4x4* const m_viewMatrix;
-		QMatrix4x4 m_modelMatrix;
+		QMatrix4x4 m_rotationMatrix;
+		QMatrix4x4 m_translationMatrix;
+		QMatrix4x4 m_scaleMatrix;
+
+
 
 		// stores the volume data
 		VolumeData3DTexture m_texture;

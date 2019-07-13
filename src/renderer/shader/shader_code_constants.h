@@ -103,20 +103,21 @@ namespace VDS::GLSL
 		
 		"	const int steps = int(length(ray) / sampleStepLength); \n"
 		"	// Ray march until reaching the end of the volume \n"
-		//"	for (int i = 0; i <= steps; i++) { \n"
+		"	for (int i = 0; i <= steps; i++) { \n"
 
-		//"		vec3 tmpPos = position; \n"
-		//"		//tmpPos.x *= 2.0f; \n"
+		"		vec3 tmpPos = position; \n"
+		"		//tmpPos.x *= 2.0f; \n"
 
-		//"		maximum_intensity = max(maximum_intensity, texture(dataTex, tmpPos).r); \n"
+		"		maximum_intensity = max(maximum_intensity, texture(dataTex, tmpPos).r); \n"
 
-		//"		position += step_vector; \n"
-		//"	} \n"
+		"		position += step_vector; \n"
+		"	} \n"
 			   
 		"	bool equal = length(ray) == intersection.y - intersection.x; \n"
 		"	fragColor.xyz = vec3(intersection.y / sqrt(8.0f)); \n"
 		"	if(intersection.x >= intersection.y){ fragColor.xyz = vec3(1, 0,0);} \n"
-		//"	fragColor.xyz = vec3(maximum_intensity); \n"
+		//"	fragColor.xyz = vec3(ray_direction); \n"
+		"	fragColor.xyz = vec3(maximum_intensity); \n"
 		"	fragColor.w = 1.0f; \n"
 		);
 

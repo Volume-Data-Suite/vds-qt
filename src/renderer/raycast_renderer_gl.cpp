@@ -145,7 +145,9 @@ namespace VDS {
 	}
 	void RayCastRenderer::resetModelMatrix()
 	{
-		m_modelMatrix.setToIdentity();
+		m_rotationMatrix.setToIdentity();
+		m_translationMatrix.setToIdentity();
+		m_scaleMatrix.setToIdentity();
 		applyMatrices();
 	}
 	void RayCastRenderer::applyMatrices()
@@ -153,8 +155,13 @@ namespace VDS {
 		glUseProgram(m_shaderProgram);
 
 
-		const QMatrix4x4 projectionViewModelMatrix = *m_projectionMatrix * *m_viewMatrix * m_modelMatrix;
-		const QMatrix4x4 viewModelMatrix = *m_viewMatrix * m_modelMatrix;
+		const QMatrix4x4 projectionViewModelMatrix = *m_projectionMatrix * *m_viewMatrix * (m_rotationMatrix * m_translationMatrix * m_scaleMatrix);
+
+		QMatrix4x4 tmp;
+		tmp.setToIdentity();
+		tmp.scale(QVector3D(1,1,1) / getExtent());
+
+		const QMatrix4x4 viewModelMatrix = *m_viewMatrix * (m_rotationMatrix * m_translationMatrix);
 			   
 		const GLuint projectionViewModelMatrixID = glGetUniformLocation(m_shaderProgram, "projectionViewModelMatrix");
 		const GLuint viewModelMatrixID = glGetUniformLocation(m_shaderProgram, "viewModelMatrix");
@@ -174,17 +181,17 @@ namespace VDS {
 	}
 	void RayCastRenderer::rotate(float angle, float x, float y, float z)
 	{
-		m_modelMatrix.rotate(angle, x, y, z);
+		m_rotationMatrix.rotate(angle, x, y, z);
 		applyMatrices();
 	}
 	void RayCastRenderer::translate(float x, float y, float z)
 	{
-		m_modelMatrix.translate(x, y, z);
+		m_translationMatrix.translate(x, y, z);
 		applyMatrices();
 	}
 	void RayCastRenderer::scale(float factor)
 	{
-		m_modelMatrix.scale(factor);
+		m_scaleMatrix.scale(factor);
 		applyMatrices();
 	}
 	void RayCastRenderer::updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
@@ -245,15 +252,17 @@ namespace VDS {
 	}
 	const std::array<float, 3> RayCastRenderer::getPosition() const
 	{
+		const QMatrix4x4 modelMatrix = m_rotationMatrix * m_translationMatrix * m_scaleMatrix;
+
 		// OpenGL is column major
 		return std::array<float, 3>{
-			m_modelMatrix.constData()[3 * 4 + 0],
-			m_modelMatrix.constData()[3 * 4 + 1],
-			m_modelMatrix.constData()[3 * 4 + 2]};
+			modelMatrix.constData()[3 * 4 + 0],
+			modelMatrix.constData()[3 * 4 + 1],
+			modelMatrix.constData()[3 * 4 + 2]};
 	}
 	const QMatrix4x4 RayCastRenderer::getModelMatrix() const
 	{
-		return m_modelMatrix;
+		return m_rotationMatrix * m_translationMatrix * m_scaleMatrix;
 	}
 	const float RayCastRenderer::getMinimalSampleStepLength() const
 	{
@@ -306,15 +315,15 @@ namespace VDS {
 	{
 		GLfloat vertices[] = {
 			// front
-			-1.0f, -1.0f,  1.0f, // 0
-			1.0f, -1.0f,  1.0f, // 1
-			1.0f,  1.0f,  1.0f, // 2
-			-1.0f,  1.0f,  1.0f, // 3
+			-1.0f,	-1.0f,	1.0f, // 0
+			1.0f,	-1.0f,	1.0f, // 1
+			1.0f,	1.0f,	1.0f, // 2
+			-1.0f,	1.0f,	1.0f, // 3
 			// back
-			-1.0f, -1.0f, -1.0f, // 4
-			1.0f, -1.0f, -1.0f, // 5
-			1.0f,  1.0f, -1.0f, // 6
-			-1.0f,  1.0f, -1.0  // 7
+			-1.0f,	-1.0f,	-1.0f, // 4
+			1.0f,	-1.0f,	-1.0f, // 5
+			1.0f,	1.0f,	-1.0f, // 6
+			-1.0f,	1.0f,	-1.0  // 7
 		};
 		GLuint indices_cube[] = {
 			// front
@@ -457,9 +466,18 @@ namespace VDS {
 
 	void RayCastRenderer::setAxisAlignedBoundingBox(const QVector3D& extent)
 	{
+		//float mini = std::min({ extent.x(), extent.y(), extent.z() });
+
+		//QVector3D tmp = extent / mini;
+
+		//QVector3D tmp(2, 2, 3);
+
+		//const QVector3D top = tmp;
+		//const QVector3D bottom = -tmp;
+
 		const QVector3D top = extent;
 		const QVector3D bottom = -extent;
-
+		
 
 		glUseProgram(m_shaderProgram);
 
@@ -520,7 +538,7 @@ namespace VDS {
 	{
 		const QVector3D extent = getExtent();
 
-		m_modelMatrix.scale(extent);
+		m_scaleMatrix.scale(extent);
 		applyMatrices();
 
 		setAxisAlignedBoundingBox(extent);
