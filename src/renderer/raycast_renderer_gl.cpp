@@ -288,6 +288,20 @@ namespace VDS {
 		// unbind shader programm
 		glUseProgram(0);
 	}
+	const QVector3D RayCastRenderer::getExtent() const
+	{
+		const float xInCentiMeter = m_texture.getSizeX() * m_texture.getSpacingX();
+		const float yInCentiMeter = m_texture.getSizeY() * m_texture.getSpacingY();
+		const float zInCentiMeter = m_texture.getSizeZ() * m_texture.getSpacingZ();
+
+		const float longestSide = std::max({ xInCentiMeter, yInCentiMeter, zInCentiMeter });
+
+		const float scaleX = xInCentiMeter / longestSide;
+		const float scaleY = yInCentiMeter / longestSide;
+		const float scaleZ = zInCentiMeter / longestSide;
+
+		return QVector3D(scaleX, scaleY, scaleZ);
+	}
 	void RayCastRenderer::setupBuffers()
 	{
 		GLfloat vertices[] = {
@@ -504,20 +518,11 @@ namespace VDS {
 	}
 	void RayCastRenderer::scaleVolumeAndNormalizeSize()
 	{
-		const float xInCentiMeter = m_texture.getSizeX() * m_texture.getSpacingX();
-		const float yInCentiMeter = m_texture.getSizeY() * m_texture.getSpacingY();
-		const float zInCentiMeter = m_texture.getSizeZ() * m_texture.getSpacingZ();
+		const QVector3D extent = getExtent();
 
-		const float longestSide = std::max({ xInCentiMeter, yInCentiMeter, zInCentiMeter });
-
-		const float scaleX = xInCentiMeter / longestSide;
-		const float scaleY = yInCentiMeter / longestSide;
-		const float scaleZ = zInCentiMeter / longestSide;
-
-		m_modelMatrix.scale(scaleX, scaleY, scaleZ);
+		m_modelMatrix.scale(extent);
 		applyMatrices();
 
-		const QVector3D extent(scaleX, scaleY, scaleZ);
 		setAxisAlignedBoundingBox(extent);
 	}
 }

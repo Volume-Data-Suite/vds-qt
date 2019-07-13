@@ -72,6 +72,7 @@ namespace VDS {
 
 		void updateFieldOfView();
 		void updateNoise();
+		const QVector3D getExtent() const;
 		
 		// global buffer handles
 		GLuint m_vao_cube_vertices;

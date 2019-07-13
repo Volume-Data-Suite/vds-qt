@@ -21,7 +21,6 @@ namespace VDS::GLSL
 		glslVersion.first + "\n"
 
 		"uniform mat4 viewModelMatrix; \n"
-		"uniform mat4 projectionViewModelMatrix; \n"
 
 		"uniform float focalLength; \n"
 		"uniform float aspectRatio; \n"
@@ -36,59 +35,63 @@ namespace VDS::GLSL
 		"uniform float sampleStepLength; \n"
 
 		"out vec4 fragColor; \n"
+			   
+		"vec2 intersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) { \n"
+		"	vec3 tMin = (boxMin - rayOrigin) / rayDir; \n"
+		"	vec3 tMax = (boxMax - rayOrigin) / rayDir; \n"
 
 
-		"// Ray \n"
-		"struct Ray { \n"
-		"	vec3 origin; \n"
-		"	vec3 direction; \n"
+		//"	vec3 tMin = (-vec3(1,0.5,1) - rayOrigin) / rayDir; \n"
+		//"	vec3 tMax = (vec3(1,0.5,1) - rayOrigin) / rayDir; \n"
+
+		"	vec3 t1 = min(tMin, tMax); \n"
+		"	vec3 t2 = max(tMin, tMax); \n"
+		"	float tNear = max(max(t1.x, t1.y), t1.z); \n"
+		"	float tFar = min(min(t2.x, t2.y), t2.z); \n"
+		"	return vec2(tNear, tFar); \n"
 		"}; \n"
-
-		"// Axis-aligned bounding box \n"
-		"struct AABB { \n"
-		"	vec3 top; \n"
-		"	vec3 bottom; \n"
-		"}; \n"
-
-
-		"// Slab method for ray-box intersection \n"
-		"void RayBoxIntersection(const Ray ray, const AABB box, out float nearIntersectionPoint, out float farIntersectionPoint) \n"
-		"{ \n"
-		"	const vec3 invertedDirection = 1.0 / ray.direction; \n"
-		"	const vec3 t_top = invertedDirection * (box.top - ray.origin); \n"
-		"	const vec3 t_bottom = invertedDirection * (box.bottom - ray.origin); \n"
-		"	const vec3 t_min = min(t_top, t_bottom); \n"
-		"	vec2 t = max(t_min.xx, t_min.yz); \n"
-		"	// clamp to zero for the near intersection, since negative values correspond to positions behind the camera \n"
-		"	nearIntersectionPoint = max(0.0, max(t.x, t.y)); \n"
-		"	const vec3 t_max = max(t_top, t_bottom); \n"
-		"	t = min(t_max.xx, t_max.yz); \n"
-		"	farIntersectionPoint = min(t.x, t.y); \n"
-		"} \n"
+		
 
 		"void main() \n"
 		"{ \n"
 		"	vec3 ray_direction; \n"
-		"	ray_direction.xy = 2.0 * gl_FragCoord.xy / viewportSize - 1.0; \n"
+		"	ray_direction.xy = (2.0 * gl_FragCoord.xy / viewportSize - 1.0); \n"
 		"	ray_direction.x *= aspectRatio; \n"
 		"	ray_direction.z = -focalLength; \n"
 		"	ray_direction = (vec4(ray_direction, 0) * viewModelMatrix).xyz; \n"
 
-		"	float nearIntersectionPoint, farIntersectionPoint; \n"
-		"	const Ray casting_ray = Ray(rayOrigin, ray_direction); \n"
-		"	const AABB bounding_box = AABB(topAABB, bottomAABB); \n"
-		"	RayBoxIntersection(casting_ray, bounding_box, nearIntersectionPoint, farIntersectionPoint); \n"
 
-		"	vec3 ray_start = (rayOrigin + ray_direction * nearIntersectionPoint - bottomAABB) / (topAABB - bottomAABB); \n"
-		"	const vec3 ray_stop = (rayOrigin + ray_direction * farIntersectionPoint - bottomAABB) / (topAABB - bottomAABB); \n"
+
+		// scale the AABB to the volume scale. gets reverted before for the ray_direction
+		"	vec3 scale = topAABB; \n"
+		"	const vec2 intersection = intersectAABB(rayOrigin, ray_direction, bottomAABB, topAABB); \n"
+
+
+		"	vec3 ray_start = (rayOrigin + ray_direction * intersection.x + topAABB) / (topAABB - bottomAABB); \n"
+		"	vec3 ray_stop = (rayOrigin + ray_direction * intersection.y + topAABB) / (topAABB - bottomAABB); \n"
+
+
+
+
+		//"	const vec2 intersection = intersectAABB(rayOrigin, ray_direction, bottomAABB, topAABB); \n"
+
+		//"	vec3 ray_start = (rayOrigin + ray_direction * intersection.x + topAABB) / (topAABB - bottomAABB); \n"
+		//"	vec3 ray_stop = (rayOrigin + ray_direction * intersection.y + topAABB) / (topAABB - bottomAABB); \n"
+
+
+
+		//"	ray_start = mapToRange(ray_start, bottomAABB, topAABB, vec3(0.0f), vec3(1.0f)); \n"
+		//"	ray_stop = mapToRange(ray_stop, bottomAABB, topAABB, vec3(0.0f), vec3(1.0f)); \n"
+
+
+
+
 
 		"	vec3 ray = ray_stop - ray_start; \n"
 		"	vec3 step_vector = normalize(ray) * sampleStepLength; \n"
 
-		"	// Random jitter \n"
-		"	ray_start += step_vector * texture(noiseTex, gl_FragCoord.xy / viewportSize).r; \n"
-		
-		"	vec3 position = ray_start; \n"
+		"	// Random jitter \n"		
+		"	vec3 position = ray_start + step_vector * texture(noiseTex, gl_FragCoord.xy / viewportSize).r; \n"
 
 		"{{ raycastingMethod }} \n"
 
@@ -100,17 +103,20 @@ namespace VDS::GLSL
 		
 		"	const int steps = int(length(ray) / sampleStepLength); \n"
 		"	// Ray march until reaching the end of the volume \n"
-		"	for (int i = 0; i <= steps; i++) { \n"
+		//"	for (int i = 0; i <= steps; i++) { \n"
 
-		"		vec3 tmpPos = position; \n"
-		"		//tmpPos.x *= 2.0f; \n"
+		//"		vec3 tmpPos = position; \n"
+		//"		//tmpPos.x *= 2.0f; \n"
 
-		"		maximum_intensity = max(maximum_intensity, texture(dataTex, tmpPos).r); \n"
+		//"		maximum_intensity = max(maximum_intensity, texture(dataTex, tmpPos).r); \n"
 
 		//"		position += step_vector; \n"
-		"	} \n"
+		//"	} \n"
 			   
-		"	fragColor.xyz = vec3(position); \n"
+		"	bool equal = length(ray) == intersection.y - intersection.x; \n"
+		"	fragColor.xyz = vec3(intersection.y / sqrt(8.0f)); \n"
+		"	if(intersection.x >= intersection.y){ fragColor.xyz = vec3(1, 0,0);} \n"
+		//"	fragColor.xyz = vec3(maximum_intensity); \n"
 		"	fragColor.w = 1.0f; \n"
 		);
 
