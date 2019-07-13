@@ -152,7 +152,7 @@ namespace VDS
 
 	void MainWindow::updateVolumeData()
 	{
-		const std::array<uint32_t, 3> size = { 
+		const std::array<std::size_t, 3> size = {
 			m_vdh.getVolumeData().getSize().getX(),
 			m_vdh.getVolumeData().getSize().getY(),
 			m_vdh.getVolumeData().getSize().getZ()

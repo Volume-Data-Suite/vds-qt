@@ -1,7 +1,7 @@
 
 #include "shader_generator.h"
 #include "shader_code_constants.h"
-
+#include <stdexcept>
 
 namespace VDS
 {
@@ -38,6 +38,10 @@ namespace VDS
 			break;
 		}
 		case VDS::RayCastMethods::LMIP:
+		{
+			shader.replace(shader.find(GLSL::raycastinMethodLMID.first), GLSL::raycastinMethodLMID.first.length(), GLSL::raycastinMethodLMID.second);
+			break;
+		}
 		case VDS::RayCastMethods::FirstHit:
 		case VDS::RayCastMethods::Accumulate:
 		case VDS::RayCastMethods::Average:

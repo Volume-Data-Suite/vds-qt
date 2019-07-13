@@ -58,7 +58,9 @@ namespace VDS {
 
 		resetModelMatrix();
 
-		m_texture.setup();
+		const std::array<std::size_t, 3> volumeSize = { 1, 1, 1 };
+		const std::array<float, 3> volumeSpacing = { 1.0f, 1.0f, 1.0f };
+		m_texture.setup(volumeSize, volumeSpacing);
 		m_noiseTexture.setup();
 
 		// Resize volume to texture
@@ -162,7 +164,7 @@ namespace VDS {
 
 		const QVector3D rayOrigin = viewModelMatrix.inverted() * QVector3D({ 0.0, 0.0, 0.0 });
 
-		const GLuint rayOriginID = glGetUniformLocation(m_shaderProgram, "ray_origin");
+		const GLuint rayOriginID = glGetUniformLocation(m_shaderProgram, "rayOrigin");
 		glUniform3f(rayOriginID, rayOrigin[0], rayOrigin[1], rayOrigin[2]);
 	
 		
@@ -185,7 +187,7 @@ namespace VDS {
 		m_modelMatrix.scale(factor);
 		applyMatrices();
 	}
-	void RayCastRenderer::updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
+	void RayCastRenderer::updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
 	{
 		m_texture.update(size, spacing, volumeData);
 
@@ -211,7 +213,7 @@ namespace VDS {
 
 		glUseProgram(m_shaderProgram);
 
-		const GLuint aspectRatioPosition = glGetUniformLocation(m_shaderProgram, "aspect_ratio");
+		const GLuint aspectRatioPosition = glGetUniformLocation(m_shaderProgram, "aspectRatio");
 		glUniform1f(aspectRatioPosition, m_aspectRationOpenGLWindow);
 
 		glUseProgram(0);
@@ -223,7 +225,7 @@ namespace VDS {
 
 		glUseProgram(m_shaderProgram);
 
-		const GLuint viewPortSizePosition = glGetUniformLocation(m_shaderProgram, "viewport_size");
+		const GLuint viewPortSizePosition = glGetUniformLocation(m_shaderProgram, "viewportSize");
 		glUniform2f(viewPortSizePosition, m_viewportSize[0], m_viewportSize[1]);
 
 		glUseProgram(0);
@@ -236,7 +238,7 @@ namespace VDS {
 
 		glUseProgram(m_shaderProgram);
 
-		const GLuint sampleStepLengthPosition = glGetUniformLocation(m_shaderProgram, "sample_step_length");
+		const GLuint sampleStepLengthPosition = glGetUniformLocation(m_shaderProgram, "sampleStepLength");
 		glUniform1f(sampleStepLengthPosition, m_sampleStepLength);
 
 		glUseProgram(0);
@@ -255,7 +257,7 @@ namespace VDS {
 	}
 	const float RayCastRenderer::getMinimalSampleStepLength() const
 	{
-		const uint32_t longestSide = std::max({m_texture.getSizeX(), m_texture.getSizeY(), m_texture.getSizeZ()});
+		const std::size_t longestSide = std::max({m_texture.getSizeX(), m_texture.getSizeY(), m_texture.getSizeZ()});
 		return 1.0f / static_cast<float>(longestSide);
 	}
 	void RayCastRenderer::updateFieldOfView()
@@ -266,7 +268,7 @@ namespace VDS {
 
 		glUseProgram(m_shaderProgram);
 
-		const GLuint focalPosition = glGetUniformLocation(m_shaderProgram, "focal_length");
+		const GLuint focalPosition = glGetUniformLocation(m_shaderProgram, "focalLength");
 		glUniform1f(focalPosition, focalLength);
 
 		glUseProgram(0);
@@ -399,7 +401,14 @@ namespace VDS {
 		glShaderSource(m_vertexShader, 1, &shaderGLSL, NULL);
 		glCompileShader(m_vertexShader);
 		
-		return checkShaderCompileStatus(m_vertexShader);
+		bool compileStatus = checkShaderCompileStatus(m_vertexShader);
+
+		if (!compileStatus)
+		{
+			qDebug() << vertexShaderSource.c_str();
+		}
+
+		return compileStatus;
 	}
 
 	bool RayCastRenderer::setupFragmentShader()
@@ -411,7 +420,14 @@ namespace VDS {
 		glShaderSource(m_fragmentShader, 1, &shaderGLSL, NULL);
 		glCompileShader(m_fragmentShader);
 
-		return checkShaderCompileStatus(m_fragmentShader);
+		bool compileStatus = checkShaderCompileStatus(m_fragmentShader);
+
+		if (!compileStatus)
+		{
+			qDebug() << fragmentShaderSource.c_str();
+		}
+
+		return compileStatus;
 	}
 
 	bool RayCastRenderer::setupShaderProgram()
@@ -433,9 +449,9 @@ namespace VDS {
 
 		glUseProgram(m_shaderProgram);
 
-		const GLuint topPosition = glGetUniformLocation(m_shaderProgram, "top");
+		const GLuint topPosition = glGetUniformLocation(m_shaderProgram, "topAABB");
 		glUniform3f(topPosition, top[0], top[1], top[2]);
-		const GLuint bottomPosition = glGetUniformLocation(m_shaderProgram, "bottom");
+		const GLuint bottomPosition = glGetUniformLocation(m_shaderProgram, "bottomAABB");
 		glUniform3f(bottomPosition, bottom[0], bottom[1], bottom[2]);
 
 		glUseProgram(0);

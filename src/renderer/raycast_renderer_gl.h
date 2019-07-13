@@ -39,7 +39,7 @@ namespace VDS {
 		void scale(float factor);
 		void resetModelMatrix();
 
-		void updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData);
+		void updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData);
 
 		// TODO: Dont need a function for that. get the data from projection matrix on projection matrix update
 		void updateAspectRation(float ratio);

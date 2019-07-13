@@ -20,7 +20,7 @@ VolumeViewGL::VolumeViewGL(QWidget *parent) : QOpenGLWidget(parent), m_rayCastRe
 	m_rotationSpeed = 200.0f;
 }
 
-void VolumeViewGL::updateVolumeData(const std::array<uint32_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
+void VolumeViewGL::updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing, const std::vector<uint16_t>& volumeData)
 {
 	m_rayCastRenderer.updateVolumeData(size, spacing, volumeData);
 	
@@ -89,6 +89,8 @@ void VolumeViewGL::initializeGL()
 
 void VolumeViewGL::resizeGL(int w, int h)
 {
+	glViewport(0, 0, w, h);
+	
 	const float aspectRatio = static_cast<float>(w) / static_cast<float>(h);
 
 	setProjectionMatrix(aspectRatio);
