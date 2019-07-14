@@ -44,14 +44,26 @@ namespace VDS {
 		// TODO: Dont need a function for that. get the data from projection matrix on projection matrix update
 		void updateAspectRation(float ratio);
 
-		void updateViewPortSize(int width, int heigth);
+		void updateViewPortSize(float width, float heigth);
 
 		void updateSampleStepLength(float stepLength);
+		void updateThreshold(float threshold);
+
+		void applyValueWindow(bool active);
+		void updateValueWindowWidth(float windowWidth);
+		void updateValueWindowCenter(float windowCenter);
+		void updateValueWindowOffset(float windowOffset);
+
+		void setRayCastMethod(int method);
 
 		const std::array<float, 3> getPosition() const;
 		const QMatrix4x4 getModelMatrix() const;
 		// returns the sample step length which is required, if we do not want to skip any voxels
 		const float getMinimalSampleStepLength() const;
+
+		void setBoundingBoxColor(const std::array<float, 4>& color);
+
+		void setBoundingBoxRenderStatus(bool active);
 
 	private:
 		void renderVolume();
@@ -60,10 +72,17 @@ namespace VDS {
 
 		void setupBuffers();
 		void setupVertexArray(RenderModes renderMode);
-		bool setupVertexShader();
-		bool setupFragmentShader();
-		bool setupShaderProgram();
-		void setAxisAlignedBoundingBox(const QVector3D& extent);
+		bool setupVertexShaderRayCasting();
+		bool setupFragmentShaderRayCasting();
+		bool setupShaderProgramRayCasting();
+
+		bool generateRaycastShaderProgram();
+
+		bool setupVertexShaderBoundingBox();
+		bool setupFragmentShaderBoundingBox();
+		bool setupShaderProgramBoundingBox();
+
+		void setAxisAlignedBoundingBox(const std::array<float, 3>& extent);
 
 		bool checkShaderCompileStatus(GLuint shader);
 		bool checkShaderProgramLinkStatus(GLuint shaderProgram);
@@ -72,7 +91,6 @@ namespace VDS {
 
 		void updateFieldOfView();
 		void updateNoise();
-		const QVector3D getExtent() const;
 		
 		// global buffer handles
 		GLuint m_vao_cube_vertices;
@@ -80,9 +98,13 @@ namespace VDS {
 		GLuint m_ibo_cube_elements;
 		GLuint m_ibo_cube_lines_elements;
 		// global shader hanldes
-		GLuint m_vertexShader;
-		GLuint m_fragmentShader;
-		GLuint m_shaderProgram;
+		GLuint m_vertexShaderRayCasting;
+		GLuint m_fragmentShaderRayCasting;
+		GLuint m_shaderProgramRayCasting;
+		// bounding box shader handles
+		GLuint m_vertexShaderBoundingBox;
+		GLuint m_fragmentShaderBoundingBox;
+		GLuint m_shaderProgramBoundingBox;
 
 		// Matrices
 		const QMatrix4x4* const m_projectionMatrix;
@@ -99,11 +121,8 @@ namespace VDS {
 		// stores random jitter noise
 		NoiseTexture2D m_noiseTexture;
 
-		float m_aspectRationOpenGLWindow;
-		std::array<float, 2> m_viewportSize;
-
-		float m_sampleStepLength;
-
 		RaycastShaderSettings m_settings;
+
+		bool m_renderBoundingBox;
 	};
 }

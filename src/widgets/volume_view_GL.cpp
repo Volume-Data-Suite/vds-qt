@@ -8,7 +8,7 @@
 VolumeViewGL::VolumeViewGL(QWidget *parent) : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix)
 {
 	setProjectionMatrix(1.0f);
-	setViewMatrix();
+	resetViewMatrix();
 
 	m_leftButtonPressed = false;
 	m_prevPos = {};
@@ -26,6 +26,9 @@ void VolumeViewGL::updateVolumeData(const std::array<std::size_t, 3> size, const
 	
 	// set sample step length to 1x optimal samples per ray
 	setRecommendedSampleStepLength(0);
+
+	resetViewMatrix();
+	m_rayCastRenderer.applyMatrices();
 
 	this->update();
 }
@@ -49,11 +52,29 @@ void VolumeViewGL::setSampleStepLength(double stepLength)
 	update();
 }
 
+void VolumeViewGL::setThreshold(double threshold)
+{
+	m_rayCastRenderer.updateThreshold(threshold);
+	update();
+}
+
 void VolumeViewGL::setRecommendedSampleStepLength(int factor)
 {
 	// factor is the drop down menu index (0 --> 1x, 1 --> 2x, 2 --> 3x, ...)
 	const float stepLenth = m_rayCastRenderer.getMinimalSampleStepLength() / static_cast<float>(factor + 1);
 	emit updateSampleStepLength(static_cast<double>(stepLenth));
+}
+
+void VolumeViewGL::setRaycastMethod(int method)
+{
+	m_rayCastRenderer.setRayCastMethod(method);
+	update();
+}
+
+void VolumeViewGL::applyValueWindow(bool active)
+{
+	m_rayCastRenderer.applyValueWindow(active);
+	update();
 }
 
 void VolumeViewGL::initializeGL()
@@ -80,11 +101,9 @@ void VolumeViewGL::initializeGL()
 
 	glClearDepth(1.0f);
 	// Change the reference of the GL_COLOR_BUFFER_BIT
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-	m_rayCastRenderer.setup();
-	m_viewMatrix.translate(0.0f, 0.0f, -0.2f);
-	
+	m_rayCastRenderer.setup();	
 }
 
 void VolumeViewGL::resizeGL(int w, int h)
@@ -96,7 +115,7 @@ void VolumeViewGL::resizeGL(int w, int h)
 	setProjectionMatrix(aspectRatio);
 	m_rayCastRenderer.applyMatrices();
 	m_rayCastRenderer.updateAspectRation(aspectRatio);
-	m_rayCastRenderer.updateViewPortSize(w, h);
+	m_rayCastRenderer.updateViewPortSize(static_cast<float>(w), static_cast<float>(h));
 }
 
 void VolumeViewGL::paintGL()
@@ -234,7 +253,7 @@ void VolumeViewGL::setProjectionMatrix(float aspectRatio)
 	m_projectionMatrix.setToIdentity();
 	m_projectionMatrix.perspective(verticalAngle, aspectRatio, nearPlane, farPlane);
 }
-void VolumeViewGL::setViewMatrix()
+void VolumeViewGL::resetViewMatrix()
 {
 	// Where is the camera
 	constexpr QVector3D eye(0.0, 0.0, 2.0);
@@ -245,6 +264,7 @@ void VolumeViewGL::setViewMatrix()
 
 	m_viewMatrix.setToIdentity();
 	m_viewMatrix.lookAt(eye, lookAt, up);
+	m_viewMatrix.translate(0.0f, 0.0f, -0.2f);
 }
 
 QVector3D VolumeViewGL::getArcBallVector(QPoint p)

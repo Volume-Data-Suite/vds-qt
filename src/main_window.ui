@@ -143,6 +143,65 @@
              </item>
             </widget>
            </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="labelThreshold">
+             <property name="text">
+              <string>Threshold:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="doubleSpinBoxThreshold">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="maximum">
+              <double>1.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.001000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QSlider" name="horizontalSliderThreshold">
+             <property name="maximum">
+              <number>1000</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="labelShaderMethod">
+             <property name="text">
+              <string>Shader Method:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QComboBox" name="comboBoxShaderMethod">
+             <item>
+              <property name="text">
+               <string>MIP</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>LMIP</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>First Hit</string>
+              </property>
+             </item>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -165,7 +224,90 @@
        <attribute name="title">
         <string>Volume Data</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_2"/>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QGroupBox" name="groupBoxApplyWindow">
+          <property name="title">
+           <string>Value Window</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <layout class="QFormLayout" name="formLayout_3">
+           <property name="topMargin">
+            <number>18</number>
+           </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="labelApplyWindowValueWindowWidth">
+             <property name="text">
+              <string>Window Width:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="spinBoxApplyWindowValueWindowWidth">
+             <property name="maximum">
+              <number>65535</number>
+             </property>
+             <property name="value">
+              <number>450</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="labelApplyWindowValueWindowCenter">
+             <property name="text">
+              <string>Window Center:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="spinBoxApplyWindowValueWindowCenter">
+             <property name="maximum">
+              <number>65535</number>
+             </property>
+             <property name="value">
+              <number>40</number>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="labelApplyWindowValueWindowOffset">
+             <property name="text">
+              <string>Window Offset</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="spinBoxApplyWindowValueWindowOffset">
+             <property name="minimum">
+              <number>-65535</number>
+             </property>
+             <property name="maximum">
+              <number>65535</number>
+             </property>
+             <property name="value">
+              <number>-1000</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QPushButton" name="pushButtonApplyWindow">
+             <property name="autoFillBackground">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Bake In</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="tabDebugInformation">
        <attribute name="title">

@@ -11,6 +11,8 @@
 #include <QCheckBox>
 #include <QDoubleSpinBox>
 #include <QComboBox>
+#include <QSlider>
+#include <QGroupBox>
 
 
 
@@ -41,7 +43,18 @@ namespace VDS
 			ui.volumeViewWidget, &VolumeViewGL::setRecommendedSampleStepLength);
 		connect(ui.volumeViewWidget, &VolumeViewGL::updateSampleStepLength,
 			ui.doubleSpinBoxSampleRate, &QDoubleSpinBox::setValue);
+
+		// connect threshold
+		connect(ui.horizontalSliderThreshold, &QSlider::valueChanged,
+			this, &MainWindow::updateThresholdFromSlider);
 		
+		// connect raycast method
+		connect(ui.comboBoxShaderMethod, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+			ui.volumeViewWidget, &VolumeViewGL::setRaycastMethod);
+
+		// connect value window
+		connect(ui.groupBoxApplyWindow, &QGroupBox::toggled,
+			ui.volumeViewWidget, &VolumeViewGL::applyValueWindow);
 	}
 
 	void MainWindow::openImportRawDialog()
@@ -150,6 +163,14 @@ namespace VDS
 		ui.labelFrameTimeVolumeValue->setText(QString::fromStdString(std::to_string(volumeRendering) + " ms"));
 	}
 
+	void MainWindow::updateThresholdFromSlider(int threshold)
+	{
+		double thresholdValue = static_cast<double>(threshold) / 1000.0;
+
+		ui.doubleSpinBoxThreshold->setValue(thresholdValue);
+		ui.volumeViewWidget->setThreshold(thresholdValue);
+	}
+
 	void MainWindow::updateVolumeData()
 	{
 		const std::array<std::size_t, 3> size = {
@@ -170,7 +191,7 @@ namespace VDS
 	void MainWindow::setupFileMenu()
 	{
 		m_menuFiles = new QMenu(ui.menuBar);
-		m_menuFiles->setTitle(QString("Files"));
+		m_menuFiles->setTitle(QString("File"));
 		ui.menuBar->addMenu(m_menuFiles);
 
 		m_actionImportRAW3D = new QAction(m_menuFiles);

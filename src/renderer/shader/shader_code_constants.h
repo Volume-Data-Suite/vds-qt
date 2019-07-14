@@ -33,9 +33,14 @@ namespace VDS::GLSL
 		"uniform sampler2D noiseTex; \n"
 
 		"uniform float sampleStepLength; \n"
+		"uniform float threshold; \n"
+
+		"uniform float valueWindowWidth; \n"
+		"uniform float valueWindowCenter; \n"
+		"uniform float valueWindowOffset; \n"
 
 		"out vec4 fragColor; \n"
-			   
+		
 		"vec2 intersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) { \n"
 		"	const vec3 tMin = (boxMin - rayOrigin) / rayDir; \n"
 		"	const vec3 tMax = (boxMax - rayOrigin) / rayDir; \n"
@@ -46,9 +51,14 @@ namespace VDS::GLSL
 		"	// clamp tNear to 0.0f, incase the camera is inside the volume \n"
 		"	tNear = max(0.0f, tNear); \n"
 		"	return vec2(tNear, tFar); \n"
-		"}; \n"
-		
+		"} \n"
 
+		"{{ applyWindowFunction }}"
+
+		"float getVolumeValue(vec3 position) { \n"
+		"	return {{ accessVoxel }}; \n"
+		"} \n"
+		
 		"void main() \n"
 		"{ \n"
 		"	vec3 ray_direction; \n"
@@ -74,21 +84,16 @@ namespace VDS::GLSL
 
 
 	static const std::pair<std::string, std::string> raycastinMethodMID = std::make_pair("{{ raycastingMethod }}", 
-		"	float maximum_intensity = texture(dataTex, position).r; \n"
+		"	float maximum_intensity = 0.0f; \n"
 		
 		"	const int steps = int(length(ray) / sampleStepLength); \n"
 		"	// Ray march until reaching the end of the volume \n"
 		"	for (int i = 0; i <= steps; i++) { \n"
-
-		"		vec3 tmpPos = position; \n"
-		"		//tmpPos.x *= 2.0f; \n"
-
-		"		maximum_intensity = max(maximum_intensity, texture(dataTex, tmpPos).r); \n"
+		"		maximum_intensity = max(maximum_intensity, getVolumeValue(position)); \n"
 
 		"		position += step_vector; \n"
 		"	} \n"
-		"	fragColor.xyz = vec3(maximum_intensity); \n"
-		"	fragColor.w = 1.0f; \n"
+		"	fragColor = vec4(vec3(maximum_intensity), 1.0f); \n"
 		);
 
 	static const std::pair<std::string, std::string> raycastinMethodLMID = std::make_pair("{{ raycastingMethod }}",
@@ -97,21 +102,97 @@ namespace VDS::GLSL
 		"	const int steps = int(length(ray) / sampleStepLength); \n"
 		"	// Ray march until reaching the end of the volume \n"
 		"	for (int i = 0; i <= steps; i++) { \n"
-		"		const float intensity = texture(dataTex, position).r; \n"
-		"		if(intensity >= maximum_intensity) { \n"
-		"			maximum_intensity = intensity; \n"
+		"		const float intensity = getVolumeValue(position); \n"
+
+		"		if(intensity >= threshold) { \n"
+		"			if(intensity >= maximum_intensity) { \n"
+		"				maximum_intensity = intensity; \n"
+		"			} \n"
+		"			else { \n"
+		"				break; \n"
+		"			} \n"
 		"		} \n"
-		"		else { \n"
+
+
+		"		position += step_vector; \n"
+		"	} \n"
+
+		"	fragColor = vec4(maximum_intensity); \n"
+		"	fragColor.w = 1.0f; \n"
+	);
+
+
+	static const std::pair<std::string, std::string> raycastinMethodFirstHit = std::make_pair("{{ raycastingMethod }}",
+		"	float firstHit = 0.0f; \n"
+
+		"	const int steps = int(length(ray) / sampleStepLength); \n"
+		"	// Ray march until reaching the end of the volume \n"
+		"	for (int i = 0; i <= steps; i++) { \n"
+		"		float intensity = getVolumeValue(position); \n"
+
+		"		if(intensity >= threshold) { \n"
+		"			firstHit = intensity; \n"
 		"			break; \n"
 		"		} \n"
 
 		"		position += step_vector; \n"
 		"	} \n"
 
-		"	fragColor.xyz = vec3(maximum_intensity); \n"
+		"	fragColor.xyz = vec3(firstHit); \n"
 		"	fragColor.w = 1.0f; \n"
 	);
 
+
+	static const std::pair<std::string, std::string> applyWindowFunction = std::make_pair("{{ applyWindowFunction }}",
+		"float applyWindow(float inputValue) { \n"
+		"	const float UINT16MAX = 65535.0f; \n"
+		"	const float UINT16STEPTOFLOAT = 1.0f / UINT16MAX; \n"
+
+		"	const float lowerBorder = valueWindowCenter - (UINT16STEPTOFLOAT * 0.5f) - ((valueWindowWidth - UINT16STEPTOFLOAT) / (2.0f * UINT16STEPTOFLOAT)); \n"
+		"	const float upperBorder = valueWindowCenter - (UINT16STEPTOFLOAT * 0.5f) + ((valueWindowWidth - UINT16STEPTOFLOAT) / (2.0f * UINT16STEPTOFLOAT)); \n"
+		"	const float mappedValue = ((inputValue + valueWindowOffset) - (valueWindowCenter - (UINT16STEPTOFLOAT * 0.5f))) / (valueWindowWidth - UINT16STEPTOFLOAT) + (UINT16STEPTOFLOAT * 0.5f); \n"
+
+		"	const float lowerBorderFactor = float(inputValue + valueWindowOffset <= lowerBorder); \n"
+		"	const float upperBorderFactor = float(inputValue + valueWindowOffset > upperBorder); \n"
+				
+		"	return (mappedValue * (1.0f - lowerBorderFactor)) * (1.0f - upperBorderFactor) + upperBorderFactor; \n"
+		"} \n"
+	);
+
+	static const std::pair<std::string, std::string> accessVoxelWithoutWindow = std::make_pair("{{ accessVoxel }}",
+		"texture(dataTex, position).r"
+	);
+
+	static const std::pair<std::string, std::string> accessVoxelWithWindow = std::make_pair("{{ accessVoxel }}",
+		"applyWindow(texture(dataTex, position).r)"
+	);
+
+
+
+
+//#ifdef QT_RELEASE
+//	+ uint16_t * ptr = (uint16_t*)bytes.data();
+//	+float c = 40;
+//	+float w = 450;
+//	+float yMin = 0;
+//	+float offset = -1000;
+//	+float yMax = UINT16_MAX;
+//	+for (size_t i = 0; i < m_p.dimensions.x() * m_p.dimensions.y() * m_p.dimensions.z(); i++)
+//		+ {
+//		+if (ptr[i] + offset <= c - 0.5 - ((w - 1) / 2))
+//			+ {
+//			+ptr[i] = yMin;
+//			+}
+//		+else if (ptr[i] + offset > c - 0.5 + ((w - 1) / 2))
+//			+ {
+//			+ptr[i] = yMax;
+//			+}
+//		+else
+//			+ {
+//			+ptr[i] = (((ptr[i] + offset) - (c - 0.5)) / (w - 1) + 0.5) * (yMax - yMin) + yMin;
+//			+}
+//		+}
+//	+#endif // QT_DEBUG
 
 
 }

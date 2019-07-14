@@ -25,6 +25,8 @@ namespace VDS
 		float getSpacingY() const;
 		float getSpacingZ() const;
 
+		const std::array<float, 3> getExtent() const;
+
 		GLuint getTextureHandle() const;
 
 	private:

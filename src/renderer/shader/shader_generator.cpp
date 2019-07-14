@@ -12,6 +12,7 @@ namespace VDS
 
 		insertGLSLVerion(fragmentShader);
 		insertRaycastMethod(fragmentShader, settings.method);
+		insertApplyWindowMethod(fragmentShader, settings.windowSettings);
 
 		return fragmentShader;
 	}
@@ -43,6 +44,10 @@ namespace VDS
 			break;
 		}
 		case VDS::RayCastMethods::FirstHit:
+		{
+			shader.replace(shader.find(GLSL::raycastinMethodFirstHit.first), GLSL::raycastinMethodFirstHit.first.length(), GLSL::raycastinMethodFirstHit.second);
+			break;
+		}
 		case VDS::RayCastMethods::Accumulate:
 		case VDS::RayCastMethods::Average:
 		default:
@@ -50,6 +55,19 @@ namespace VDS
 			std::runtime_error("unimplemented");
 			break;
 		}
+		}
+	}
+	void ShaderGenerator::insertApplyWindowMethod(std::string & shader, const ValueWindowSettings& windowSettings)
+	{
+		if (windowSettings.enabled)
+		{
+			shader.replace(shader.find(GLSL::applyWindowFunction.first), GLSL::applyWindowFunction.first.length(), GLSL::applyWindowFunction.second);
+			shader.replace(shader.find(GLSL::accessVoxelWithWindow.first), GLSL::accessVoxelWithWindow.first.length(), GLSL::accessVoxelWithWindow.second);
+		}
+		else
+		{
+			shader.replace(shader.find(GLSL::applyWindowFunction.first), GLSL::applyWindowFunction.first.length(), "");
+			shader.replace(shader.find(GLSL::accessVoxelWithoutWindow.first), GLSL::accessVoxelWithoutWindow.first.length(), GLSL::accessVoxelWithoutWindow.second);
 		}
 	}
 }

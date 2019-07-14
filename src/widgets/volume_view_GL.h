@@ -23,7 +23,10 @@ public:
 public slots:
 	void setRenderLoop(bool onlyRerenderOnChange);
 	void setSampleStepLength(double stepLength);
+	void setThreshold(double threshold);
 	void setRecommendedSampleStepLength(int factor);
+	void setRaycastMethod(int method);
+	void applyValueWindow(bool active);
 
 protected:
 	void initializeGL() override;
@@ -46,7 +49,7 @@ private:
 	void logRenderDeviceInfo(const QString& title, GLenum name);
 
 	void setProjectionMatrix(float aspectRatio);
-	void setViewMatrix();
+	void resetViewMatrix();
 
 	QVector3D getArcBallVector(QPoint p);
 

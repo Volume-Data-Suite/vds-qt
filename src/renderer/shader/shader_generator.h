@@ -1,22 +1,9 @@
 #pragma once
 #include <string>
+#include "shader_settings.h"
 
 namespace VDS
 {
-	enum class RayCastMethods
-	{
-		MIP,
-		LMIP,
-		FirstHit,
-		Accumulate,
-		Average,
-	};
-
-	struct RaycastShaderSettings
-	{
-		RayCastMethods method = RayCastMethods::MIP;
-	};
-
 	class ShaderGenerator
 	{
 	public:
@@ -29,6 +16,7 @@ namespace VDS
 	private:
 		static void insertGLSLVerion(std::string& shader);
 		static void insertRaycastMethod(std::string& shader, RayCastMethods method);
+		static void insertApplyWindowMethod(std::string& shader, const ValueWindowSettings& windowSettings);
 
 	};
 

@@ -17,7 +17,7 @@ namespace VDS {
 	RayCastRenderer::RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix)
 		: m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix), m_noiseTexture(9)
 	{
-		m_sampleStepLength = 0.01f;
+		m_renderBoundingBox = false;
 	}
 
 	RayCastRenderer::~RayCastRenderer()
@@ -25,8 +25,15 @@ namespace VDS {
 	}
 	void RayCastRenderer::render()
 	{
-		//renderVolumeBorders();
 		renderVolume();
+
+		if (m_renderBoundingBox)
+		{
+			setupVertexArray(RenderModes::Borders);
+			renderVolumeBorders();
+			setupVertexArray(RenderModes::Mesh);
+		}
+
 
 
 #ifdef _DEBUG
@@ -46,34 +53,38 @@ namespace VDS {
 		setupBuffers();
 		setupVertexArray(RenderModes::Mesh);
 
-		if (!setupVertexShader() || !setupFragmentShader())
+		const std::array<std::size_t, 3> volumeSize = { 1, 1, 1 };
+		const std::array<float, 3> volumeSpacing = { 1.0f, 1.0f, 1.0f };
+
+		m_texture.setup(volumeSize, volumeSpacing);
+		m_noiseTexture.setup();
+
+
+		if (!generateRaycastShaderProgram())
+		{
+			return false;
+		}
+		
+		if (!setupVertexShaderBoundingBox() || !setupFragmentShaderBoundingBox())
 		{
 			return false;
 		}
 
-		if (!setupShaderProgram())
+		if (!setupShaderProgramBoundingBox())
 		{
 			return false;
 		}
 
 		resetModelMatrix();
 
-		const std::array<std::size_t, 3> volumeSize = { 1, 1, 1 };
-		const std::array<float, 3> volumeSpacing = { 1.0f, 1.0f, 1.0f };
-		m_texture.setup(volumeSize, volumeSpacing);
-		m_noiseTexture.setup();
-
-		// Resize volume to texture
-		scaleVolumeAndNormalizeSize();
-
-		updateSampleStepLength(m_sampleStepLength);
+		setBoundingBoxColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		return true;
 	}
 
 	void RayCastRenderer::renderVolume()
 	{
-		glUseProgram(m_shaderProgram);
+		glUseProgram(m_shaderProgramRayCasting);
 
 		// Bind vertex data
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_elements);
@@ -108,7 +119,7 @@ namespace VDS {
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-		glUseProgram(m_shaderProgram);
+		glUseProgram(m_shaderProgramBoundingBox);
 
 		// Bind vertex data
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_elements);
@@ -128,7 +139,7 @@ namespace VDS {
 	}
 	void RayCastRenderer::renderVolumeBorders()
 	{
-		glUseProgram(m_shaderProgram);
+		glUseProgram(m_shaderProgramBoundingBox);
 
 		// Bind vertex data
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_lines_elements);
@@ -152,24 +163,30 @@ namespace VDS {
 	}
 	void RayCastRenderer::applyMatrices()
 	{
-		glUseProgram(m_shaderProgram);
-
-
 		const QMatrix4x4 projectionViewModelMatrix = *m_projectionMatrix * *m_viewMatrix * (m_rotationMatrix * m_translationMatrix * m_scaleMatrix);
 		const QMatrix4x4 viewModelMatrixWithoutModleScale = *m_viewMatrix * (m_rotationMatrix * m_translationMatrix);
-			   
-		const GLuint projectionViewModelMatrixID = glGetUniformLocation(m_shaderProgram, "projectionViewModelMatrix");
-		const GLuint viewModelMatrixWithoutModleScaleID = glGetUniformLocation(m_shaderProgram, "viewModelMatrixWithoutModleScale");
-		glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE, projectionViewModelMatrix.data());
-		glUniformMatrix4fv(viewModelMatrixWithoutModleScaleID, 1, GL_FALSE, viewModelMatrixWithoutModleScale.data());
-
-
-		const QVector3D rayOrigin = viewModelMatrixWithoutModleScale.inverted() * QVector3D({ 0.0, 0.0, 0.0 });
-
-		const GLuint rayOriginID = glGetUniformLocation(m_shaderProgram, "rayOrigin");
-		glUniform3f(rayOriginID, rayOrigin[0], rayOrigin[1], rayOrigin[2]);
-	
 		
+		glUseProgram(m_shaderProgramBoundingBox);
+		{
+			const GLuint projectionViewModelMatrixID = glGetUniformLocation(m_shaderProgramRayCasting, "projectionViewModelMatrix");
+			const GLuint viewModelMatrixWithoutModleScaleID = glGetUniformLocation(m_shaderProgramRayCasting, "viewModelMatrixWithoutModleScale");
+			glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE, projectionViewModelMatrix.data());
+		}
+		glUseProgram(0);
+
+
+		glUseProgram(m_shaderProgramRayCasting);
+		{
+			const GLuint projectionViewModelMatrixID = glGetUniformLocation(m_shaderProgramRayCasting, "projectionViewModelMatrix");
+			const GLuint viewModelMatrixWithoutModleScaleID = glGetUniformLocation(m_shaderProgramRayCasting, "viewModelMatrixWithoutModleScale");
+			glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE, projectionViewModelMatrix.data());
+			glUniformMatrix4fv(viewModelMatrixWithoutModleScaleID, 1, GL_FALSE, viewModelMatrixWithoutModleScale.data());
+
+			const QVector3D rayOrigin = viewModelMatrixWithoutModleScale.inverted() * QVector3D({ 0.0, 0.0, 0.0 });
+
+			const GLuint rayOriginID = glGetUniformLocation(m_shaderProgramRayCasting, "rayOrigin");
+			glUniform3f(rayOriginID, rayOrigin[0], rayOrigin[1], rayOrigin[2]);
+		}
 		glUseProgram(0);
 
 		updateFieldOfView();
@@ -194,41 +211,41 @@ namespace VDS {
 		m_texture.update(size, spacing, volumeData);
 
 		// update texture for shader program
-		glUseProgram(m_shaderProgram);
+		glUseProgram(m_shaderProgramRayCasting);
 		// Bind volume data
 		glBindTexture(GL_TEXTURE_3D, m_texture.getTextureHandle());
-		glUniform1i(glGetUniformLocation(m_shaderProgram, "dataTex"), 0);
+		glUniform1i(glGetUniformLocation(m_shaderProgramRayCasting, "dataTex"), 0);
 		// Unbind volume data
 		glBindTexture(GL_TEXTURE_3D, 0);
-
-		resetModelMatrix();
-
+		
 		// unbind shader programm
 		glUseProgram(0);
+
+		resetModelMatrix();
 
 		// Resize volume box
 		scaleVolumeAndNormalizeSize();
 	}
 	void RayCastRenderer::updateAspectRation(float ratio)
 	{
-		m_aspectRationOpenGLWindow = ratio;
+		m_settings.aspectRationOpenGLWindow = ratio;
 
-		glUseProgram(m_shaderProgram);
+		glUseProgram(m_shaderProgramRayCasting);
 
-		const GLuint aspectRatioPosition = glGetUniformLocation(m_shaderProgram, "aspectRatio");
-		glUniform1f(aspectRatioPosition, m_aspectRationOpenGLWindow);
+		const GLuint aspectRatioPosition = glGetUniformLocation(m_shaderProgramRayCasting, "aspectRatio");
+		glUniform1f(aspectRatioPosition, m_settings.aspectRationOpenGLWindow);
 
 		glUseProgram(0);
 	}
-	void RayCastRenderer::updateViewPortSize(int width, int heigth)
+	void RayCastRenderer::updateViewPortSize(float width, float heigth)
 	{
-		m_viewportSize[0] = static_cast<float>(width);
-		m_viewportSize[1] = static_cast<float>(heigth);
+		m_settings.viewportSize[0] = width;
+		m_settings.viewportSize[1] = heigth;
 
-		glUseProgram(m_shaderProgram);
+		glUseProgram(m_shaderProgramRayCasting);
 
-		const GLuint viewPortSizePosition = glGetUniformLocation(m_shaderProgram, "viewportSize");
-		glUniform2f(viewPortSizePosition, m_viewportSize[0], m_viewportSize[1]);
+		const GLuint viewPortSizePosition = glGetUniformLocation(m_shaderProgramRayCasting, "viewportSize");
+		glUniform2f(viewPortSizePosition, m_settings.viewportSize[0], m_settings.viewportSize[1]);
 
 		glUseProgram(0);
 
@@ -236,14 +253,69 @@ namespace VDS {
 	}
 	void RayCastRenderer::updateSampleStepLength(float stepLength)
 	{
-		m_sampleStepLength = stepLength;
+		m_settings.sampleStepLength = stepLength;
 
-		glUseProgram(m_shaderProgram);
+		glUseProgram(m_shaderProgramRayCasting);
 
-		const GLuint sampleStepLengthPosition = glGetUniformLocation(m_shaderProgram, "sampleStepLength");
-		glUniform1f(sampleStepLengthPosition, m_sampleStepLength);
+		const GLuint sampleStepLengthPosition = glGetUniformLocation(m_shaderProgramRayCasting, "sampleStepLength");
+		glUniform1f(sampleStepLengthPosition, m_settings.sampleStepLength);
 
 		glUseProgram(0);
+	}
+	void RayCastRenderer::updateThreshold(float threshold)
+	{
+		m_settings.threshold = threshold;
+
+		glUseProgram(m_shaderProgramRayCasting);
+
+		const GLuint thresholdPosition = glGetUniformLocation(m_shaderProgramRayCasting, "threshold");
+		glUniform1f(thresholdPosition, m_settings.threshold);
+
+		glUseProgram(0);
+	}
+	void RayCastRenderer::applyValueWindow(bool active)
+	{
+		m_settings.windowSettings.enabled = active;
+
+		generateRaycastShaderProgram();
+	}
+	void RayCastRenderer::updateValueWindowWidth(float windowWidth)
+	{
+		m_settings.windowSettings.valueWindowWidth = windowWidth;
+
+		glUseProgram(m_shaderProgramRayCasting);
+
+		const GLuint windowWidthPosition = glGetUniformLocation(m_shaderProgramRayCasting, "valueWindowWidth");
+		glUniform1f(windowWidthPosition, m_settings.windowSettings.valueWindowWidth);
+
+		glUseProgram(0);
+	}
+	void RayCastRenderer::updateValueWindowCenter(float windowCenter)
+	{
+		m_settings.windowSettings.valueWindowCenter = windowCenter;
+
+		glUseProgram(m_shaderProgramRayCasting);
+
+		const GLuint windowCenterPosition = glGetUniformLocation(m_shaderProgramRayCasting, "valueWindowCenter");
+		glUniform1f(windowCenterPosition, m_settings.windowSettings.valueWindowCenter);
+
+		glUseProgram(0);
+	}
+	void RayCastRenderer::updateValueWindowOffset(float windowOffset)
+	{
+		m_settings.windowSettings.valueWindowOffset = windowOffset;
+
+		glUseProgram(m_shaderProgramRayCasting);
+
+		const GLuint windowOffsetPosition = glGetUniformLocation(m_shaderProgramRayCasting, "valueWindowOffset");
+		glUniform1f(windowOffsetPosition, m_settings.windowSettings.valueWindowOffset);
+
+		glUseProgram(0);
+	}
+	void RayCastRenderer::setRayCastMethod(int method)
+	{
+		m_settings.method = static_cast<RayCastMethods>(method);
+		generateRaycastShaderProgram();
 	}
 	const std::array<float, 3> RayCastRenderer::getPosition() const
 	{
@@ -264,15 +336,28 @@ namespace VDS {
 		const std::size_t longestSide = std::max({m_texture.getSizeX(), m_texture.getSizeY(), m_texture.getSizeZ()});
 		return 1.0f / static_cast<float>(longestSide);
 	}
+	void RayCastRenderer::setBoundingBoxColor(const std::array<float, 4>& color)
+	{
+		glUseProgram(m_shaderProgramBoundingBox);
+
+		const GLuint boundingBoxColorPosition = glGetUniformLocation(m_shaderProgramBoundingBox, "boundingBoxColor");
+		glUniform4f(boundingBoxColorPosition, color[0], color[1], color[2], color[3]);
+
+		glUseProgram(0);
+	}
+	void RayCastRenderer::setBoundingBoxRenderStatus(bool active)
+	{
+		m_renderBoundingBox = active;
+	}
 	void RayCastRenderer::updateFieldOfView()
 	{
 		const float projectionMatrixValue1x1 = m_projectionMatrix->constData()[1 * 4 + 1];
 		const float fov = std::atan(1.0f / projectionMatrixValue1x1);
 		const GLfloat focalLength = 1.0f / std::tan(fov);
 
-		glUseProgram(m_shaderProgram);
+		glUseProgram(m_shaderProgramRayCasting);
 
-		const GLuint focalPosition = glGetUniformLocation(m_shaderProgram, "focalLength");
+		const GLuint focalPosition = glGetUniformLocation(m_shaderProgramRayCasting, "focalLength");
 		glUniform1f(focalPosition, focalLength);
 
 		glUseProgram(0);
@@ -282,29 +367,15 @@ namespace VDS {
 		m_noiseTexture.updateNoise();
 
 		// update texture for shader program
-		glUseProgram(m_shaderProgram);
+		glUseProgram(m_shaderProgramRayCasting);
 		// Bind volume data
 		glBindTexture(GL_TEXTURE_2D, m_noiseTexture.getTextureHandle());
-		glUniform1i(glGetUniformLocation(m_shaderProgram, "noiseTex"), 1);
+		glUniform1i(glGetUniformLocation(m_shaderProgramRayCasting, "noiseTex"), 1);
 		// Unbind volume data
 		glBindTexture(GL_TEXTURE_2D, 0);
 		
 		// unbind shader programm
 		glUseProgram(0);
-	}
-	const QVector3D RayCastRenderer::getExtent() const
-	{
-		const float xInCentiMeter = m_texture.getSizeX() * m_texture.getSpacingX();
-		const float yInCentiMeter = m_texture.getSizeY() * m_texture.getSpacingY();
-		const float zInCentiMeter = m_texture.getSizeZ() * m_texture.getSpacingZ();
-
-		const float longestSide = std::max({ xInCentiMeter, yInCentiMeter, zInCentiMeter });
-
-		const float scaleX = xInCentiMeter / longestSide;
-		const float scaleY = yInCentiMeter / longestSide;
-		const float scaleZ = zInCentiMeter / longestSide;
-
-		return QVector3D(scaleX, scaleY, scaleZ);
 	}
 	void RayCastRenderer::setupBuffers()
 	{
@@ -410,16 +481,16 @@ namespace VDS {
 	}
 
 
-	bool RayCastRenderer::setupVertexShader()
+	bool RayCastRenderer::setupVertexShaderRayCasting()
 	{
 		const std::string vertexShaderSource = VDS::ShaderGenerator::getVertexShaderCode();
 		const GLchar* const shaderGLSL = 	vertexShaderSource.c_str();
 
-		m_vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(m_vertexShader, 1, &shaderGLSL, NULL);
-		glCompileShader(m_vertexShader);
+		m_vertexShaderRayCasting = glCreateShader(GL_VERTEX_SHADER);
+		glShaderSource(m_vertexShaderRayCasting, 1, &shaderGLSL, NULL);
+		glCompileShader(m_vertexShaderRayCasting);
 		
-		bool compileStatus = checkShaderCompileStatus(m_vertexShader);
+		bool compileStatus = checkShaderCompileStatus(m_vertexShaderRayCasting);
 
 		if (!compileStatus)
 		{
@@ -429,16 +500,16 @@ namespace VDS {
 		return compileStatus;
 	}
 
-	bool RayCastRenderer::setupFragmentShader()
+	bool RayCastRenderer::setupFragmentShaderRayCasting()
 	{
 		const std::string fragmentShaderSource = VDS::ShaderGenerator::getFragmentShaderCode(m_settings);
 		const GLchar* const shaderGLSL = fragmentShaderSource.c_str();
 
-		m_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(m_fragmentShader, 1, &shaderGLSL, NULL);
-		glCompileShader(m_fragmentShader);
+		m_fragmentShaderRayCasting = glCreateShader(GL_FRAGMENT_SHADER);
+		glShaderSource(m_fragmentShaderRayCasting, 1, &shaderGLSL, NULL);
+		glCompileShader(m_fragmentShaderRayCasting);
 
-		bool compileStatus = checkShaderCompileStatus(m_fragmentShader);
+		bool compileStatus = checkShaderCompileStatus(m_fragmentShaderRayCasting);
 
 		if (!compileStatus)
 		{
@@ -448,38 +519,121 @@ namespace VDS {
 		return compileStatus;
 	}
 
-	bool RayCastRenderer::setupShaderProgram()
+	bool RayCastRenderer::setupShaderProgramRayCasting()
 	{
-		m_shaderProgram = glCreateProgram();
+		m_shaderProgramRayCasting = glCreateProgram();
 
-		glAttachShader(m_shaderProgram, m_vertexShader);
-		glAttachShader(m_shaderProgram, m_fragmentShader);
-		glLinkProgram(m_shaderProgram);
+		glAttachShader(m_shaderProgramRayCasting, m_vertexShaderRayCasting);
+		glAttachShader(m_shaderProgramRayCasting, m_fragmentShaderRayCasting);
+		glLinkProgram(m_shaderProgramRayCasting);
 
-		return checkShaderProgramLinkStatus(m_shaderProgram);
+		return checkShaderProgramLinkStatus(m_shaderProgramRayCasting);
 	}
 
-	void RayCastRenderer::setAxisAlignedBoundingBox(const QVector3D& extent)
+	bool RayCastRenderer::generateRaycastShaderProgram()
 	{
-		//float mini = std::min({ extent.x(), extent.y(), extent.z() });
+		if (!setupVertexShaderRayCasting() || !setupFragmentShaderRayCasting())
+		{
+			return false;
+		}
 
-		//QVector3D tmp = extent / mini;
+		if (!setupShaderProgramRayCasting())
+		{
+			return false;
+		}
 
-		//QVector3D tmp(2, 2, 3);
-
-		//const QVector3D top = tmp;
-		//const QVector3D bottom = -tmp;
-
-		const QVector3D top = extent;
-		const QVector3D bottom = -extent;
+		applyMatrices();
 		
+		// Resize volume to texture
+		scaleVolumeAndNormalizeSize();
 
-		glUseProgram(m_shaderProgram);
+		updateAspectRation(m_settings.aspectRationOpenGLWindow);
+		updateViewPortSize(m_settings.viewportSize[0], m_settings.viewportSize[1]);
+		updateFieldOfView();
+		updateSampleStepLength(m_settings.sampleStepLength);
+		updateThreshold(m_settings.threshold);
+		updateValueWindowWidth(m_settings.windowSettings.valueWindowWidth);
+		updateValueWindowCenter(m_settings.windowSettings.valueWindowCenter);
+		updateValueWindowOffset(m_settings.windowSettings.valueWindowOffset);
 
-		const GLuint topPosition = glGetUniformLocation(m_shaderProgram, "topAABB");
-		glUniform3f(topPosition, top[0], top[1], top[2]);
-		const GLuint bottomPosition = glGetUniformLocation(m_shaderProgram, "bottomAABB");
-		glUniform3f(bottomPosition, bottom[0], bottom[1], bottom[2]);
+		updateSampleStepLength(m_settings.sampleStepLength);
+
+		return true;
+	}
+
+	bool RayCastRenderer::setupVertexShaderBoundingBox()
+	{
+		const GLchar* const vertexShaderSource =
+			"#version 430 core \n"
+
+			"in vec3 inPos; \n"
+			"uniform mat4 projectionViewModelMatrix; \n"
+
+			"void main() \n"
+			"{ \n"
+			"	gl_Position = projectionViewModelMatrix * vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
+			"} \n";;
+
+		m_vertexShaderBoundingBox = glCreateShader(GL_VERTEX_SHADER);
+		glShaderSource(m_vertexShaderBoundingBox, 1, &vertexShaderSource, NULL);
+		glCompileShader(m_vertexShaderBoundingBox);
+
+		bool compileStatus = checkShaderCompileStatus(m_vertexShaderBoundingBox);
+
+		if (!compileStatus)
+		{
+			qDebug() << vertexShaderSource;
+		}
+
+		return compileStatus;
+	}
+
+	bool RayCastRenderer::setupFragmentShaderBoundingBox()
+	{
+		const GLchar* const fragmentShaderSource =
+			"#version 430 core \n"
+
+			"uniform vec4 boundingBoxColor; \n"
+			"out vec4 FragColor; \n"
+
+			"void main() \n"
+			"{ \n"
+			"	FragColor = boundingBoxColor; \n"
+			"} \n";
+
+		m_fragmentShaderBoundingBox = glCreateShader(GL_FRAGMENT_SHADER);
+		glShaderSource(m_fragmentShaderBoundingBox, 1, &fragmentShaderSource, NULL);
+		glCompileShader(m_fragmentShaderBoundingBox);
+
+		bool compileStatus = checkShaderCompileStatus(m_fragmentShaderBoundingBox);
+
+		if (!compileStatus)
+		{
+			qDebug() << fragmentShaderSource;
+		}
+
+		return compileStatus;
+	}
+
+	bool RayCastRenderer::setupShaderProgramBoundingBox()
+	{
+		m_shaderProgramBoundingBox = glCreateProgram();
+
+		glAttachShader(m_shaderProgramBoundingBox, m_vertexShaderBoundingBox);
+		glAttachShader(m_shaderProgramBoundingBox, m_fragmentShaderBoundingBox);
+		glLinkProgram(m_shaderProgramBoundingBox);
+		
+		return checkShaderProgramLinkStatus(m_shaderProgramBoundingBox);
+	}
+
+	void RayCastRenderer::setAxisAlignedBoundingBox(const std::array<float, 3>& extent)
+	{
+		glUseProgram(m_shaderProgramRayCasting);
+
+		const GLuint topPosition = glGetUniformLocation(m_shaderProgramRayCasting, "topAABB");
+		glUniform3f(topPosition, extent[0], extent[1], extent[2]);
+		const GLuint bottomPosition = glGetUniformLocation(m_shaderProgramRayCasting, "bottomAABB");
+		glUniform3f(bottomPosition, -extent[0], -extent[1], -extent[2]);
 
 		glUseProgram(0);
 	}
@@ -531,9 +685,10 @@ namespace VDS {
 	}
 	void RayCastRenderer::scaleVolumeAndNormalizeSize()
 	{
-		const QVector3D extent = getExtent();
+		const std::array<float, 3> extent = m_texture.getExtent();
 
-		m_scaleMatrix.scale(extent);
+		m_scaleMatrix.setToIdentity();
+		m_scaleMatrix.scale(extent[0], extent[1], extent[2]);
 		applyMatrices();
 
 		setAxisAlignedBoundingBox(extent);

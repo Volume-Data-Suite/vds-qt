@@ -53,6 +53,20 @@ namespace VDS
 	{
 		return m_spacing[2];
 	}
+	const std::array<float, 3> VolumeData3DTexture::getExtent() const
+	{
+		const float xInCentiMeter = getSizeX() * getSpacingX();
+		const float yInCentiMeter = getSizeY() * getSpacingY();
+		const float zInCentiMeter = getSizeZ() * getSpacingZ();
+
+		const float longestSide = std::max({ xInCentiMeter, yInCentiMeter, zInCentiMeter });
+
+		const float scaleX = xInCentiMeter / longestSide;
+		const float scaleY = yInCentiMeter / longestSide;
+		const float scaleZ = zInCentiMeter / longestSide;
+
+		return std::array<float, 3>{scaleX, scaleY, scaleZ};
+	}
 	GLuint VolumeData3DTexture::getTextureHandle() const
 	{
 		return m_texture;

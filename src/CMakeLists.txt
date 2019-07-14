@@ -21,6 +21,7 @@ add_executable(VDS
 	fileio/import_raw_3D_dialog.cpp
 	
 	renderer/shader/shader_code_constants.h
+	renderer/shader/shader_settings.h
 	renderer/shader/shader_generator.h
 	renderer/shader/shader_generator.cpp
 	renderer/textures/noise_texture_2D.h

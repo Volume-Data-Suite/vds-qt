@@ -27,6 +27,8 @@ namespace VDS
 
 		void updateFrametime(float frameTime, float renderEverything, float volumeRendering);
 
+		void updateThresholdFromSlider(int threshold);
+
 	private:
 		void updateVolumeData();
 		void setupFileMenu();

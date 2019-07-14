@@ -18,7 +18,7 @@ namespace VDS
 
 		uint32_t getSizeX() const;
 		uint32_t getSizeY() const;
-
+		
 		GLuint getTextureHandle() const;
 
 	private:
