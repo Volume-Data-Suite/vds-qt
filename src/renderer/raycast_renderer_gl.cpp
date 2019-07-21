@@ -99,15 +99,11 @@ namespace VDS {
 
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-
 		// Unbind noise texture
 		glBindTexture(GL_TEXTURE_2D, 0);
 		// Unbind volume data
 		glBindTexture(GL_TEXTURE_3D, 0);
-
-		//// reset active texture
-		//glActiveTexture(GL_TEXTURE0);
-
+		
 		// Unbind vertex data
 		glBindVertexArray(0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -572,7 +568,7 @@ namespace VDS {
 			"void main() \n"
 			"{ \n"
 			"	gl_Position = projectionViewModelMatrix * vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
-			"} \n";;
+			"} \n";
 
 		m_vertexShaderBoundingBox = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(m_vertexShaderBoundingBox, 1, &vertexShaderSource, NULL);

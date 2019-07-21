@@ -75,7 +75,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabSettingsRayCasting">
        <attribute name="title">
@@ -226,6 +226,16 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
+         <widget class="HistogramViewGL" name="openGLWidgetHistogram">
+          <property name="minimumSize">
+           <size>
+            <width>43</width>
+            <height>50</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QGroupBox" name="groupBoxApplyWindow">
           <property name="title">
            <string>Value Window</string>
@@ -249,8 +259,11 @@
            </item>
            <item row="0" column="1">
             <widget class="QSpinBox" name="spinBoxApplyWindowValueWindowWidth">
+             <property name="minimum">
+              <number>-65534</number>
+             </property>
              <property name="maximum">
-              <number>65535</number>
+              <number>65534</number>
              </property>
              <property name="value">
               <number>450</number>
@@ -266,8 +279,11 @@
            </item>
            <item row="1" column="1">
             <widget class="QSpinBox" name="spinBoxApplyWindowValueWindowCenter">
+             <property name="minimum">
+              <number>-65534</number>
+             </property>
              <property name="maximum">
-              <number>65535</number>
+              <number>65534</number>
              </property>
              <property name="value">
               <number>40</number>
@@ -284,10 +300,10 @@
            <item row="2" column="1">
             <widget class="QSpinBox" name="spinBoxApplyWindowValueWindowOffset">
              <property name="minimum">
-              <number>-65535</number>
+              <number>-65534</number>
              </property>
              <property name="maximum">
-              <number>65535</number>
+              <number>65534</number>
              </property>
              <property name="value">
               <number>-1000</number>
@@ -448,6 +464,11 @@
    <class>VolumeViewGL</class>
    <extends>QOpenGLWidget</extends>
    <header>widgets/volume_view_GL.h</header>
+  </customwidget>
+  <customwidget>
+   <class>HistogramViewGL</class>
+   <extends>QOpenGLWidget</extends>
+   <header>widgets/histogram_view_GL.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

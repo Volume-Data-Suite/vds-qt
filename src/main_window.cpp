@@ -55,6 +55,12 @@ namespace VDS
 		// connect value window
 		connect(ui.groupBoxApplyWindow, &QGroupBox::toggled,
 			ui.volumeViewWidget, &VolumeViewGL::applyValueWindow);
+		connect(ui.spinBoxApplyWindowValueWindowWidth, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+			ui.volumeViewWidget, &VolumeViewGL::updateValueWindowWidth);
+		connect(ui.spinBoxApplyWindowValueWindowCenter, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+			ui.volumeViewWidget, &VolumeViewGL::updateValueWindowCenter);
+		connect(ui.spinBoxApplyWindowValueWindowOffset, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+			ui.volumeViewWidget, &VolumeViewGL::updateValueWindowOffset);
 	}
 
 	void MainWindow::openImportRawDialog()
@@ -185,6 +191,7 @@ namespace VDS
 			m_vdh.getVolumeData().getSpacing().getZ()
 		};
 
+		ui.openGLWidgetHistogram->updateHistogramData(m_vdh.getHistogram());
 		ui.volumeViewWidget->updateVolumeData(size, spacing, m_vdh.getVolumeData().getRawVolumeData());
 	}
 

@@ -20,6 +20,9 @@ namespace VDS::GLSL
 	static const std::string fragmentBase =
 		glslVersion.first + "\n"
 
+		"// prevent loops from unrolling (prevent random crashes) TODO: Optimize loop unrolling \n"
+		"#pragma unroll 1 \n"
+
 		"uniform mat4 viewModelMatrixWithoutModleScale; \n"
 
 		"uniform float focalLength; \n"
@@ -138,7 +141,7 @@ namespace VDS::GLSL
 		"		position += step_vector; \n"
 		"	} \n"
 
-		"	fragColor.xyz = vec3(firstHit); \n"
+		"	fragColor.xyz = vec3((firstHit > 0.0f) ? 0.5f : 0.0f); \n"
 		"	fragColor.w = 1.0f; \n"
 	);
 
@@ -154,8 +157,10 @@ namespace VDS::GLSL
 
 		"	const float lowerBorderFactor = float(inputValue + valueWindowOffset <= lowerBorder); \n"
 		"	const float upperBorderFactor = float(inputValue + valueWindowOffset > upperBorder); \n"
+
+		"	const float result = (mappedValue * (1.0f - lowerBorderFactor)) * (1.0f - upperBorderFactor) + upperBorderFactor; \n"
 				
-		"	return (mappedValue * (1.0f - lowerBorderFactor)) * (1.0f - upperBorderFactor) + upperBorderFactor; \n"
+		"	return clamp(result, 0.0f, 1.0f); \n"
 		"} \n"
 	);
 
@@ -166,33 +171,4 @@ namespace VDS::GLSL
 	static const std::pair<std::string, std::string> accessVoxelWithWindow = std::make_pair("{{ accessVoxel }}",
 		"applyWindow(texture(dataTex, position).r)"
 	);
-
-
-
-
-//#ifdef QT_RELEASE
-//	+ uint16_t * ptr = (uint16_t*)bytes.data();
-//	+float c = 40;
-//	+float w = 450;
-//	+float yMin = 0;
-//	+float offset = -1000;
-//	+float yMax = UINT16_MAX;
-//	+for (size_t i = 0; i < m_p.dimensions.x() * m_p.dimensions.y() * m_p.dimensions.z(); i++)
-//		+ {
-//		+if (ptr[i] + offset <= c - 0.5 - ((w - 1) / 2))
-//			+ {
-//			+ptr[i] = yMin;
-//			+}
-//		+else if (ptr[i] + offset > c - 0.5 + ((w - 1) / 2))
-//			+ {
-//			+ptr[i] = yMax;
-//			+}
-//		+else
-//			+ {
-//			+ptr[i] = (((ptr[i] + offset) - (c - 0.5)) / (w - 1) + 0.5) * (yMax - yMin) + yMin;
-//			+}
-//		+}
-//	+#endif // QT_DEBUG
-
-
 }

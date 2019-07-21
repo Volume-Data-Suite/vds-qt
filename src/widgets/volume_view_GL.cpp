@@ -77,6 +77,24 @@ void VolumeViewGL::applyValueWindow(bool active)
 	update();
 }
 
+void VolumeViewGL::updateValueWindowWidth(float windowWidth)
+{
+	m_rayCastRenderer.updateValueWindowWidth(1.0f / static_cast<float>(UINT16_MAX) * windowWidth);
+	update();
+}
+
+void VolumeViewGL::updateValueWindowCenter(float windowCenter)
+{
+	m_rayCastRenderer.updateValueWindowCenter(1.0f / static_cast<float>(UINT16_MAX) * windowCenter);
+	update();
+}
+
+void VolumeViewGL::updateValueWindowOffset(float windowOffset)
+{
+	m_rayCastRenderer.updateValueWindowOffset(1.0f / static_cast<float>(UINT16_MAX) * windowOffset);
+	update();
+}
+
 void VolumeViewGL::initializeGL()
 {
 	initializeOpenGLFunctions();
@@ -98,6 +116,8 @@ void VolumeViewGL::initializeGL()
 	// so we can go inside the volume and dont have to accumulated raycasts (because we do a single pass raycasting)
 	glCullFace(GL_FRONT); 
 	glFrontFace(GL_CCW);
+	
+	//glEnable(GL_MULTISAMPLE);
 
 	glClearDepth(1.0f);
 	// Change the reference of the GL_COLOR_BUFFER_BIT
@@ -208,7 +228,7 @@ void VolumeViewGL::mouseMoveEvent(QMouseEvent * e)
 
 void VolumeViewGL::wheelEvent(QWheelEvent * e)
 {
-	const float translateAmount = static_cast<float>(e->delta()) / 150.0f;
+	const float translateAmount = static_cast<float>(e->delta()) / 2500.0f;
 	m_viewMatrix.translate(0, 0, translateAmount);
 	m_rayCastRenderer.applyMatrices();
 
