@@ -15,9 +15,9 @@ namespace VDS
 	struct ValueWindowSettings
 	{
 		bool enabled = false;
-		float valueWindowWidth = (1.0f / static_cast<float>(UINT16_MAX)) * 450.0f;
-		float valueWindowCenter = (1.0f / static_cast<float>(UINT16_MAX)) * 40.0f;
-		float valueWindowOffset = (1.0f / static_cast<float>(UINT16_MAX)) * -1000.0f;
+		float valueWindowWidth = static_cast<float>(UINT16_MAX);
+		float valueWindowCenter = static_cast<float>(UINT16_MAX / 2);
+		float valueWindowOffset = 0.0f;
 	};
 
 	struct RaycastShaderSettings

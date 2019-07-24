@@ -29,6 +29,10 @@ namespace VDS
 
 		void updateThresholdFromSlider(int threshold);
 
+		void updateHistogram();
+
+		void setValueWindowPreset(const QString& preset);
+
 	private:
 		void updateVolumeData();
 		void setupFileMenu();

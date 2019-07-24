@@ -61,6 +61,20 @@ namespace VDS
 			ui.volumeViewWidget, &VolumeViewGL::updateValueWindowCenter);
 		connect(ui.spinBoxApplyWindowValueWindowOffset, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
 			ui.volumeViewWidget, &VolumeViewGL::updateValueWindowOffset);
+		connect(ui.comboBoxApplyWindowPresets, &QComboBox::currentTextChanged,
+			this, &MainWindow::setValueWindowPreset);
+
+		// connect histogram update
+		connect(ui.groupBoxApplyWindow, &QGroupBox::toggled,
+			this, &MainWindow::updateHistogram);
+		connect(ui.spinBoxApplyWindowValueWindowWidth, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+			this, &MainWindow::updateHistogram);
+		connect(ui.spinBoxApplyWindowValueWindowCenter, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+			this, &MainWindow::updateHistogram);
+		connect(ui.spinBoxApplyWindowValueWindowOffset, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+			this, &MainWindow::updateHistogram);
+		connect(ui.comboBoxApplyWindowFunction, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+			this, &MainWindow::updateHistogram);
 	}
 
 	void MainWindow::openImportRawDialog()
@@ -177,6 +191,90 @@ namespace VDS
 		ui.volumeViewWidget->setThreshold(thresholdValue);
 	}
 
+	void MainWindow::updateHistogram()
+	{
+		const bool windowingEnabled = ui.groupBoxApplyWindow->isChecked();
+
+		if (!windowingEnabled)
+		{
+			ui.openGLWidgetHistogram->updateHistogramData(m_vdh.getHistogram(), false);
+			return;
+		}
+
+		const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
+		const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
+		const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
+		const VDTK::WindowingFunction function = VDTK::WindowingFunction(ui.comboBoxApplyWindowFunction->currentIndex());
+
+
+		ui.openGLWidgetHistogram->updateHistogramData(m_vdh.getHistogramWidthWindowing(function, windowCenter, windowWidth, windowOffset), true);
+	}
+
+	void MainWindow::setValueWindowPreset(const QString& preset)
+	{
+		if (preset == "Default: No Change")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(UINT16_MAX);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(UINT16_MAX / 2);
+		}
+		else if (preset == "Head & Neck: Brain")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(80);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(40);
+		}
+		else if (preset == "Head & Neck: Subdural")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(300);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(100);
+		}
+		else if (preset == "Head & Neck: Stroke")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(8);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(32);
+		}
+		else if (preset == "Head & Neck: Temporal Bones")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(2800);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(600);
+		}
+		else if (preset == "Head & Neck: Soft Tissues")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(400);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(60);
+		}
+		else if (preset == "Chest: Lungs")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(1500);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(-600);
+		}
+		else if (preset == "Chest: Mediastinum")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(350);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(50);
+		}
+		else if (preset == "Abdomen: Soft Tissues")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(400);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(50);
+		}
+		else if (preset == "Abdomen: Liver")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(150);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(30);
+		}
+		else if (preset == "Spine: Soft Tissues")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(250);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(50);
+		}
+		else if (preset == "Spine: Bones")
+		{
+			ui.spinBoxApplyWindowValueWindowWidth->setValue(1800);
+			ui.spinBoxApplyWindowValueWindowCenter->setValue(400);
+		}
+
+	}
+
 	void MainWindow::updateVolumeData()
 	{
 		const std::array<std::size_t, 3> size = {
@@ -191,8 +289,9 @@ namespace VDS
 			m_vdh.getVolumeData().getSpacing().getZ()
 		};
 
-		ui.openGLWidgetHistogram->updateHistogramData(m_vdh.getHistogram());
 		ui.volumeViewWidget->updateVolumeData(size, spacing, m_vdh.getVolumeData().getRawVolumeData());
+
+		updateHistogram();
 	}
 
 	void MainWindow::setupFileMenu()

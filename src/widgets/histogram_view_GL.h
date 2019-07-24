@@ -3,7 +3,6 @@
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_4_3_Core>
 #include <QObject>
-#include <QMatrix4x4>
 
 #include <vector>
 
@@ -14,7 +13,8 @@ class HistogramViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Cor
 public:
 	HistogramViewGL(QWidget *parent);
 
-	void updateHistogramData(const std::vector<uint16_t>& histo);
+	// ignoreBorders if active, 0 and Max (UINT16MAX) get ingored, since they are crowed by linear windowing
+	void updateHistogramData(const std::vector<uint16_t>& histo, bool ignoreBorders);
 
 protected:
 	void initializeGL() override;
@@ -29,6 +29,7 @@ private:
 	void setupVertexShader();
 	void setupFragmentShader();
 	void setupShaderProgram();
+	void setupTexture();
 
 	std::vector<uint16_t> m_histogramData;
 	std::vector<uint16_t> m_histogramDataScaled;
@@ -37,7 +38,7 @@ private:
 
 	int m_width;
 	int m_height;
-
+	
 
 	// global buffer handles
 	GLuint m_vao;
@@ -47,9 +48,7 @@ private:
 	GLuint m_vertexShader;
 	GLuint m_fragmentShader;
 	GLuint m_shaderProgram;
+	// globatl texture handles
+	GLuint m_texture;
 
-	// Matrices
-	QMatrix4x4 m_projectionMatrix;
-	QMatrix4x4 m_viewMatrix;
-	QMatrix4x4 m_modelMatrix;
 };

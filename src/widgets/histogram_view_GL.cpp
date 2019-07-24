@@ -3,18 +3,24 @@
 
 #include <algorithm>
 
-HistogramViewGL::HistogramViewGL(QWidget *parent) : QOpenGLWidget(parent), m_histogramData(UINT16_MAX, 0)
+HistogramViewGL::HistogramViewGL(QWidget *parent) : QOpenGLWidget(parent), m_histogramData(UINT16_MAX + 1, 0), m_histogramDataScaled(10, 0)
 {
 }
 
 
-void HistogramViewGL::updateHistogramData(const std::vector<uint16_t>& histo)
+void HistogramViewGL::updateHistogramData(const std::vector<uint16_t>& histo, bool ignoreBorders)
 {
 	m_histogramData = histo;
-	m_max = *std::max_element(m_histogramData.begin(), m_histogramData.end());
+
+	if (ignoreBorders)
+	{
+		m_histogramData[0] = 0;
+		m_histogramData[UINT16_MAX] = 0;
+	}
 
 	calculateScaledHistogram();
 }
+
 
 void HistogramViewGL::initializeGL()
 {
@@ -36,6 +42,7 @@ void HistogramViewGL::initializeGL()
 	setupVertexShader();
 	setupFragmentShader();
 	setupShaderProgram();
+	setupTexture();
 }
 
 void HistogramViewGL::resizeGL(int w, int h)
@@ -44,6 +51,11 @@ void HistogramViewGL::resizeGL(int w, int h)
 	m_height = h;
 	glViewport(0, 0, m_width, m_height);
 	calculateScaledHistogram();
+
+	glUseProgram(m_shaderProgram);
+	const GLuint viewport = glGetUniformLocation(m_shaderProgram, "viewport");
+	glUniform2f(viewport, static_cast<float>(m_width), static_cast<float>(m_height));
+	glUseProgram(0);
 }
 
 void HistogramViewGL::paintGL()
@@ -56,14 +68,19 @@ void HistogramViewGL::paintGL()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
 	glBindVertexArray(m_vao);
 
+	glBindTexture(GL_TEXTURE_1D, m_texture);
+
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 	
+	glBindTexture(GL_TEXTURE_1D, 0);
+
 	// Unbind vertex data
 	glBindVertexArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	// unbind shader programm
 	glUseProgram(0);
+
 }
 
 void HistogramViewGL::calculateScaledHistogram()
@@ -77,20 +94,30 @@ void HistogramViewGL::calculateScaledHistogram()
 	{
 		m_histogramDataScaled[index] = *std::max_element(m_histogramData.begin() + index * sectionSize, m_histogramData.begin() + (index + 1) * sectionSize - 1);
 	}
+
+	setupTexture();
+
+	m_max = *std::max_element(m_histogramDataScaled.begin(), m_histogramDataScaled.end());
+
+	glUseProgram(m_shaderProgram);
+	const float maxNormalized = static_cast<float>(m_max) / static_cast<float>(UINT16_MAX);
+	const GLuint max = glGetUniformLocation(m_shaderProgram, "max");
+	glUniform1f(max, maxNormalized);
+	glUseProgram(0);
+
+	update();
 }
 
 void HistogramViewGL::setupBuffers()
 {
 	GLfloat vertices[] = {
-		-1.0f,	-1.0f,	-1.0f, // 0
-		1.0f,	-1.0f,	-1.0f, // 1
-		1.0f,	1.0f,	-1.0f, // 2
-		-1.0f,	1.0f,	-1.0f // 3
+		-1.0f,	-1.0f,	0.0f, // 0
+		3.0f,	-1.0f,	0.0f, // 1
+		-1.0f,	3.0f,	0.0f, // 2
 	};
 	GLuint indices_cube[] = {
 		// front
-		0, 1, 2,
-		2, 3, 0
+		0, 1, 2
 	};
 
 	glGenBuffers(1, &m_vbo);
@@ -130,15 +157,10 @@ void HistogramViewGL::setupVertexShader()
 		"#version 430 core \n"
 
 		"in vec3 inPos; \n"
-		"uniform mat4 projectionViewModelMatrix; \n"
 
 		"void main() \n"
 		"{ \n"
-		//"	gl_Position = projectionViewModelMatrix * vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
-		//"	gl_Position = vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
-		"	const float x = -1.0 + float((gl_VertexID & 1) << 2); \n"
-		"	const float y = -1.0 + float((gl_VertexID & 2) << 1); \n"
-		"	gl_Position =  vec4(x, y, 0.0f, 1.0f) \n"
+		"	gl_Position = vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
 		"} \n";
 
 	m_vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -151,12 +173,18 @@ void HistogramViewGL::setupFragmentShader()
 	const GLchar* const shaderGLSL = 
 		"#version 430 core \n"
 
-		"uniform vec2 viewPortSize; \n"
+		"uniform vec2 viewport; \n"
+		"uniform float max; \n"
+
+		"uniform sampler1D histogram; \n"
+
 		"out vec4 FragColor; \n"
 
 		"void main() \n"
 		"{ \n"
-		"	FragColor = vec4(1.0f); \n"
+		"	const float value = texture(histogram, gl_FragCoord.x / viewport.x).r / max; \n"
+		"	const float correctValue = value >= gl_FragCoord.y / viewport.y ? 1.0f : 0.0f; \n"
+		"	FragColor = vec4(vec3(correctValue), 1.0f); \n"
 		"} \n";
 
 	m_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -171,4 +199,20 @@ void HistogramViewGL::setupShaderProgram()
 	glAttachShader(m_shaderProgram, m_vertexShader);
 	glAttachShader(m_shaderProgram, m_fragmentShader);
 	glLinkProgram(m_shaderProgram);
+}
+
+void HistogramViewGL::setupTexture()
+{
+	glDeleteTextures(1, &m_texture);
+	glGenTextures(1, &m_texture);
+
+	glBindTexture(GL_TEXTURE_1D, m_texture);
+
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, m_histogramDataScaled.size(), 0, GL_RED, GL_UNSIGNED_SHORT, m_histogramDataScaled.data());
+
+	// unbind
+	glBindTexture(GL_TEXTURE_1D, 0);
 }
