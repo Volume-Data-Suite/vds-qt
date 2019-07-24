@@ -146,7 +146,7 @@ namespace VDS::GLSL
 	);
 
 
-	static const std::pair<std::string, std::string> applyWindowFunction = std::make_pair("{{ applyWindowFunction }}",
+	static const std::pair<std::string, std::string> applyWindowFunctionLinear = std::make_pair("{{ applyWindowFunction }}",
 		"float applyWindow(float inputValue) { \n"
 		"	const float UINT16MAX = 65535.0f; \n"
 		"	const float UINT16STEPTOFLOAT = 1.0f / UINT16MAX; \n"
@@ -154,11 +154,10 @@ namespace VDS::GLSL
 		"	const float windowCenterShifted = valueWindowCenter - (UINT16STEPTOFLOAT * 0.5f); \n"
 		"	const float windowWidthShifted = valueWindowWidth - UINT16STEPTOFLOAT; \n"
 
-		"	const float lowerBorder = windowCenterShifted - (windowWidthShifted / 2.0f); \n"
-		"	const float upperBorder = windowCenterShifted + (windowWidthShifted / 2.0f); \n"
+		"	const float lowerBorder = windowCenterShifted - (windowWidthShifted * 0.5f); \n"
+		"	const float upperBorder = windowCenterShifted + (windowWidthShifted * 0.5f); \n"
 
-		//		mappedValue = static_cast<uint16_t>(((valueAsFloat + windowOffsetAsFloat - windowCenterShifted) / windowWidthShifted + 0.5f) * max);
-		"	const float mappedValue = (inputValue + valueWindowOffset - windowCenterShifted) / windowWidthShifted + (UINT16STEPTOFLOAT * 0.5f); \n"
+		"	const float mappedValue = (inputValue + valueWindowOffset - windowCenterShifted) / windowWidthShifted + 0.5f; \n"
 
 		"	const float lowerBorderFactor = float(inputValue + valueWindowOffset <= lowerBorder); \n"
 		"	const float upperBorderFactor = float(inputValue + valueWindowOffset > upperBorder); \n"
@@ -169,50 +168,15 @@ namespace VDS::GLSL
 		"} \n"
 	);
 
-	//const float windowCenterShifted = static_cast<float>(windowCenter) - 0.5f;
-	//const float windowWidthShifted = static_cast<float>(windowWidth) - 1.0f;
-	//const float windowOffsetAsFloat = static_cast<float>(windowOffset);
-
-	//const float lowerBorder = windowCenterShifted - windowWidthShifted / 2.0f;
-	//const float upperBorder = windowCenterShifted + windowWidthShifted / 2.0f;
-
-	//constexpr float max = static_cast<float>(UINT16_MAX);
-
-	//std::vector<uint16_t> histo(UINT16_MAX + 1, 0);
-
-	//for (const uint16_t& value : volume->getRawVolumeData())
-	//{
-	//	const float valueAsFloat = static_cast<float>(value);
-
-	//	uint16_t mappedValue = 0;
-
-
-	//	if (valueAsFloat + windowOffsetAsFloat <= lowerBorder)
-	//	{
-	//		mappedValue = 0;
-	//	}
-	//	else if (valueAsFloat + windowOffsetAsFloat > upperBorder)
-	//	{
-	//		mappedValue = UINT16_MAX;
-	//	}
-	//	else
-	//	{
-	//		mappedValue = static_cast<uint16_t>(((valueAsFloat + windowOffsetAsFloat - windowCenterShifted) / windowWidthShifted + 0.5f) * max);
-	//	}
-
-	//	histo[mappedValue] = histo[mappedValue] + 1;
-	//}
-
-
-	static const std::pair<std::string, std::string> applyWindowFunctionLinear = std::make_pair("{{ applyWindowFunction }}",
+	static const std::pair<std::string, std::string> applyWindowFunctionLinearExact = std::make_pair("{{ applyWindowFunction }}",
 		"float applyWindow(float inputValue) { \n"
 		"	const float UINT16MAX = 65535.0f; \n"
 		"	const float UINT16STEPTOFLOAT = 1.0f / UINT16MAX; \n"
+		
+		"	const float lowerBorder = valueWindowCenter - (valueWindowWidth * 0.5f); \n"
+		"	const float upperBorder = valueWindowCenter + (valueWindowWidth * 0.5f); \n"
 
-		"	const float lowerBorder = valueWindowCenter - (UINT16STEPTOFLOAT * 0.5f) - ((valueWindowWidth - UINT16STEPTOFLOAT) / (2.0f * UINT16STEPTOFLOAT)); \n"
-		"	const float upperBorder = valueWindowCenter - (UINT16STEPTOFLOAT * 0.5f) + ((valueWindowWidth - UINT16STEPTOFLOAT) / (2.0f * UINT16STEPTOFLOAT)); \n"
-
-		"	const float mappedValue = ((inputValue + valueWindowOffset) - (valueWindowCenter - (UINT16STEPTOFLOAT * 0.5f))) / (valueWindowWidth - UINT16STEPTOFLOAT) + (UINT16STEPTOFLOAT * 0.5f); \n"
+		"	const float mappedValue = (inputValue + valueWindowOffset - valueWindowCenter) / valueWindowWidth + 0.5f; \n"
 
 		"	const float lowerBorderFactor = float(inputValue + valueWindowOffset <= lowerBorder); \n"
 		"	const float upperBorderFactor = float(inputValue + valueWindowOffset > upperBorder); \n"
@@ -220,6 +184,16 @@ namespace VDS::GLSL
 		"	const float result = (mappedValue * (1.0f - lowerBorderFactor)) * (1.0f - upperBorderFactor) + upperBorderFactor; \n"
 
 		"	return clamp(result, 0.0f, 1.0f); \n"
+		"} \n"
+	);
+
+	static const std::pair<std::string, std::string> applyWindowFunctionSigmoid = std::make_pair("{{ applyWindowFunction }}",
+		"float applyWindow(float inputValue) { \n"
+		"	const float UINT16MAX = 65535.0f; \n"
+
+		"	const float result = UINT16MAX / (1.0f + exp(-4.0f * ((inputValue + valueWindowOffset - valueWindowCenter) / valueWindowWidth))); \n"
+
+		"	return clamp(result / UINT16MAX, 0.0f, 1.0f); \n"
 		"} \n"
 	);
 

@@ -63,6 +63,8 @@ namespace VDS
 			ui.volumeViewWidget, &VolumeViewGL::updateValueWindowOffset);
 		connect(ui.comboBoxApplyWindowPresets, &QComboBox::currentTextChanged,
 			this, &MainWindow::setValueWindowPreset);
+		connect(ui.comboBoxApplyWindowFunction, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+			ui.volumeViewWidget, &VolumeViewGL::setValueWindowMethod);
 
 		// connect histogram update
 		connect(ui.groupBoxApplyWindow, &QGroupBox::toggled,

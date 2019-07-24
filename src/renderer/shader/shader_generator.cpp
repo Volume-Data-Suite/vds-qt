@@ -61,12 +61,36 @@ namespace VDS
 	{
 		if (windowSettings.enabled)
 		{
-			shader.replace(shader.find(GLSL::applyWindowFunction.first), GLSL::applyWindowFunction.first.length(), GLSL::applyWindowFunction.second);
 			shader.replace(shader.find(GLSL::accessVoxelWithWindow.first), GLSL::accessVoxelWithWindow.first.length(), GLSL::accessVoxelWithWindow.second);
+
+			switch (windowSettings.method)
+			{
+			case VDS::WindowingMethod::Linear:
+			{
+				shader.replace(shader.find(GLSL::applyWindowFunctionLinear.first), GLSL::applyWindowFunctionLinear.first.length(), GLSL::applyWindowFunctionLinear.second);
+				break;
+			}
+			case VDS::WindowingMethod::LinearExact:
+			{
+				shader.replace(shader.find(GLSL::applyWindowFunctionLinearExact.first), GLSL::applyWindowFunctionLinearExact.first.length(), GLSL::applyWindowFunctionLinearExact.second);
+				break;
+			}
+			case VDS::WindowingMethod::Sigmoid:
+			{
+				shader.replace(shader.find(GLSL::applyWindowFunctionSigmoid.first), GLSL::applyWindowFunctionSigmoid.first.length(), GLSL::applyWindowFunctionSigmoid.second);
+				break;
+			}
+			default:
+			{
+				shader.replace(shader.find(GLSL::applyWindowFunctionLinear.first), GLSL::applyWindowFunctionLinear.first.length(), GLSL::applyWindowFunctionLinear.second);
+				break;
+			}
+			}
+
 		}
 		else
 		{
-			shader.replace(shader.find(GLSL::applyWindowFunction.first), GLSL::applyWindowFunction.first.length(), "");
+			shader.replace(shader.find(GLSL::applyWindowFunctionLinear.first), GLSL::applyWindowFunctionLinear.first.length(), "");
 			shader.replace(shader.find(GLSL::accessVoxelWithoutWindow.first), GLSL::accessVoxelWithoutWindow.first.length(), GLSL::accessVoxelWithoutWindow.second);
 		}
 	}

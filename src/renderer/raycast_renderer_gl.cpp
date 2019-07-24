@@ -275,6 +275,12 @@ namespace VDS {
 
 		generateRaycastShaderProgram();
 	}
+	void RayCastRenderer::setValueWindowMethod(int method)
+	{
+		m_settings.windowSettings.method = VDS::WindowingMethod(method);
+
+		generateRaycastShaderProgram();
+	}
 	void RayCastRenderer::updateValueWindowWidth(float windowWidth)
 	{
 		m_settings.windowSettings.valueWindowWidth = windowWidth;

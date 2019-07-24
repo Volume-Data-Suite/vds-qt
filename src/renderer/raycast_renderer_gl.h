@@ -50,6 +50,7 @@ namespace VDS {
 		void updateThreshold(float threshold);
 
 		void applyValueWindow(bool active);
+		void setValueWindowMethod(int method);
 		void updateValueWindowWidth(float windowWidth);
 		void updateValueWindowCenter(float windowCenter);
 		void updateValueWindowOffset(float windowOffset);

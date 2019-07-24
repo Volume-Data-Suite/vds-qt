@@ -12,11 +12,19 @@ namespace VDS
 		Average,
 	};
 
+	// VOI LUT functions
+	enum class WindowingMethod {
+		Linear,
+		LinearExact,
+		Sigmoid
+	};
+
 	struct ValueWindowSettings
 	{
 		bool enabled = false;
-		float valueWindowWidth = static_cast<float>(UINT16_MAX);
-		float valueWindowCenter = static_cast<float>(UINT16_MAX / 2);
+		WindowingMethod method = WindowingMethod::Linear;
+		float valueWindowWidth = 1.0f;
+		float valueWindowCenter = 0.5f;
 		float valueWindowOffset = 0.0f;
 	};
 

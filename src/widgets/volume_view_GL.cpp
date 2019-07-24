@@ -77,6 +77,12 @@ void VolumeViewGL::applyValueWindow(bool active)
 	update();
 }
 
+void VolumeViewGL::setValueWindowMethod(int method)
+{
+	m_rayCastRenderer.setValueWindowMethod(method);
+	update();
+}
+
 void VolumeViewGL::updateValueWindowWidth(float windowWidth)
 {
 	m_rayCastRenderer.updateValueWindowWidth(1.0f / static_cast<float>(UINT16_MAX) * windowWidth);

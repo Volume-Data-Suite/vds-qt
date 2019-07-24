@@ -268,12 +268,12 @@
             <widget class="QComboBox" name="comboBoxApplyWindowFunction">
              <item>
               <property name="text">
-               <string>Linear</string>
+               <string>Linear (Default)</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>Linear (Exact)</string>
+               <string>Linear (Simple)</string>
               </property>
              </item>
              <item>

@@ -27,6 +27,7 @@ public slots:
 	void setRecommendedSampleStepLength(int factor);
 	void setRaycastMethod(int method);
 	void applyValueWindow(bool active);
+	void setValueWindowMethod(int method);
 	void updateValueWindowWidth(float windowWidth);
 	void updateValueWindowCenter(float windowCenter);
 	void updateValueWindowOffset(float windowOffset);
