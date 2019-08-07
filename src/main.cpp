@@ -11,9 +11,8 @@ int main(int argc, char *argv[]) {
 	fmt.setMajorVersion(4);
 	fmt.setMinorVersion(3);
 	fmt.setProfile(QSurfaceFormat::CoreProfile);
-	// TODO: expose a setting for buffer value (ie single/double/triple) for V-Sync
-	fmt.setSwapBehavior(QSurfaceFormat::SingleBuffer);
-	fmt.setSwapInterval(1);
+	fmt.setSwapBehavior(QSurfaceFormat::DefaultSwapBehavior);
+	fmt.setSwapInterval(0);
 #ifdef _DEBUG
 	fmt.setOption(QSurfaceFormat::DebugContext);
 #endif

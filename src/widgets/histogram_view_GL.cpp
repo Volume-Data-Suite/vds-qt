@@ -5,6 +5,7 @@
 
 HistogramViewGL::HistogramViewGL(QWidget *parent) : QOpenGLWidget(parent), m_histogramData(UINT16_MAX + 1, 0), m_histogramDataScaled(10, 0)
 {
+	m_width = m_height = 1;
 }
 
 
@@ -47,8 +48,8 @@ void HistogramViewGL::initializeGL()
 
 void HistogramViewGL::resizeGL(int w, int h)
 {
-	m_width = w;
-	m_height = h;
+	m_width = w > 1 ? w : 1;
+	m_height = h > 1 ? h : 1;
 	glViewport(0, 0, m_width, m_height);
 	calculateScaledHistogram();
 

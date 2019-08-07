@@ -46,6 +46,12 @@ void VolumeViewGL::setRenderLoop(bool onlyRerenderOnChange)
 	}
 }
 
+void VolumeViewGL::setBoundingBoxRenderStatus(bool active)
+{
+	m_rayCastRenderer.setBoundingBoxRenderStatus(active);
+	update();
+}
+
 void VolumeViewGL::setSampleStepLength(double stepLength)
 {
 	m_rayCastRenderer.updateSampleStepLength(static_cast<float>(stepLength));
@@ -272,7 +278,7 @@ void VolumeViewGL::logRenderDeviceInfo(const QString& title, GLenum name)
 
 void VolumeViewGL::setProjectionMatrix(float aspectRatio)
 {
-	constexpr GLfloat nearPlane = 0.0f;
+	constexpr GLfloat nearPlane = 0.0001f;
 	constexpr GLfloat farPlane = 10.0f;
 	constexpr GLfloat verticalAngle = 90.0f;
 

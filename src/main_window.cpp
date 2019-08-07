@@ -77,6 +77,10 @@ namespace VDS
 			this, &MainWindow::updateHistogram);
 		connect(ui.comboBoxApplyWindowFunction, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
 			this, &MainWindow::updateHistogram);
+
+		// connect bounding box settings
+		connect(ui.checkBoxRenderBoundingBox, &QCheckBox::stateChanged,
+			ui.volumeViewWidget, &VolumeViewGL::setBoundingBoxRenderStatus);
 	}
 
 	void MainWindow::openImportRawDialog()

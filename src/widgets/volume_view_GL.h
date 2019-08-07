@@ -22,6 +22,7 @@ public:
 
 public slots:
 	void setRenderLoop(bool onlyRerenderOnChange);
+	void setBoundingBoxRenderStatus(bool active);
 	void setSampleStepLength(double stepLength);
 	void setThreshold(double threshold);
 	void setRecommendedSampleStepLength(int factor);

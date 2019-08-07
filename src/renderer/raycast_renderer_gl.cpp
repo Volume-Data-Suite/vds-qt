@@ -30,7 +30,9 @@ namespace VDS {
 		if (m_renderBoundingBox)
 		{
 			setupVertexArray(RenderModes::Borders);
+			glCullFace(GL_BACK);
 			renderVolumeBorders();
+			glCullFace(GL_FRONT);
 			setupVertexArray(RenderModes::Mesh);
 		}
 
@@ -59,18 +61,15 @@ namespace VDS {
 		m_texture.setup(volumeSize, volumeSpacing);
 		m_noiseTexture.setup();
 
-
-		if (!generateRaycastShaderProgram())
-		{
-			return false;
-		}
-		
 		if (!setupVertexShaderBoundingBox() || !setupFragmentShaderBoundingBox())
 		{
 			return false;
 		}
-
 		if (!setupShaderProgramBoundingBox())
+		{
+			return false;
+		}
+		if (!generateRaycastShaderProgram())
 		{
 			return false;
 		}
@@ -164,19 +163,23 @@ namespace VDS {
 		
 		glUseProgram(m_shaderProgramBoundingBox);
 		{
-			const GLuint projectionViewModelMatrixID = glGetUniformLocation(m_shaderProgramRayCasting, "projectionViewModelMatrix");
-			const GLuint viewModelMatrixWithoutModleScaleID = glGetUniformLocation(m_shaderProgramRayCasting, "viewModelMatrixWithoutModleScale");
+			const GLuint projectionViewModelMatrixID = glGetUniformLocation(m_shaderProgramBoundingBox, "projectionViewModelMatrix");
+			const GLuint viewModelMatrixWithoutModleScaleID = glGetUniformLocation(m_shaderProgramBoundingBox, "viewModelMatrixWithoutModleScale");
 			glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE, projectionViewModelMatrix.data());
 		}
 		glUseProgram(0);
-
 
 		glUseProgram(m_shaderProgramRayCasting);
 		{
 			const GLuint projectionViewModelMatrixID = glGetUniformLocation(m_shaderProgramRayCasting, "projectionViewModelMatrix");
 			const GLuint viewModelMatrixWithoutModleScaleID = glGetUniformLocation(m_shaderProgramRayCasting, "viewModelMatrixWithoutModleScale");
+			const GLuint viewMatrixID = glGetUniformLocation(m_shaderProgramRayCasting, "viewMatrix");
+			const GLuint projectionMatrixID = glGetUniformLocation(m_shaderProgramRayCasting, "projectionMatrix");
+
 			glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE, projectionViewModelMatrix.data());
 			glUniformMatrix4fv(viewModelMatrixWithoutModleScaleID, 1, GL_FALSE, viewModelMatrixWithoutModleScale.data());
+			glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, m_viewMatrix->data());
+			glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, m_projectionMatrix->data());
 
 			const QVector3D rayOrigin = viewModelMatrixWithoutModleScale.inverted() * QVector3D({ 0.0, 0.0, 0.0 });
 
