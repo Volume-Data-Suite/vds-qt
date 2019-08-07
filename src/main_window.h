@@ -7,53 +7,47 @@
 
 #include "fileio/import_item_list.h"
 
-namespace VDS
-{
-	class MainWindow : public QMainWindow
-	{
-		Q_OBJECT
+namespace VDS {
+class MainWindow : public QMainWindow {
+    Q_OBJECT
 
-	public:
-		MainWindow(QWidget *parent = Q_NULLPTR);
+public:
+    MainWindow(QWidget* parent = Q_NULLPTR);
 
+public slots:
+    void openImportRawDialog();
+    void saveRecentFilesList();
+    void loadRecentFilesList();
+    void importRAW3D(const ImportItemRaw& item);
 
-	public slots:
-		void openImportRawDialog();
-		void saveRecentFilesList();
-		void loadRecentFilesList();
-		void importRAW3D(const ImportItemRaw& item);
+    void importRecentFile(std::size_t index);
 
-		void importRecentFile(std::size_t index);
+    void updateFrametime(float frameTime, float renderEverything, float volumeRendering);
 
-		void updateFrametime(float frameTime, float renderEverything, float volumeRendering);
+    void updateThresholdFromSlider(int threshold);
 
-		void updateThresholdFromSlider(int threshold);
+    void updateHistogram();
 
-		void updateHistogram();
+    void setValueWindowPreset(const QString& preset);
 
-		void setValueWindowPreset(const QString& preset);
+private:
+    void updateVolumeData();
+    void setupFileMenu();
+    void refreshRecentFiles();
 
-	private:
-		void updateVolumeData();
-		void setupFileMenu();
-		void refreshRecentFiles();
+    Ui::MainWindowClass ui;
 
-		Ui::MainWindowClass ui;
+    // File Menu
+    QMenu* m_menuFiles;
+    QAction* m_actionImportRAW3D;
+    QAction* m_actionImportBitmapSeries;
+    QAction* m_actionImportBinarySlices;
+    QMenu* m_menuRecentFiles;
+    QAction* m_actionExportRAW3D;
+    QAction* m_actionExportBitmapSeries;
 
-		// File Menu
-		QMenu* m_menuFiles;
-		QAction* m_actionImportRAW3D;
-		QAction* m_actionImportBitmapSeries;
-		QAction* m_actionImportBinarySlices;
-		QMenu* m_menuRecentFiles;
-		QAction* m_actionExportRAW3D;
-		QAction* m_actionExportBitmapSeries;
+    VDTK::VolumeDataHandler m_vdh;
 
-		VDTK::VolumeDataHandler m_vdh;
-
-
-		ImportItemList m_importList;
-	};
-}
-
-
+    ImportItemList m_importList;
+};
+} // namespace VDS
