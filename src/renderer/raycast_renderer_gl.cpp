@@ -62,6 +62,8 @@ bool RayCastRenderer::setup() {
         return false;
     }
 
+    updateNoise();
+
     resetModelMatrix();
 
     setBoundingBoxColor({1.0f, 1.0f, 1.0f, 1.0f});
