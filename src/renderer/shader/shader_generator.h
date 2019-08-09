@@ -16,6 +16,8 @@ private:
     static void insertRaycastMethod(std::string& shader, RayCastMethods method);
     static void insertApplyWindowMethod(std::string& shader,
                                         const ValueWindowSettings& windowSettings);
+    static void insertPhongShading(std::string& shader,
+                                        const bool active);
 };
 
 } // namespace VDS

@@ -60,11 +60,14 @@ static const std::string fragmentBase =
     "	return vec2(tNear, tFar); \n"
     "} \n"
 
-    "{{ applyWindowFunction }}"
+    "{{ applyWindowFunction }} \n"
 
     "float getVolumeValue(vec3 position) { \n"
     "	return {{ accessVoxel }}; \n"
     "} \n"
+
+    "{{ getGradient }} \n"
+    "{{ getPhongShading }} \n"
 
     "void main() \n"
     "{ \n"
@@ -129,22 +132,24 @@ static const std::pair<std::string, std::string> raycastinMethodLMID = std::make
                               "	fragColor.w = (maximum_intensity > 0.0f) ? 1.0f : 0.0f; \n");
 
 static const std::pair<std::string, std::string> raycastinMethodFirstHit = std::make_pair(
-    "{{ raycastingMethod }}", "	float firstHit = 0.0f; \n"
+    "{{ raycastingMethod }}", "	vec3 firstHit = vec3(0.0f); \n"
 
                               "	// Ray march until reaching the end of the volume \n"
+                              "	float intensity = 0.0f; \n"
                               "	for (int i = 0; i <= steps; i++) { \n"
-                              "		float intensity = getVolumeValue(position); \n"
+                              "		intensity = getVolumeValue(position); \n"
 
                               "		if(intensity >= threshold) { \n"
-                              "			firstHit = intensity; \n"
+                              "			firstHit = vec3((intensity > 0.0f) ? 0.5f : 0.0f);; \n"
+                              "			firstHit += phongShading(ray, position, vec3(0.0f)); "
                               "			break; \n"
                               "		} \n"
 
                               "		position += step_vector; \n"
                               "	} \n"
 
-                              "	fragColor.xyz = vec3((firstHit > 0.0f) ? 0.5f : 0.0f); \n"
-                              "	fragColor.w = (firstHit > 0.0f) ? 1.0f : 0.0f; \n");
+                              "	fragColor.xyz = firstHit; \n"
+                              "	fragColor.w = (intensity > 0.0f) ? 1.0f : 0.0f; \n");
 
 static const std::pair<std::string, std::string> applyWindowFunctionLinear = std::make_pair(
     "{{ applyWindowFunction }}",
@@ -208,47 +213,53 @@ static const std::pair<std::string, std::string> accessVoxelWithoutWindow =
 static const std::pair<std::string, std::string> accessVoxelWithWindow =
     std::make_pair("{{ accessVoxel }}", "applyWindow(texture(dataTex, position).r)");
 
-static const std::pair<std::string, std::string> getVoxelNormalOnTheFly =
-    std::make_pair("{{ getVoxelNormal }}",
-                   "float normal(vec3 position, float intensity) { \n"
-                   "	const float d = sampleStepLength; \n"
-                   "	const float dx = getVolumeValue(position + vec3(d, 0, 0)) - intensity; \n"
-                   "	const float dy = getVolumeValue(position + vec3(0, d, 0)) - intensity; \n"
-                   "	const float dz = getVolumeValue(position + vec3(0, 0, d)) - intensity; \n"
-                   "	return -normalize(vec3(dx, dy, dz)); \n"
-                   "} \n");
+static const std::pair<std::string, std::string> getGradientOnTheFly = std::make_pair(
+    "{{ getGradient }}", "vec3 getGradient(vec3 position) { \n"
+                         "	const float d = sampleStepLength; \n"
+                         "	const vec3 top = vec3(getVolumeValue(position + vec3(d, 0.0f, 0.0f)), "
+                         "getVolumeValue(position + vec3(0.0f, d, 0.0f)), getVolumeValue(position "
+                         "+ vec3(0.0f, 0.0f, d))); \n"
+                         "	const vec3 bottom = vec3(getVolumeValue(position - vec3(d, 0.0f, "
+                         "0.0f)), getVolumeValue(position - vec3(0.0f, d, 0.0f)), "
+                         "getVolumeValue(position - vec3(0.0f, 0.0f, d))); \n"
+                         "	return normalize(top - bottom); \n"
+                         "} \n");
 
-//// Blinn-Phong Shading
-// vec3 blinnPhong(vec3 N, vec3 L, vec3 V, vec3 position, vec3 diffuseColor, vec4 light, float diff)
-// { 	const vec3 H = normalize(L + V); 							// Halfway vector
+static const std::pair<std::string, std::string> getPhongShading = std::make_pair(
+    "{{ getPhongShading }}",
+    "vec3 phongShading(vec3 ray, vec3 position, vec3 lightPosition) { \n"
+    "	// Blinn-Phong shading \n"
+    "	vec3 Ka = vec3(0.1, 0.1, 0.1); // ambient \n"
+    "	vec3 Kd = vec3(0.6, 0.6, 0.6); // diffuse \n"
+    "	vec3 Ks = vec3(0.2, 0.2, 0.2); // specular \n"
+    "	float shininess = 100.0; \n"
 
-//	const vec3 ambient = vec3(kAmbient) * diffuseColor; 		// Ambient term
+    "	// light properties \n"
+    "	vec3 lightColor = vec3(1.0, 1.0, 1.0); \n"
+    "	vec3 ambientLight = vec3(0.3, 0.3, 0.3); \n"
 
-//	const vec3 diffuse = vec3(diff * kDiffus) * diffuseColor;	// Diffuse term
+    "	vec3 L = normalize(lightPosition - position); \n"
+    "	vec3 V = -normalize(ray); \n"
+    "	vec3 N = getGradient(position); \n"
+    "	vec3 H = normalize(L + V); \n"
 
-//	const float blinnSpec = (diff > 0.0f) ? pow(max(dot(H, N), 0), shininess) : 0.0f;
-//	const vec3 specular = vec3(blinnSpec * kSpecular);			// Specular term
+    "	// Compute ambient term \n"
+    "	vec3 ambient = Ka * ambientLight; \n"
+    "	// Compute the diffuse term \n"
+    "	float diffuseLight = max(dot(L, N), 0); \n"
+    "	vec3 diffuse = Kd * lightColor * diffuseLight; \n"
+    "	// Compute the specular term \n"
+    "	float specularLight = pow(max(dot(H, N), 0), shininess); \n"
+    "	if (diffuseLight <= 0) \n"
+    "	    specularLight = 0; \n"
+    "	vec3 specular = Ks * lightColor * specularLight; \n"
+    "	return ambient + diffuse + specular; \n"
 
-//	const float distance = length(L - position);				// Attenuation
-//	const float attenuation = 1.0f / (constant + linear * distance + quadratic * (distance *
-// distance));
+    //"	const float Ia = 0.1f; \n"
+    //"	const float Id = 1.0f * max(0.0f, dot(N, L)); \n"
+    //"	const float Is = 8.0 * pow(max(0, dot(N, H)), 600); \n"
+    //"	return (Ia + Id) * vec3(intensity) + Is * vec3(1.0); \n"
 
-//	return (ambient + diffuse + specular) * attenuation;
-//}
-
-static const std::pair<std::string, std::string> getPhongOnTheFly = std::make_pair(
-    "{{ getPhongShading }}", "float phongShading(vec3 lightPosition, float intensity) { \n"
-                             "	// Blinn-Phong shading \n"
-                             "	vec3 L = normalize(light_position - position); \n"
-                             "	vec3 V = -normalize(ray); \n"
-                             "	vec3 N = normal(position, intensity); \n"
-                             "	vec3 H = normalize(L + V); \n"
-
-                             "	const float Ia = 0.1f; \n"
-                             "	const float Id = 1.0f * max(0.0f, dot(N, L)); \n"
-                             "	const float Is = 8.0 * pow(max(0, dot(N, H)), 600); \n"
-                             "	return (Ia + Id) * vec3(intensity) + Is * vec3(1.0); \n"
-
-                             "} \n");
+    "} \n");
 
 } // namespace VDS::GLSL

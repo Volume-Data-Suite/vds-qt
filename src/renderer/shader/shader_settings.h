@@ -29,7 +29,8 @@ struct RaycastShaderSettings {
     std::array<float, 2> viewportSize = {100.0f, 100.0f};
 
     float sampleStepLength = 0.01f;
-    ;
     float threshold = 0.05f;
+
+	bool phongShading = true;
 };
 } // namespace VDS

@@ -11,6 +11,7 @@ const std::string ShaderGenerator::getFragmentShaderCode(const RaycastShaderSett
     insertGLSLVerion(fragmentShader);
     insertRaycastMethod(fragmentShader, settings.method);
     insertApplyWindowMethod(fragmentShader, settings.windowSettings);
+    insertPhongShading(fragmentShader, settings.phongShading);
 
     return fragmentShader;
 }
@@ -60,12 +61,6 @@ void ShaderGenerator::insertApplyWindowMethod(std::string& shader,
                        GLSL::accessVoxelWithWindow.second);
 
         switch (windowSettings.method) {
-        case VDS::WindowingMethod::Linear: {
-            shader.replace(shader.find(GLSL::applyWindowFunctionLinear.first),
-                           GLSL::applyWindowFunctionLinear.first.length(),
-                           GLSL::applyWindowFunctionLinear.second);
-            break;
-        }
         case VDS::WindowingMethod::LinearExact: {
             shader.replace(shader.find(GLSL::applyWindowFunctionLinearExact.first),
                            GLSL::applyWindowFunctionLinearExact.first.length(),
@@ -78,7 +73,8 @@ void ShaderGenerator::insertApplyWindowMethod(std::string& shader,
                            GLSL::applyWindowFunctionSigmoid.second);
             break;
         }
-        default: {
+        case VDS::WindowingMethod::Linear: 
+		default: {
             shader.replace(shader.find(GLSL::applyWindowFunctionLinear.first),
                            GLSL::applyWindowFunctionLinear.first.length(),
                            GLSL::applyWindowFunctionLinear.second);
@@ -92,6 +88,19 @@ void ShaderGenerator::insertApplyWindowMethod(std::string& shader,
         shader.replace(shader.find(GLSL::accessVoxelWithoutWindow.first),
                        GLSL::accessVoxelWithoutWindow.first.length(),
                        GLSL::accessVoxelWithoutWindow.second);
+    }
+}
+void ShaderGenerator::insertPhongShading(std::string& shader, const bool active) {
+    if (active) {
+        shader.replace(shader.find(GLSL::getGradientOnTheFly.first),
+                       GLSL::getGradientOnTheFly.first.length(), GLSL::getGradientOnTheFly.second);
+        shader.replace(shader.find(GLSL::getPhongShading.first),
+                       GLSL::getPhongShading.first.length(), GLSL::getPhongShading.second);
+    } else {
+        shader.replace(shader.find(GLSL::getGradientOnTheFly.first),
+                       GLSL::getGradientOnTheFly.first.length(), "");
+		shader.replace(shader.find(GLSL::getPhongShading.first),
+                       GLSL::getPhongShading.first.length(), "");
     }
 }
 } // namespace VDS
