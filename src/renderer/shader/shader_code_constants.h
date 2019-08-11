@@ -21,9 +21,6 @@ static const std::string fragmentBase =
     glslVersion.first +
     "\n"
 
-    "// prevent loops from unrolling (prevent random crashes) TODO: Optimize loop unrolling \n"
-    //"#pragma unroll 1 \n"
-
     "uniform mat4 viewModelMatrixWithoutModleScale; \n"
     "uniform mat4 viewMatrix; \n"
     "uniform mat4 projectionMatrix; \n"
@@ -44,6 +41,9 @@ static const std::string fragmentBase =
     "uniform float valueWindowWidth; \n"
     "uniform float valueWindowCenter; \n"
     "uniform float valueWindowOffset; \n"
+
+    "#define LIGHTSOURCES_COUNT {{ lightSourcesCount }} \n"
+    "uniform vec3[LIGHTSOURCES_COUNT] lightSources; \n"
 
     "out vec4 fragColor; \n"
     "out float gl_FragDepth; \n"
@@ -131,25 +131,29 @@ static const std::pair<std::string, std::string> raycastinMethodLMID = std::make
                               "	fragColor.xyz = vec3(maximum_intensity); \n"
                               "	fragColor.w = (maximum_intensity > 0.0f) ? 1.0f : 0.0f; \n");
 
-static const std::pair<std::string, std::string> raycastinMethodFirstHit = std::make_pair(
-    "{{ raycastingMethod }}", "	vec3 firstHit = vec3(0.0f); \n"
+static const std::pair<std::string, std::string> raycastinMethodFirstHit =
+    std::make_pair("{{ raycastingMethod }}",
+                   "	vec3 firstHit = vec3(0.0f); \n"
 
-                              "	// Ray march until reaching the end of the volume \n"
-                              "	float intensity = 0.0f; \n"
-                              "	for (int i = 0; i <= steps; i++) { \n"
-                              "		intensity = getVolumeValue(position); \n"
+                   "	// Ray march until reaching the end of the volume \n"
+                   "	float intensity = 0.0f; \n"
+                   "	for (int i = 0; i <= steps; i++) { \n"
+                   "		intensity = getVolumeValue(position); \n"
 
-                              "		if(intensity >= threshold) { \n"
-                              "			firstHit = vec3((intensity > 0.0f) ? 0.5f : 0.0f);; \n"
-                              "			firstHit += phongShading(ray, position, vec3(0.0f)); "
-                              "			break; \n"
-                              "		} \n"
+                   "		if(intensity >= threshold) { \n"
+                   "			firstHit = vec3((intensity > 0.0f) ? 0.5f : 0.0f); \n"
 
-                              "		position += step_vector; \n"
-                              "	} \n"
+                   "			for(int index = 0; index < LIGHTSOURCES_COUNT; index++) { \n"
+                   "				firstHit += phongShading(ray, position, lightSources[index]); "
+                   "			}\n"
+                   "			break; \n"
+                   "		} \n"
 
-                              "	fragColor.xyz = firstHit; \n"
-                              "	fragColor.w = (intensity > 0.0f) ? 1.0f : 0.0f; \n");
+                   "		position += step_vector; \n"
+                   "	} \n"
+
+                   "	fragColor.xyz = firstHit; \n"
+                   "	fragColor.w = (intensity > 0.0f) ? 1.0f : 0.0f; \n");
 
 static const std::pair<std::string, std::string> applyWindowFunctionLinear = std::make_pair(
     "{{ applyWindowFunction }}",
@@ -226,40 +230,32 @@ static const std::pair<std::string, std::string> getGradientOnTheFly = std::make
                          "} \n");
 
 static const std::pair<std::string, std::string> getPhongShading = std::make_pair(
-    "{{ getPhongShading }}",
-    "vec3 phongShading(vec3 ray, vec3 position, vec3 lightPosition) { \n"
-    "	// Blinn-Phong shading \n"
-    "	vec3 Ka = vec3(0.1, 0.1, 0.1); // ambient \n"
-    "	vec3 Kd = vec3(0.6, 0.6, 0.6); // diffuse \n"
-    "	vec3 Ks = vec3(0.2, 0.2, 0.2); // specular \n"
-    "	float shininess = 100.0; \n"
+    "{{ getPhongShading }}", "vec3 phongShading(vec3 ray, vec3 position, vec3 lightPosition) { \n"
+                             "	// Blinn-Phong shading \n"
+                             "	const vec3 Ka = vec3(0.1, 0.1, 0.1); // ambient \n"
+                             "	const vec3 Kd = vec3(0.6, 0.6, 0.6); // diffuse \n"
+                             "	const vec3 Ks = vec3(0.2, 0.2, 0.2); // specular \n"
+                             "	const float shininess = 100.0; \n"
 
-    "	// light properties \n"
-    "	vec3 lightColor = vec3(1.0, 1.0, 1.0); \n"
-    "	vec3 ambientLight = vec3(0.3, 0.3, 0.3); \n"
+                             "	// light properties \n"
+                             "	const vec3 lightColor = vec3(1.0, 1.0, 1.0); \n"
+                             "	const vec3 ambientLight = vec3(0.3, 0.3, 0.3); \n"
 
-    "	vec3 L = normalize(lightPosition - position); \n"
-    "	vec3 V = -normalize(ray); \n"
-    "	vec3 N = getGradient(position); \n"
-    "	vec3 H = normalize(L + V); \n"
+                             "	const vec3 L = normalize(lightPosition - position); \n"
+                             "	const vec3 V = -normalize(ray); \n"
+                             "	const vec3 N = getGradient(position); \n"
+                             "	const vec3 H = normalize(L + V); \n"
 
-    "	// Compute ambient term \n"
-    "	vec3 ambient = Ka * ambientLight; \n"
-    "	// Compute the diffuse term \n"
-    "	float diffuseLight = max(dot(L, N), 0); \n"
-    "	vec3 diffuse = Kd * lightColor * diffuseLight; \n"
-    "	// Compute the specular term \n"
-    "	float specularLight = pow(max(dot(H, N), 0), shininess); \n"
-    "	if (diffuseLight <= 0) \n"
-    "	    specularLight = 0; \n"
-    "	vec3 specular = Ks * lightColor * specularLight; \n"
-    "	return ambient + diffuse + specular; \n"
-
-    //"	const float Ia = 0.1f; \n"
-    //"	const float Id = 1.0f * max(0.0f, dot(N, L)); \n"
-    //"	const float Is = 8.0 * pow(max(0, dot(N, H)), 600); \n"
-    //"	return (Ia + Id) * vec3(intensity) + Is * vec3(1.0); \n"
-
-    "} \n");
+                             "	// Compute ambient term \n"
+                             "	const vec3 ambient = Ka * ambientLight; \n"
+                             "	// Compute the diffuse term \n"
+                             "	const float diffuseLight = max(dot(L, N), 0); \n"
+                             "	const vec3 diffuse = Kd * lightColor * diffuseLight; \n"
+                             "	// Compute the specular term \n"
+                             "	const float specularLight = diffuseLight <= 0 ? 0.0f : "
+                             "pow(max(dot(H, N), 0), shininess); \n"
+                             "	const vec3 specular = Ks * lightColor * specularLight; \n"
+                             "	return ambient + diffuse + specular; \n"
+                             "} \n");
 
 } // namespace VDS::GLSL

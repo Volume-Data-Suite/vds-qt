@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <vector>
 
 namespace VDS {
 enum class RayCastMethods {
@@ -31,6 +32,7 @@ struct RaycastShaderSettings {
     float sampleStepLength = 0.01f;
     float threshold = 0.05f;
 
-	bool phongShading = true;
+    std::vector<std::array<float, 3>> lightSources =
+        std::vector<std::array<float, 3>>(1, {0.0f, 0.0f, 0.0f});
 };
 } // namespace VDS
