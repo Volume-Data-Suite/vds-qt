@@ -30,14 +30,6 @@ void RayCastRenderer::render() {
         glCullFace(GL_FRONT);
         setupVertexArray(RenderModes::Mesh);
     }
-
-#ifdef _DEBUG
-    // check OpenGL error
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        qDebug() << "OpenGL error: " << err << endl;
-    }
-#endif // _DEBUG
 }
 
 bool RayCastRenderer::setup() {
@@ -166,16 +158,11 @@ void RayCastRenderer::applyMatrices() {
             glGetUniformLocation(m_shaderProgramRayCasting, "projectionViewModelMatrix");
         const GLuint viewModelMatrixWithoutModleScaleID =
             glGetUniformLocation(m_shaderProgramRayCasting, "viewModelMatrixWithoutModleScale");
-        const GLuint viewMatrixID = glGetUniformLocation(m_shaderProgramRayCasting, "viewMatrix");
-        const GLuint projectionMatrixID =
-            glGetUniformLocation(m_shaderProgramRayCasting, "projectionMatrix");
 
         glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE,
                            projectionViewModelMatrix.data());
         glUniformMatrix4fv(viewModelMatrixWithoutModleScaleID, 1, GL_FALSE,
                            viewModelMatrixWithoutModleScale.data());
-        glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, m_viewMatrix->data());
-        glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, m_projectionMatrix->data());
 
         const QVector3D rayOrigin =
             viewModelMatrixWithoutModleScale.inverted() * QVector3D({0.0, 0.0, 0.0});

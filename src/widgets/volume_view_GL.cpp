@@ -6,7 +6,8 @@
 #include <chrono>
 
 VolumeViewGL::VolumeViewGL(QWidget* parent)
-    : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix) {
+    : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix),
+      m_lightSourceRenderer(&m_projectionMatrix, &m_viewMatrix) {
     setProjectionMatrix(1.0f);
     resetViewMatrix();
 
@@ -18,18 +19,23 @@ VolumeViewGL::VolumeViewGL(QWidget* parent)
     m_lastFrameTimePoint = std::chrono::high_resolution_clock::now();
 
     m_rotationSpeed = 200.0f;
+
+	VDS::LightSource lightSource;
+    addLightSource(lightSource);
 }
 
 void VolumeViewGL::updateVolumeData(const std::array<std::size_t, 3> size,
                                     const std::array<float, 3> spacing,
                                     const std::vector<uint16_t>& volumeData) {
     m_rayCastRenderer.updateVolumeData(size, spacing, volumeData);
+    m_lightSourceRenderer.resetModelMatrix();
 
     // set sample step length to 1x optimal samples per ray
     setRecommendedSampleStepLength(0);
 
     resetViewMatrix();
     m_rayCastRenderer.applyMatrices();
+    m_lightSourceRenderer.applyMatrices();
 
     this->update();
 }
@@ -95,6 +101,14 @@ void VolumeViewGL::updateValueWindowOffset(float windowOffset) {
     update();
 }
 
+void VolumeViewGL::addLightSource(const VDS::LightSource& lightSource) {
+    m_lightSourceRenderer.addLightSource(lightSource);
+}
+
+void VolumeViewGL::deleteLightSource(const VDS::LightSource& lightSource) {
+    m_lightSourceRenderer.deleteLightSource(lightSource);
+}
+
 void VolumeViewGL::initializeGL() {
     initializeOpenGLFunctions();
 
@@ -123,6 +137,7 @@ void VolumeViewGL::initializeGL() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     m_rayCastRenderer.setup();
+    m_lightSourceRenderer.setup();
 }
 
 void VolumeViewGL::resizeGL(int w, int h) {
@@ -131,6 +146,7 @@ void VolumeViewGL::resizeGL(int w, int h) {
     const float aspectRatio = static_cast<float>(w) / static_cast<float>(h);
 
     setProjectionMatrix(aspectRatio);
+    m_lightSourceRenderer.applyMatrices();
     m_rayCastRenderer.applyMatrices();
     m_rayCastRenderer.updateAspectRation(aspectRatio);
     m_rayCastRenderer.updateViewPortSize(static_cast<float>(w), static_cast<float>(h));
@@ -144,6 +160,8 @@ void VolumeViewGL::paintGL() {
     const auto startRenderVolume = std::chrono::high_resolution_clock::now();
     m_rayCastRenderer.render();
     const auto endRenderVolume = std::chrono::high_resolution_clock::now();
+
+    m_lightSourceRenderer.render();
 
     const auto endRender = std::chrono::high_resolution_clock::now();
 
@@ -162,6 +180,14 @@ void VolumeViewGL::paintGL() {
         emit updateFrametime(frameTime, renderTime, renderTimeVolume);
         m_lastFrameTimeGUIUpdate = endRender;
     }
+
+#ifdef _DEBUG
+    // check OpenGL error
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        qDebug() << "OpenGL error: " << err << endl;
+    }
+#endif // _DEBUG
 
     if (m_renderloop) {
         update();
@@ -205,6 +231,9 @@ void VolumeViewGL::mouseMoveEvent(QMouseEvent* e) {
     m_rayCastRenderer.rotate(rotationAngle, axisInObjectCoordinates.x(),
                              axisInObjectCoordinates.y(), axisInObjectCoordinates.z());
 
+    m_lightSourceRenderer.rotate(rotationAngle, axisInObjectCoordinates.x(),
+                             axisInObjectCoordinates.y(), axisInObjectCoordinates.z());
+
     m_prevPos = e->pos();
 
     e->accept();
@@ -219,6 +248,7 @@ void VolumeViewGL::wheelEvent(QWheelEvent* e) {
     const float translateAmount = static_cast<float>(e->delta()) / 2500.0f;
     m_viewMatrix.translate(0, 0, translateAmount);
     m_rayCastRenderer.applyMatrices();
+    m_lightSourceRenderer.applyMatrices();
 
     e->accept();
     this->update();

@@ -95,14 +95,12 @@ void ShaderGenerator::insertPhongShading(std::string& shader, const bool precomp
     if (precomputedGradients) {
         shader.replace(shader.find(GLSL::getGradientOnTheFly.first),
                        GLSL::getGradientOnTheFly.first.length(), GLSL::getGradientOnTheFly.second);
-        shader.replace(shader.find(GLSL::getPhongShading.first),
-                       GLSL::getPhongShading.first.length(), GLSL::getPhongShading.second);
     } else {
         shader.replace(shader.find(GLSL::getGradientOnTheFly.first),
                        GLSL::getGradientOnTheFly.first.length(), GLSL::getGradientOnTheFly.second);
-        shader.replace(shader.find(GLSL::getPhongShading.first),
-                       GLSL::getPhongShading.first.length(), GLSL::getPhongShading.second);
     }
+    shader.replace(shader.find(GLSL::getPhongShading.first), GLSL::getPhongShading.first.length(),
+                   GLSL::getPhongShading.second);
 }
 void ShaderGenerator::insertLightSources(std::string& shader,
                                          const std::vector<std::array<float, 3>>& lightSources) {

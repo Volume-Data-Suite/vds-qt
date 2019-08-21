@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../renderer/raycast_renderer_gl.h"
+#include "../renderer/light_source_renderer_gl.h"
+#include "../renderer/light_source.h"
 
 #include <QMatrix4x4>
 #include <QMouseEvent>
@@ -31,6 +33,8 @@ public slots:
     void updateValueWindowWidth(float windowWidth);
     void updateValueWindowCenter(float windowCenter);
     void updateValueWindowOffset(float windowOffset);
+    void addLightSource(const VDS::LightSource& lightSource);
+    void deleteLightSource(const VDS::LightSource& lightSource);
 
 protected:
     void initializeGL() override;
@@ -61,6 +65,7 @@ private:
                              std::chrono::steady_clock::time_point end) const;
 
     VDS::RayCastRenderer m_rayCastRenderer;
+    VDS::LightSourceRenderer m_lightSourceRenderer;
 
     QMatrix4x4 m_projectionMatrix;
     QMatrix4x4 m_viewMatrix;

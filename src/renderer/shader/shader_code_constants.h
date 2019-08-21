@@ -22,8 +22,6 @@ static const std::string fragmentBase =
     "\n"
 
     "uniform mat4 viewModelMatrixWithoutModleScale; \n"
-    "uniform mat4 viewMatrix; \n"
-    "uniform mat4 projectionMatrix; \n"
 
     "uniform float focalLength; \n"
     "uniform float aspectRatio; \n"
@@ -95,19 +93,25 @@ static const std::string fragmentBase =
 
     "{{ raycastingMethod }} \n"
 
+    "	gl_FragDepth = length(position - ray_start) / gl_FragCoord.w; \n"
+
     "} \n";
 
 static const std::pair<std::string, std::string> raycastinMethodMID = std::make_pair(
     "{{ raycastingMethod }}",
     "	float maximum_intensity = 0.0f; \n"
+    "	vec3 maximum_intensity_position = position; \n"
 
     "	// Ray march until reaching the end of the volume \n"
     "	for (int i = 0; i <= steps; i++) { \n"
-    "		maximum_intensity = max(maximum_intensity, getVolumeValue(position)); \n"
+    "		const float current_value = getVolumeValue(position); \n"
+    "		maximum_intensity_position = (current_value > maximum_intensity) ? position : maximum_intensity_position; \n"
+    "		maximum_intensity = max(maximum_intensity, current_value); \n"
 
     "		position += step_vector; \n"
     "	} \n"
-    "	fragColor = vec4(vec3(maximum_intensity), 1.0f); \n");
+    "	position = maximum_intensity_position; \n"
+    "	fragColor = vec4(vec3(maximum_intensity, 0.0f, 0.0f), 1.0f); \n");
 
 static const std::pair<std::string, std::string> raycastinMethodLMID = std::make_pair(
     "{{ raycastingMethod }}", "	float maximum_intensity = 0.0f; \n"
