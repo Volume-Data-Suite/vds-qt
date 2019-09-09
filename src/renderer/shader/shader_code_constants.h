@@ -157,7 +157,7 @@ static const std::pair<std::string, std::string> raycastinMethodFirstHit =
                    "	} \n"
 
                    "	fragColor.xyz = firstHit; \n"
-                   "	fragColor.w = (intensity > 0.0f) ? 1.0f : 0.0f; \n");
+                   "	fragColor.w = (intensity >= threshold) ? 1.0f : 0.0f; \n");
 
 static const std::pair<std::string, std::string> applyWindowFunctionLinear = std::make_pair(
     "{{ applyWindowFunction }}",

@@ -157,11 +157,12 @@ void VolumeViewGL::paintGL() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    m_lightSourceRenderer.render();
+
     const auto startRenderVolume = std::chrono::high_resolution_clock::now();
     m_rayCastRenderer.render();
     const auto endRenderVolume = std::chrono::high_resolution_clock::now();
 
-    m_lightSourceRenderer.render();
 
     const auto endRender = std::chrono::high_resolution_clock::now();
 

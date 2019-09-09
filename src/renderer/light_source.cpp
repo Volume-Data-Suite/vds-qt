@@ -8,7 +8,7 @@ LightSource::LightSource() {
     m_modelMatrix = QMatrix4x4();
     m_modelMatrix.setToIdentity();
     m_modelMatrix.scale(0.2f);
-    m_modelMatrix.translate(QVector3D(0.0f, 0.0f, -8.0f));
+    m_modelMatrix.translate(QVector3D(0.0f, 0.0f, 0.0f));
 
 	setBrightness(1.0f);
     setVisibility(true);
