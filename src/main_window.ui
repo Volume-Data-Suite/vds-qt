@@ -269,6 +269,70 @@
              </property>
             </widget>
            </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="comboBoxApplyWindowPresets">
+             <item>
+              <property name="text">
+               <string>Default: No Change</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Head &amp; Neck: Brain</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Head &amp; Neck: Subdural</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Head &amp; Neck: Stroke</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Head &amp; Neck: Temporal Bones</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Head &amp; Neck: Soft Tissues</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Chest: Lungs</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Chest: Mediastinum</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Abdomen: Soft Tissues</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Abdomen: Liver</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Spine: Soft Tissues</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Spine: Bones</string>
+              </property>
+             </item>
+            </widget>
+           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="labelApplyWindowFunction">
              <property name="text">
@@ -353,80 +417,6 @@
              <property name="value">
               <number>0</number>
              </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QPushButton" name="pushButtonApplyWindow">
-             <property name="autoFillBackground">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Bake In Value Window</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QComboBox" name="comboBoxApplyWindowPresets">
-             <item>
-              <property name="text">
-               <string>Default: No Change</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Head &amp; Neck: Brain</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Head &amp; Neck: Subdural</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Head &amp; Neck: Stroke</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Head &amp; Neck: Temporal Bones</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Head &amp; Neck: Soft Tissues</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Chest: Lungs</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Chest: Mediastinum</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Abdomen: Soft Tissues</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Abdomen: Liver</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Spine: Soft Tissues</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Spine: Bones</string>
-              </property>
-             </item>
             </widget>
            </item>
           </layout>
