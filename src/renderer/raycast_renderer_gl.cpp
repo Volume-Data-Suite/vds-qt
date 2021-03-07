@@ -522,8 +522,8 @@ bool RayCastRenderer::generateRaycastShaderProgram() {
     updateValueWindowWidth(m_settings.windowSettings.valueWindowWidth);
     updateValueWindowCenter(m_settings.windowSettings.valueWindowCenter);
     updateValueWindowOffset(m_settings.windowSettings.valueWindowOffset);
-
     updateSampleStepLength(m_settings.sampleStepLength);
+    updateCameraPosition();
 
     return true;
 }
