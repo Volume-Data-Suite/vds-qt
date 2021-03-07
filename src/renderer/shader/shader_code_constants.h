@@ -97,20 +97,20 @@ static const std::string fragmentBase =
     "} \n";
 
 static const std::pair<std::string, std::string> raycastinMethodMID = std::make_pair(
-    "{{ raycastingMethod }}",
-    "	float maximum_intensity = 0.0f; \n"
-    "	vec3 maximum_intensity_position = position; \n"
+    "{{ raycastingMethod }}", "	float maximum_intensity = 0.0f; \n"
+                              "	vec3 maximum_intensity_position = position; \n"
 
-    "	// Ray march until reaching the end of the volume \n"
-    "	for (int i = 0; i <= steps; i++) { \n"
-    "		const float current_value = getVolumeValue(position); \n"
-    "		maximum_intensity_position = (current_value > maximum_intensity) ? position : maximum_intensity_position; \n"
-    "		maximum_intensity = max(maximum_intensity, current_value); \n"
+                              "	// Ray march until reaching the end of the volume \n"
+                              "	for (int i = 0; i <= steps; i++) { \n"
+                              "		const float current_value = getVolumeValue(position); \n"
+                              "		maximum_intensity_position = (current_value > "
+                              "maximum_intensity) ? position : maximum_intensity_position; \n"
+                              "		maximum_intensity = max(maximum_intensity, current_value); \n"
 
-    "		position += step_vector; \n"
-    "	} \n"
-    "	position = maximum_intensity_position; \n"
-    "	fragColor = vec4(vec3(maximum_intensity), 1.0f); \n");
+                              "		position += step_vector; \n"
+                              "	} \n"
+                              "	position = maximum_intensity_position; \n"
+                              "	fragColor = vec4(vec3(maximum_intensity), 1.0f); \n");
 
 static const std::pair<std::string, std::string> raycastinMethodLMID = std::make_pair(
     "{{ raycastingMethod }}", "	float maximum_intensity = 0.0f; \n"
@@ -156,6 +156,55 @@ static const std::pair<std::string, std::string> raycastinMethodFirstHit =
 
                    "	fragColor.xyz = firstHit; \n"
                    "	fragColor.w = (intensity >= threshold) ? 1.0f : 0.0f; \n");
+
+static const std::pair<std::string, std::string> raycastinMethodFirstHitDepth = std::make_pair(
+    "{{ raycastingMethod }}",
+    "	vec3 firstHit = vec3(0.0f); \n"
+
+    "	// Ray march until reaching the end of the volume \n"
+    "	float intensity = 0.0f; \n"
+    "	for (int i = 0; i <= steps; i++) { \n"
+    "		intensity = getVolumeValue(position); \n"
+
+    "		if(intensity >= threshold) { \n"
+    "			firstHit = vec3((intensity > 0.0f) ? 0.5f : 0.0f); \n"
+    "			break; \n"
+    "		} \n"
+
+    "		position += step_vector; \n"
+    "	} \n"
+
+    "	fragColor.xyz = position + 0.2f * phongShading(ray, position, cameraPosition); \n"
+    "	fragColor.w = 1.0f; \n");
+
+static const std::pair<std::string, std::string> raycastinMethodAccumulate =
+    std::make_pair("{{ raycastingMethod }}",
+                   "	vec4 result = vec4(0.0f); \n"
+
+                   "	// Ray march until reaching the end of the volume \n"
+                   "	float intensity = 0.0f; \n"
+                   "	for (int i = 0; i <= steps; i++) { \n"
+                   "		intensity = getVolumeValue(position); \n"
+
+                   "		if(intensity >= threshold) { \n"
+                   "	    	vec3 color = 2.0f * phongShading(ray, position, cameraPosition); \n"
+                   "	    	result += vec4((color / steps), 1.0f); \n"
+                   "		} \n"
+
+                   "		position += step_vector; \n"
+                   "	} \n"
+
+                   "	fragColor = result; \n");
+
+static const std::pair<std::string, std::string> raycastinMethodAverage = std::make_pair(
+    "{{ raycastingMethod }}", "	float sum = 0.0f; \n"
+
+                              "	// Ray march until reaching the end of the volume \n"
+                              "	for (int i = 0; i <= steps; i++) { \n"
+                              "		sum += getVolumeValue(position); \n"
+                              "		position += step_vector; \n"
+                              "	} \n"
+                              "	fragColor = vec4(vec3(sum / steps), 1.0f); \n");
 
 static const std::pair<std::string, std::string> applyWindowFunctionLinear = std::make_pair(
     "{{ applyWindowFunction }}",

@@ -7,6 +7,7 @@ enum class RayCastMethods {
     MIP,
     LMIP,
     FirstHit,
+    FirstHitDepth,
     Accumulate,
     Average,
 };

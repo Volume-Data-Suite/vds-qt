@@ -45,8 +45,24 @@ void ShaderGenerator::insertRaycastMethod(std::string& shader, RayCastMethods me
                        GLSL::raycastinMethodFirstHit.second);
         break;
     }
-    case VDS::RayCastMethods::Accumulate:
-    case VDS::RayCastMethods::Average:
+    case VDS::RayCastMethods::FirstHitDepth: {
+        shader.replace(shader.find(GLSL::raycastinMethodFirstHitDepth.first),
+                       GLSL::raycastinMethodFirstHitDepth.first.length(),
+                       GLSL::raycastinMethodFirstHitDepth.second);
+        break;
+    }
+    case VDS::RayCastMethods::Accumulate: {
+        shader.replace(shader.find(GLSL::raycastinMethodAccumulate.first),
+                       GLSL::raycastinMethodAccumulate.first.length(),
+                       GLSL::raycastinMethodAccumulate.second);
+        break;
+    }
+    case VDS::RayCastMethods::Average: {
+        shader.replace(shader.find(GLSL::raycastinMethodAverage.first),
+                       GLSL::raycastinMethodAverage.first.length(),
+                       GLSL::raycastinMethodAverage.second);
+        break;
+    }
     default: {
         std::runtime_error("unimplemented");
         break;

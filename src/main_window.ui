@@ -202,6 +202,21 @@
                <string>First Hit</string>
               </property>
              </item>
+             <item>
+              <property name="text">
+               <string>First Hit Depth</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Accumulate</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Average</string>
+              </property>
+             </item>
             </widget>
            </item>
            <item row="3" column="1">
