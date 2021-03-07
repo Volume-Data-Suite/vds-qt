@@ -14,9 +14,8 @@
 namespace VDS {
 
 RayCastRenderer::RayCastRenderer(const QMatrix4x4* const projectionMatrix,
-                                 const QMatrix4x4* const viewMatrix,
-                                 const std::vector<LightSource>* const lightSource)
-    : m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix), m_lightSources(lightSource),
+                                 const QMatrix4x4* const viewMatrix)
+    : m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix),
       m_noiseTexture(9) {
     m_renderBoundingBox = false;
 }
@@ -178,10 +177,12 @@ void RayCastRenderer::applyMatrices() {
 }
 void RayCastRenderer::rotate(float angle, float x, float y, float z) {
     m_rotationMatrix.rotate(angle, x, y, z);
+    updateCameraPosition();
     applyMatrices();
 }
 void RayCastRenderer::translate(float x, float y, float z) {
     m_translationMatrix.translate(x, y, z);
+    updateCameraPosition();
     applyMatrices();
 }
 void RayCastRenderer::scale(float factor) {
@@ -298,34 +299,7 @@ void RayCastRenderer::updateValueWindowOffset(float windowOffset) {
 
     glUseProgram(0);
 }
-void RayCastRenderer::updateLightSourceValues() {    
-	std::vector<QVector4D> positions(m_settings.lightSourceCount); 
 
-	const QMatrix4x4 modelMatrix = m_rotationMatrix * m_translationMatrix * m_scaleMatrix;
-
-	for (std::size_t index = 0; index < m_settings.lightSourceCount; index++) {
-
-		// TODO: Do not forget the light source renderer model matrix
-		// Create a class light_source_sammlung wiht own model matrix. change light_source_renderer to light_source_sammlung_renderer
-
-		positions[index] = modelMatrix * (m_lightSources->at(index).getModelMatrix().inverted() *
-                                          QVector4D(1.0f, 1.0f, 1.0f, 1.0f));
-        positions[index].setW(m_lightSources->at(index).getBrightness());
-    }
-
-    glUseProgram(m_shaderProgramRayCasting);
-
-    const GLuint lightSourcesPosition =
-        glGetUniformLocation(m_shaderProgramRayCasting, "lightSources");
-    glUniform4fv(lightSourcesPosition, sizeof(QVector4D) * m_settings.lightSourceCount,
-                 (float*)positions.data());
-
-    glUseProgram(0);
-}
-void RayCastRenderer::updateLightSourceCount() {
-    m_settings.lightSourceCount = m_lightSources->size();
-    generateRaycastShaderProgram();
-}
 void RayCastRenderer::setRayCastMethod(int method) {
     m_settings.method = static_cast<RayCastMethods>(method);
     generateRaycastShaderProgram();
@@ -382,6 +356,21 @@ void RayCastRenderer::updateNoise() {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // unbind shader programm
+    glUseProgram(0);
+}
+void RayCastRenderer::updateCameraPosition() {
+    glUseProgram(m_shaderProgramRayCasting);
+
+    const QMatrix4x4 projectionViewModelMatrix =
+        *m_projectionMatrix * *m_viewMatrix *
+        (m_rotationMatrix * m_translationMatrix * m_scaleMatrix);
+
+    const QVector4D cameraPositon =
+        projectionViewModelMatrix.inverted() * QVector4D(0.0f, 0.0f, 2.0f, 1.0f);
+
+    const GLuint cameraPositionPosition = glGetUniformLocation(m_shaderProgramRayCasting, "cameraPosition");
+    glUniform3f(cameraPositionPosition, cameraPositon.x(), cameraPositon.y(), cameraPositon.z());
+
     glUseProgram(0);
 }
 void RayCastRenderer::setupBuffers() {
@@ -535,8 +524,6 @@ bool RayCastRenderer::generateRaycastShaderProgram() {
     updateValueWindowOffset(m_settings.windowSettings.valueWindowOffset);
 
     updateSampleStepLength(m_settings.sampleStepLength);
-
-	updateLightSourceValues();
 
     return true;
 }

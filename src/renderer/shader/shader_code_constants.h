@@ -30,6 +30,8 @@ static const std::string fragmentBase =
     "uniform vec3 topAABB; \n"
     "uniform vec3 bottomAABB; \n"
 
+    "uniform vec3 cameraPosition; \n"
+
     "uniform sampler3D dataTex; \n"
     "uniform sampler2D noiseTex; \n"
 
@@ -39,9 +41,6 @@ static const std::string fragmentBase =
     "uniform float valueWindowWidth; \n"
     "uniform float valueWindowCenter; \n"
     "uniform float valueWindowOffset; \n"
-
-    "#define LIGHTSOURCES_COUNT {{ lightSourcesCount }} \n"
-    "uniform vec4[LIGHTSOURCES_COUNT] lightSources; \n"
 
     "out vec4 fragColor; \n"
     "out float gl_FragDepth; \n"
@@ -111,7 +110,7 @@ static const std::pair<std::string, std::string> raycastinMethodMID = std::make_
     "		position += step_vector; \n"
     "	} \n"
     "	position = maximum_intensity_position; \n"
-    "	fragColor = vec4(vec3(maximum_intensity, 0.0f, 0.0f), 1.0f); \n");
+    "	fragColor = vec4(vec3(maximum_intensity), 1.0f); \n");
 
 static const std::pair<std::string, std::string> raycastinMethodLMID = std::make_pair(
     "{{ raycastingMethod }}", "	float maximum_intensity = 0.0f; \n"
@@ -152,9 +151,8 @@ static const std::pair<std::string, std::string> raycastinMethodFirstHit =
                    "		position += step_vector; \n"
                    "	} \n"
 
-                   "	for(int index = 0; index < LIGHTSOURCES_COUNT; index++) { \n"
-                   "		firstHit += phongShading(ray, position, lightSources[index].xyz) * lightSources[index].w; "
-                   "	}\n"
+                   "	// Phong Shading \n"
+                   "		firstHit += 0.5f * phongShading(ray, position, cameraPosition); \n"
 
                    "	fragColor.xyz = firstHit; \n"
                    "	fragColor.w = (intensity >= threshold) ? 1.0f : 0.0f; \n");

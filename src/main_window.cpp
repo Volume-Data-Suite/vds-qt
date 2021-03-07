@@ -86,14 +86,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     // connect bounding box settings
     connect(ui.checkBoxRenderBoundingBox, &QCheckBox::stateChanged, ui.volumeViewWidget,
             &VolumeViewGL::setBoundingBoxRenderStatus);
-
-    // connect rotation options
-    connect(ui.radioButtonRotateVolumeOnly, &QRadioButton::clicked, ui.volumeViewWidget,
-            &VolumeViewGL::rotateVolumeOnly);
-    connect(ui.radioButtonRotateVolumeAndLights, &QRadioButton::clicked, ui.volumeViewWidget,
-            &VolumeViewGL::rotateVolumeAndLights);
-    connect(ui.radioButtonRotateLightsOnly, &QRadioButton::clicked, ui.volumeViewWidget,
-            &VolumeViewGL::rotateLightsOnly);
 }
 
 void MainWindow::openImportRawDialog() {

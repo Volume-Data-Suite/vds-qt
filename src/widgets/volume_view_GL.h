@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../renderer/light_source.h"
-#include "../renderer/light_source_renderer_gl.h"
 #include "../renderer/raycast_renderer_gl.h"
 
 #include <QMatrix4x4>
@@ -33,12 +31,6 @@ public slots:
     void updateValueWindowWidth(float windowWidth);
     void updateValueWindowCenter(float windowCenter);
     void updateValueWindowOffset(float windowOffset);
-    void addLightSource(const VDS::LightSource& lightSource);
-    // delete by value. This eleminates a lot of synching between the GUI and this class
-    void deleteLightSource(const VDS::LightSource& lightSource);
-    void rotateVolumeOnly();
-    void rotateVolumeAndLights();
-    void rotateLightsOnly();
 
 protected:
     void initializeGL() override;
@@ -55,8 +47,6 @@ protected:
 signals:
     void updateFrametime(float frameTime, float renderEverything, float volumeRendering);
     void updateSampleStepLength(double stepLength);
-    void updateLightSourceValues();
-    void updateLightSourceCount();
 
 private:
     void logQSurfaceFormat() const;
@@ -64,7 +54,6 @@ private:
 
     void setProjectionMatrix(float aspectRatio);
     void resetViewMatrix();
-    void setupLightSources();
 
     QVector3D getArcBallVector(QPoint p);
 
@@ -72,8 +61,6 @@ private:
                              std::chrono::steady_clock::time_point end) const;
 
     VDS::RayCastRenderer m_rayCastRenderer;
-    VDS::LightSourceRenderer m_lightSourceRenderer;
-    std::vector<VDS::LightSource> m_lightSources;
 
     QMatrix4x4 m_projectionMatrix;
     QMatrix4x4 m_viewMatrix;
@@ -82,8 +69,6 @@ private:
     bool m_leftButtonPressed;
     QPoint m_prevPos;
     float m_rotationSpeed;
-    bool m_rotateVolume;
-    bool m_rotateLights;
 
     bool m_renderloop;
     std::chrono::steady_clock::time_point m_lastFrameTimePoint;

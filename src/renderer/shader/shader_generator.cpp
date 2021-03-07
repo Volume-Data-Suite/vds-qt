@@ -12,7 +12,6 @@ const std::string ShaderGenerator::getFragmentShaderCode(const RaycastShaderSett
     insertRaycastMethod(fragmentShader, settings.method);
     insertApplyWindowMethod(fragmentShader, settings.windowSettings);
     insertPhongShading(fragmentShader, false);
-    insertLightSources(fragmentShader, settings.lightSourceCount);
 
     return fragmentShader;
 }
@@ -101,10 +100,5 @@ void ShaderGenerator::insertPhongShading(std::string& shader, const bool precomp
     }
     shader.replace(shader.find(GLSL::getPhongShading.first), GLSL::getPhongShading.first.length(),
                    GLSL::getPhongShading.second);
-}
-void ShaderGenerator::insertLightSources(std::string& shader, std::size_t lightSourceCount) {
-    shader.replace(shader.find("{{ lightSourcesCount }}"),
-                   std::string("{{ lightSourcesCount }}").length(),
-                   std::to_string(lightSourceCount > 0 ? lightSourceCount : 1));
 }
 } // namespace VDS

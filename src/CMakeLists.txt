@@ -29,10 +29,6 @@ add_executable(VDS
 	renderer/textures/volume_data_3D_texture.h
 	renderer/textures/volume_data_3D_texture.cpp
 	renderer/textures/texture_units.h
-	renderer/light_source.h
-	renderer/light_source.cpp
-	renderer/light_source_renderer_gl.h
-	renderer/light_source_renderer_gl.cpp
 	renderer/raycast_renderer_gl.h
 	renderer/raycast_renderer_gl.cpp
 
