@@ -17,8 +17,7 @@ private:
     static void insertApplyWindowMethod(std::string& shader,
                                         const ValueWindowSettings& windowSettings);
     static void insertPhongShading(std::string& shader, const bool active);
-    static void insertLightSources(std::string& shader,
-                                   const std::vector<std::array<float, 3>>& lightSources);
+    static void insertLightSources(std::string& shader, std::size_t lightSourceCount);
 };
 
 } // namespace VDS

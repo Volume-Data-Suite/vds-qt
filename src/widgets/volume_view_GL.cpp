@@ -6,8 +6,9 @@
 #include <chrono>
 
 VolumeViewGL::VolumeViewGL(QWidget* parent)
-    : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix),
-      m_lightSourceRenderer(&m_projectionMatrix, &m_viewMatrix) {
+    : QOpenGLWidget(parent),
+      m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix, &m_lightSources),
+      m_lightSourceRenderer(&m_projectionMatrix, &m_viewMatrix, &m_lightSources) {
     setProjectionMatrix(1.0f);
     resetViewMatrix();
 
@@ -19,9 +20,13 @@ VolumeViewGL::VolumeViewGL(QWidget* parent)
     m_lastFrameTimePoint = std::chrono::high_resolution_clock::now();
 
     m_rotationSpeed = 200.0f;
+    m_rotateVolume = true;
+    m_rotateLights = false;
 
-	VDS::LightSource lightSource;
-    addLightSource(lightSource);
+	connect(this, &VolumeViewGL::updateLightSourceCount,
+            &m_rayCastRenderer, &VDS::RayCastRenderer::updateLightSourceCount);
+    connect(this, &VolumeViewGL::updateLightSourceValues, &m_rayCastRenderer,
+            &VDS::RayCastRenderer::updateLightSourceValues);
 }
 
 void VolumeViewGL::updateVolumeData(const std::array<std::size_t, 3> size,
@@ -102,11 +107,29 @@ void VolumeViewGL::updateValueWindowOffset(float windowOffset) {
 }
 
 void VolumeViewGL::addLightSource(const VDS::LightSource& lightSource) {
-    m_lightSourceRenderer.addLightSource(lightSource);
+    m_lightSources.push_back(lightSource);
+    updateLightSourceCount();
 }
 
 void VolumeViewGL::deleteLightSource(const VDS::LightSource& lightSource) {
-    m_lightSourceRenderer.deleteLightSource(lightSource);
+    m_lightSources.erase(std::remove(m_lightSources.begin(), m_lightSources.end(), lightSource),
+                         m_lightSources.end());
+    updateLightSourceCount();
+}
+
+void VolumeViewGL::rotateVolumeOnly() {
+    m_rotateVolume = true;
+    m_rotateLights = false;
+}
+
+void VolumeViewGL::rotateVolumeAndLights() {
+    m_rotateVolume = true;
+    m_rotateLights = true;
+}
+
+void VolumeViewGL::rotateLightsOnly() {
+    m_rotateVolume = false;
+    m_rotateLights = true;
 }
 
 void VolumeViewGL::initializeGL() {
@@ -138,6 +161,8 @@ void VolumeViewGL::initializeGL() {
 
     m_rayCastRenderer.setup();
     m_lightSourceRenderer.setup();
+
+    setupLightSources();
 }
 
 void VolumeViewGL::resizeGL(int w, int h) {
@@ -162,7 +187,6 @@ void VolumeViewGL::paintGL() {
     const auto startRenderVolume = std::chrono::high_resolution_clock::now();
     m_rayCastRenderer.render();
     const auto endRenderVolume = std::chrono::high_resolution_clock::now();
-
 
     const auto endRender = std::chrono::high_resolution_clock::now();
 
@@ -226,14 +250,23 @@ void VolumeViewGL::mouseMoveEvent(QMouseEvent* e) {
     const float rotationAngle = std::acos(std::min(1.0f, dot)) * m_rotationSpeed;
 
     const QVector3D axisInCameraCoordinates = QVector3D::crossProduct(oldPosition, newPosition);
-    const QVector3D axisInObjectCoordinates =
-        m_rayCastRenderer.getModelMatrix().inverted() * axisInCameraCoordinates;
 
-    m_rayCastRenderer.rotate(rotationAngle, axisInObjectCoordinates.x(),
-                             axisInObjectCoordinates.y(), axisInObjectCoordinates.z());
+    if (m_rotateVolume) {
+        const QVector3D axisInObjectCoordinates =
+            m_rayCastRenderer.getModelMatrix().inverted() * axisInCameraCoordinates;
+        m_rayCastRenderer.rotate(rotationAngle, axisInObjectCoordinates.x(),
+                                 axisInObjectCoordinates.y(), axisInObjectCoordinates.z());
+    }
+    if (m_rotateLights) {
+        const QVector3D axisInObjectCoordinates =
+            m_lightSourceRenderer.getModelMatrix().inverted() * axisInCameraCoordinates;
+        m_lightSourceRenderer.rotate(rotationAngle, axisInObjectCoordinates.x(),
+                                     axisInObjectCoordinates.y(), axisInObjectCoordinates.z());
+    }
 
-    m_lightSourceRenderer.rotate(rotationAngle, axisInObjectCoordinates.x(),
-                             axisInObjectCoordinates.y(), axisInObjectCoordinates.z());
+	if (m_rotateVolume != m_rotateLights) {
+        updateLightSourceValues();
+    }
 
     m_prevPos = e->pos();
 
@@ -303,6 +336,20 @@ void VolumeViewGL::resetViewMatrix() {
     m_viewMatrix.setToIdentity();
     m_viewMatrix.lookAt(eye, lookAt, up);
     m_viewMatrix.translate(0.0f, 0.0f, -0.2f);
+}
+
+void VolumeViewGL::setupLightSources() {
+    VDS::LightSource light1, light2, light3, light4;
+
+    light1.translate(QVector3D(8.0f, 8.0f, 8.0f));
+    light2.translate(QVector3D(-8.0f, 8.0f, 8.0f));
+    light3.translate(QVector3D(8.0f, -8.0f, 8.0f));
+    light4.translate(QVector3D(-8.0f, -8.0f, 8.0f));
+
+    addLightSource(light1);
+    addLightSource(light2);
+    addLightSource(light3);
+    addLightSource(light4);
 }
 
 QVector3D VolumeViewGL::getArcBallVector(QPoint p) {

@@ -10,7 +10,7 @@ LightSource::LightSource() {
     m_modelMatrix.scale(0.2f);
     m_modelMatrix.translate(QVector3D(0.0f, 0.0f, 0.0f));
 
-	setBrightness(1.0f);
+    setBrightness(0.3f);
     setVisibility(true);
 }
 
@@ -20,6 +20,10 @@ void LightSource::setBrightness(float brightness) {
 
 void LightSource::setVisibility(bool isVisible) {
     m_visible = isVisible;
+}
+
+void LightSource::translate(const QVector3D& direction) {
+    m_modelMatrix.translate(direction);
 }
 
 QMatrix4x4 LightSource::getModelMatrix() const {
@@ -33,7 +37,5 @@ float LightSource::getBrightness() const {
 bool LightSource::getVisibility() const {
     return m_visible;
 }
-
-
 
 } // namespace VDS

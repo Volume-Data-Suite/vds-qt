@@ -15,7 +15,8 @@ class LightSourceRenderer : public QObject, protected QOpenGLFunctions_4_3_Core 
 
 public:
     LightSourceRenderer(const QMatrix4x4* const projectionMatrix,
-                        const QMatrix4x4* const viewMatrix);
+                        const QMatrix4x4* const viewMatrix,
+                        const std::vector<LightSource>* const lightSource);
     ~LightSourceRenderer();
 
     void render();
@@ -27,10 +28,6 @@ public:
     void translate(float x, float y, float z);
     void scale(float factor);
     void resetModelMatrix();
-
-	void addLightSource(const LightSource& lightSource);
-	// delete by value. This eleminates a lot of synching between the GUI and this class
-    void deleteLightSource(const LightSource& lightSource);
     
 private:
     void setupBuffers();
@@ -55,6 +52,6 @@ private:
     QMatrix4x4 m_translationMatrix;
     QMatrix4x4 m_scaleMatrix;
 
-	std::vector<LightSource> m_lightSources;
+	const std::vector<LightSource>* const m_lightSources;
 };
 } // namespace VDS

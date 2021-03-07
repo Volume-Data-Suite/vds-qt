@@ -32,7 +32,6 @@ struct RaycastShaderSettings {
     float sampleStepLength = 0.01f;
     float threshold = 0.05f;
 
-    std::vector<std::array<float, 3>> lightSources =
-        std::vector<std::array<float, 3>>(1, {0.0f, 0.0f, 0.0f});
+	std::size_t lightSourceCount = 0;
 };
 } // namespace VDS

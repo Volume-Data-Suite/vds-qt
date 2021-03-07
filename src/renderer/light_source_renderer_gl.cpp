@@ -13,8 +13,9 @@
 namespace VDS {
 
 LightSourceRenderer::LightSourceRenderer(const QMatrix4x4* const projectionMatrix,
-                                         const QMatrix4x4* const viewMatrix)
-    : m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix) {}
+                                         const QMatrix4x4* const viewMatrix,
+                                         const std::vector<LightSource>* const lightSource)
+    : m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix), m_lightSources(lightSource) {}
 
 LightSourceRenderer::~LightSourceRenderer() {}
 void LightSourceRenderer::render() {
@@ -25,7 +26,7 @@ void LightSourceRenderer::render() {
     glBindVertexArray(m_vao_cube_vertices);
 
 	// render all light sources without rebinding the shader programm each time
-    for (const LightSource& light : m_lightSources) {
+    for (const LightSource& light : *m_lightSources) {
         const GLuint modelMatrixLocation = glGetUniformLocation(m_shaderProgram, "modelMatrix");
         glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, light.getModelMatrix().data());
 
@@ -60,13 +61,6 @@ void LightSourceRenderer::resetModelMatrix() {
     m_translationMatrix.setToIdentity();
     m_scaleMatrix.setToIdentity();
     applyMatrices();
-}
-void LightSourceRenderer::addLightSource(const LightSource& lightSource) {
-    m_lightSources.push_back(lightSource);
-}
-void LightSourceRenderer::deleteLightSource(const LightSource& lightSource) {
-    m_lightSources.erase(std::remove(m_lightSources.begin(), m_lightSources.end(), lightSource),
-                         m_lightSources.end());
 }
 void LightSourceRenderer::applyMatrices() {
     glUseProgram(m_shaderProgram);

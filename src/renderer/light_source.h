@@ -2,6 +2,7 @@
 
 #include <array>
 #include <QMatrix4x4>
+#include <QVector3D>
 
 namespace VDS {
 
@@ -12,6 +13,7 @@ public:
 
     void setBrightness(float brightness);
     void setVisibility(bool isVisible);
+    void translate(const QVector3D& direction);
 
     QMatrix4x4 getModelMatrix() const;
     float getBrightness() const;

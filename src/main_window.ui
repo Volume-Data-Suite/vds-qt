@@ -233,6 +233,42 @@
             <number>0</number>
            </property>
            <item>
+            <widget class="QGroupBox" name="groupBoxRotation">
+             <property name="title">
+              <string>Lights position</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_7">
+              <property name="topMargin">
+               <number>18</number>
+              </property>
+              <item>
+               <widget class="QRadioButton" name="radioButtonRotateVolumeOnly">
+                <property name="text">
+                 <string>Rotate volume only</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButtonRotateVolumeAndLights">
+                <property name="text">
+                 <string>Rotate volume and lights</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="radioButtonRotateLightsOnly">
+                <property name="text">
+                 <string>Rotate lights only</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QGroupBox" name="groupBoxLightSources">
              <property name="title">
               <string>Light Sources</string>

@@ -41,7 +41,7 @@ static const std::string fragmentBase =
     "uniform float valueWindowOffset; \n"
 
     "#define LIGHTSOURCES_COUNT {{ lightSourcesCount }} \n"
-    "uniform vec3[LIGHTSOURCES_COUNT] lightSources; \n"
+    "uniform vec4[LIGHTSOURCES_COUNT] lightSources; \n"
 
     "out vec4 fragColor; \n"
     "out float gl_FragDepth; \n"
@@ -146,15 +146,15 @@ static const std::pair<std::string, std::string> raycastinMethodFirstHit =
 
                    "		if(intensity >= threshold) { \n"
                    "			firstHit = vec3((intensity > 0.0f) ? 0.5f : 0.0f); \n"
-
-                   "			for(int index = 0; index < LIGHTSOURCES_COUNT; index++) { \n"
-                   "				firstHit += phongShading(ray, position, lightSources[index]); "
-                   "			}\n"
                    "			break; \n"
                    "		} \n"
 
                    "		position += step_vector; \n"
                    "	} \n"
+
+                   "	for(int index = 0; index < LIGHTSOURCES_COUNT; index++) { \n"
+                   "		firstHit += phongShading(ray, position, lightSources[index].xyz) * lightSources[index].w; "
+                   "	}\n"
 
                    "	fragColor.xyz = firstHit; \n"
                    "	fragColor.w = (intensity >= threshold) ? 1.0f : 0.0f; \n");

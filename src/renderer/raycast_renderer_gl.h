@@ -7,6 +7,7 @@
 #include <QOpenGLVertexArrayObject>
 
 #include <array>
+#include "light_source.h"
 #include "shader/shader_generator.h"
 #include "textures/noise_texture_2D.h"
 #include "textures/volume_data_3D_texture.h"
@@ -21,7 +22,8 @@ enum class RenderModes {
 class RayCastRenderer : public QObject, protected QOpenGLFunctions_4_3_Core {
 
 public:
-    RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix);
+    RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix,
+                        const std::vector<LightSource>* const lightSource);
     ~RayCastRenderer();
 
     void render();
@@ -52,6 +54,12 @@ public:
     void updateValueWindowWidth(float windowWidth);
     void updateValueWindowCenter(float windowCenter);
     void updateValueWindowOffset(float windowOffset);
+
+	
+	// triggers a uniform update
+    void updateLightSourceValues();
+    // triggers a shader recompilation
+    void updateLightSourceCount();
 
     void setRayCastMethod(int method);
 
@@ -117,6 +125,8 @@ private:
 
     // stores random jitter noise
     NoiseTexture2D m_noiseTexture;
+
+	const std::vector<LightSource>* const m_lightSources;
 
     RaycastShaderSettings m_settings;
 
