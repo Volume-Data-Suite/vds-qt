@@ -23,6 +23,7 @@ protected:
 
 private:
     void calculateScaledHistogram();
+    void updateTexture();
 
     void setupBuffers();
     void setupVertexArray();

@@ -16,6 +16,8 @@ void HistogramViewGL::updateHistogramData(const std::vector<uint16_t>& histo, bo
     }
 
     calculateScaledHistogram();
+    updateTexture();
+    update();
 }
 
 void HistogramViewGL::initializeGL() {
@@ -87,17 +89,17 @@ void HistogramViewGL::calculateScaledHistogram() {
                               m_histogramData.begin() + (index + 1) * sectionSize - 1);
     }
 
-    setupTexture();
-
     m_max = *std::max_element(m_histogramDataScaled.begin(), m_histogramDataScaled.end());
+}
+
+void HistogramViewGL::updateTexture() {
+    setupTexture();
 
     glUseProgram(m_shaderProgram);
     const float maxNormalized = static_cast<float>(m_max) / static_cast<float>(UINT16_MAX);
     const GLuint max = glGetUniformLocation(m_shaderProgram, "max");
     glUniform1f(max, maxNormalized);
     glUseProgram(0);
-
-    update();
 }
 
 void HistogramViewGL::setupBuffers() {

@@ -227,10 +227,8 @@ void MainWindow::updateThresholdFromSlider(int threshold) {
 void MainWindow::updateHistogram() {
     const bool windowingEnabled = ui.groupBoxApplyWindow->isChecked();
 
-    if (!windowingEnabled) {
-        ui.openGLWidgetHistogram->updateHistogramData(m_vdh.getHistogram(), false);
-        return;
-    }
+    std::vector<uint16_t> histogram{};
+    bool ignoreBorders = windowingEnabled;
 
     const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
     const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
@@ -238,8 +236,13 @@ void MainWindow::updateHistogram() {
     const VDTK::WindowingFunction function =
         VDTK::WindowingFunction(ui.comboBoxApplyWindowFunction->currentIndex());
 
-    ui.openGLWidgetHistogram->updateHistogramData(
-        m_vdh.getHistogramWidthWindowing(function, windowCenter, windowWidth, windowOffset), true);
+    if (windowingEnabled) {
+        histogram = m_vdh.getHistogramWidthWindowing(function, windowCenter, windowWidth, windowOffset);
+    } else {
+        histogram = m_vdh.getHistogram();
+    }
+
+    ui.openGLWidgetHistogram->updateHistogramData(histogram, ignoreBorders);
 }
 
 void MainWindow::setValueWindowPreset(const QString& preset) {
