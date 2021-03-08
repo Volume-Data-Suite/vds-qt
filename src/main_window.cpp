@@ -134,6 +134,10 @@ void MainWindow::importRAW3D(const ImportItemRaw& item3D) {
     const VDTK::VolumeSize size = Helper::QVector3DToVolumeSize(item3D.getSize());
     const VDTK::VolumeSpacing spacing = Helper::QVector3DToVolumeSpacing(item3D.getSpacing());
     if (m_vdh.importRawFile(item3D.getFilePath(), item3D.getBitsPerVoxel(), size, spacing)) {
+        if (item3D.representedInLittleEndian() == checkIsBigEndian()) {
+            m_vdh.convertEndianness();
+        }
+
         updateVolumeData();
 
         // add to recent files

@@ -9,12 +9,12 @@ ExportItem::ExportItem(const std::filesystem::path& path) : m_path{path} {}
 
 ExportItemRaw::ExportItemRaw(const std::filesystem::path& filePath, const uint8_t bitsPerVoxel,
                              const bool little_endian)
-    : ExportItem(filePath), m_bitsPerVoxel(bitsPerVoxel), m_little_endian(little_endian) {}
+    : ExportItem(filePath), m_bitsPerVoxel(bitsPerVoxel), m_littleEndian(little_endian) {}
 
 uint8_t ExportItemRaw::getBitsPerVoxel() const {
     return m_bitsPerVoxel;
 }
 bool ExportItemRaw::representedInLittleEndian() const {
-    return m_little_endian;
+    return m_littleEndian;
 }
 } // namespace VDS

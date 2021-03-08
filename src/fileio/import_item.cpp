@@ -8,11 +8,14 @@ const std::filesystem::path ImportItem::getFilePath() const {
 ImportItem::ImportItem(const std::filesystem::path& path) : m_path{path} {}
 
 ImportItemRaw::ImportItemRaw(const std::filesystem::path& filePath, const uint8_t bitsPerVoxel,
-                             const QVector3D& size, const QVector3D& spacing)
-    : ImportItem(filePath), m_bitsPerVoxel(bitsPerVoxel), m_size(size), m_spacing(spacing) {}
+                             const bool little_endian, const QVector3D& size,
+                             const QVector3D& spacing)
+    : ImportItem(filePath), m_bitsPerVoxel(bitsPerVoxel), m_littleEndian(little_endian),
+      m_size(size), m_spacing(spacing) {}
 
 ImportItemRaw::ImportItemRaw()
-    : m_bitsPerVoxel{}, m_size{}, m_spacing{}, ImportItem{std::filesystem::path{}} {}
+    : m_bitsPerVoxel{}, m_littleEndian{}, m_size{}, m_spacing{}, ImportItem{
+                                                                     std::filesystem::path{}} {}
 
 const QString ImportItemRaw::getFileName() const {
     return QString::fromStdString(m_path.filename().string());
@@ -25,6 +28,9 @@ const QVector3D ImportItemRaw::getSpacing() const {
 }
 uint8_t ImportItemRaw::getBitsPerVoxel() const {
     return m_bitsPerVoxel;
+}
+bool ImportItemRaw::representedInLittleEndian() const {
+    return m_littleEndian;
 }
 const QJsonObject ImportItemRaw::serialize() const {
     // QJsonObject supports just a few data types
@@ -41,6 +47,7 @@ const QJsonObject ImportItemRaw::serialize() const {
     QJsonObject json;
     json["path"] = QString(m_path.string().c_str());
     json["bitPerVoxel"] = m_bitsPerVoxel;
+    json["littleEndian"] = m_littleEndian;
     json["size"] = jsonSize;
     json["spacing"] = jsonSpacing;
 
@@ -60,5 +67,6 @@ void ImportItemRaw::deserialize(const QJsonObject& json) {
     m_path = std::filesystem::path(json["path"].toString().toStdString());
 
     m_bitsPerVoxel = static_cast<uint8_t>(json["bitPerVoxel"].toInt());
+    m_littleEndian = static_cast<uint8_t>(json["littleEndian"].toBool());
 }
 } // namespace VDS

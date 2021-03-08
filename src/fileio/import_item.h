@@ -27,7 +27,7 @@ protected:
 class ImportItemRaw : public ImportItem {
 public:
     ImportItemRaw(const std::filesystem::path& filePath, const uint8_t bitsPerVoxel,
-                  const QVector3D& size, const QVector3D& spacing);
+                  const bool little_endian, const QVector3D& size, const QVector3D& spacing);
     ImportItemRaw();
     ~ImportItemRaw() = default;
 
@@ -35,12 +35,14 @@ public:
     const QVector3D getSize() const;
     const QVector3D getSpacing() const;
     uint8_t getBitsPerVoxel() const;
+    bool representedInLittleEndian() const;
 
     const QJsonObject serialize() const;
     void deserialize(const QJsonObject& json);
 
 private:
     uint8_t m_bitsPerVoxel;
+    bool m_littleEndian;
     QVector3D m_size;
     QVector3D m_spacing;
 };

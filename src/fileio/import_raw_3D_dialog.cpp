@@ -15,6 +15,7 @@ DialogImportRAW3D::DialogImportRAW3D(QWidget* parent) : QDialog(parent) {
 
     setupSectionPathToFile();
     setupSectionBitsPerVoxel();
+    setupSectionEndianess();
     setupSectionSize();
     setupSectionSpacing();
     setupSectionOKAndCancel();
@@ -22,6 +23,7 @@ DialogImportRAW3D::DialogImportRAW3D(QWidget* parent) : QDialog(parent) {
     m_vLayoutDialog = new QVBoxLayout(this);
     m_vLayoutDialog->addWidget(m_groupPathToFile);
     m_vLayoutDialog->addWidget(m_groupBitsPerVoxel);
+    m_vLayoutDialog->addWidget(m_groupEndianess);
     m_vLayoutDialog->addWidget(m_groupSize);
     m_vLayoutDialog->addWidget(m_groupSpacing);
     m_vLayoutDialog->addWidget(m_groupOKAndCancel);
@@ -50,7 +52,18 @@ const ImportItemRaw DialogImportRAW3D::getImportItem() const {
         break;
     }
 
-    return ImportItemRaw(path, bitsPerVoxel, size, spacing);
+    bool representedInLittleEndian = true;
+    switch (m_comboBoxEndianessOptions->currentIndex()) {
+    case 0:
+        representedInLittleEndian = false;
+        break;
+    case 1:
+    default:
+        representedInLittleEndian = true;
+        break;
+    }
+
+    return ImportItemRaw(path, bitsPerVoxel, representedInLittleEndian, size, spacing);
 }
 void DialogImportRAW3D::onOKButtonClicked() {
     if (checkCurrentInput()) {
@@ -77,6 +90,14 @@ bool DialogImportRAW3D::checkCurrentInput() {
         return false;
     }
     return true;
+}
+bool DialogImportRAW3D::checkIsBigEndian() {
+    union {
+        uint32_t i;
+        char c[4];
+    } bint = {0x01020304};
+
+    return bint.c[0] == 1;
 }
 void DialogImportRAW3D::setupSectionPathToFile() {
     m_labelPathToFile = new QLabel;
@@ -119,6 +140,31 @@ void DialogImportRAW3D::setupSectionBitsPerVoxel() {
 
     m_groupBitsPerVoxel = new QGroupBox;
     m_groupBitsPerVoxel->setLayout(m_hLayoutBitsPerVoxel);
+}
+
+void DialogImportRAW3D::setupSectionEndianess() {
+    m_labelEndianess = new QLabel;
+    m_labelEndianess->setText(QString("Endianess:"));
+
+    m_comboBoxEndianessOptions = new QComboBox;
+    switch (checkIsBigEndian()) {
+    case true:
+        m_comboBoxEndianessOptions->addItems({"Big Endian (System Default)", "Little Endian"});
+        m_comboBoxEndianessOptions->setCurrentIndex(0);
+        break;
+    case false:
+    default:
+        m_comboBoxEndianessOptions->addItems({"Big Endian", "Little Endian (System Default)"});
+        m_comboBoxEndianessOptions->setCurrentIndex(1);
+        break;
+    }
+
+    m_hLayoutEndianess = new QHBoxLayout;
+    m_hLayoutEndianess->addWidget(m_labelEndianess);
+    m_hLayoutEndianess->addWidget(m_comboBoxEndianessOptions);
+
+    m_groupEndianess = new QGroupBox;
+    m_groupEndianess->setLayout(m_hLayoutEndianess);
 }
 
 void DialogImportRAW3D::setupSectionSize() {

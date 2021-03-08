@@ -28,9 +28,11 @@ public slots:
 
 private:
     bool checkCurrentInput();
+    bool checkIsBigEndian();
 
     void setupSectionPathToFile();
     void setupSectionBitsPerVoxel();
+    void setupSectionEndianess();
     void setupSectionSize();
     void setupSectionSpacing();
     void setupSectionOKAndCancel();
@@ -51,6 +53,12 @@ private:
     QHBoxLayout* m_hLayoutBitsPerVoxel;
     QLabel* m_labelBitsPerVoxel;
     QComboBox* m_comboBoxBitsPerVoxelOptions;
+
+    // Endianess
+    QGroupBox* m_groupEndianess;
+    QHBoxLayout* m_hLayoutEndianess;
+    QLabel* m_labelEndianess;
+    QComboBox* m_comboBoxEndianessOptions;
 
     // Size
     QGroupBox* m_groupSize;

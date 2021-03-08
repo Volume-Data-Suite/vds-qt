@@ -151,13 +151,14 @@ void DialogExportRAW3D::setupSectionEndianess() {
     m_labelEndianess->setText(QString("Endianess:"));
 
     m_comboBoxEndianessOptions = new QComboBox;
-    m_comboBoxEndianessOptions->addItems({"Big Endian", "Little Endian"});
     switch (checkIsBigEndian()) {
     case true:
+        m_comboBoxEndianessOptions->addItems({"Big Endian (System Default)", "Little Endian"});
         m_comboBoxEndianessOptions->setCurrentIndex(0);
         break;
     case false:
     default:
+        m_comboBoxEndianessOptions->addItems({"Big Endian", "Little Endian (System Default)"});
         m_comboBoxEndianessOptions->setCurrentIndex(1);
         break;
     }

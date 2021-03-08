@@ -20,7 +20,8 @@ protected:
 
 class ExportItemRaw : public ExportItem {
 public:
-    ExportItemRaw(const std::filesystem::path& filePath, const uint8_t bitsPerVoxel, const bool little_endian);
+    ExportItemRaw(const std::filesystem::path& filePath, const uint8_t bitsPerVoxel,
+                  const bool little_endian);
     ~ExportItemRaw() = default;
 
     uint8_t getBitsPerVoxel() const;
@@ -28,7 +29,7 @@ public:
 
 private:
     uint8_t m_bitsPerVoxel;
-    uint8_t m_little_endian;
+    bool m_littleEndian;
 };
 
 } // namespace VDS
