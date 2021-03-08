@@ -13,6 +13,10 @@ add_executable(VDS
 
 	common/vdtk_helper_functions.h
 	
+	fileio/export_item.h
+	fileio/export_item.cpp
+	fileio/export_raw_3D_dialog.h
+	fileio/export_raw_3D_dialog.cpp
 	fileio/import_item.h
 	fileio/import_item.cpp
 	fileio/import_item_list.h

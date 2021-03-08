@@ -6,6 +6,8 @@
 #include <VDTK/VolumeDataHandler.h>
 
 #include "fileio/import_item_list.h"
+#include "fileio/import_item.h"
+#include "fileio/export_item.h"
 
 namespace VDS {
 class MainWindow : public QMainWindow {
@@ -22,6 +24,9 @@ public slots:
 
     void importRecentFile(std::size_t index);
 
+    void openExportRawDialog();
+    void exportRAW3D(const ExportItemRaw& item);
+
     void updateFrametime(float frameTime, float renderEverything, float volumeRendering);
 
     void updateThresholdFromSlider(int threshold);
@@ -34,6 +39,8 @@ private:
     void updateVolumeData();
     void setupFileMenu();
     void refreshRecentFiles();
+
+    bool checkIsBigEndian();
 
     Ui::MainWindowClass ui;
 

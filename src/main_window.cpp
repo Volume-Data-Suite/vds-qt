@@ -1,6 +1,7 @@
 #include "main_window.h"
 
 #include "fileio/import_raw_3D_dialog.h"
+#include "fileio/export_raw_3D_dialog.h"
 
 #include "common/vdtk_helper_functions.h"
 
@@ -175,6 +176,34 @@ void MainWindow::importRecentFile(std::size_t index) {
     }
 }
 
+void MainWindow::openExportRawDialog() {
+    DialogExportRAW3D dialog;
+    dialog.show();
+
+    if (dialog.exec() != QDialog::Accepted) {
+        // Raw Export got canceled by user
+        return;
+    }
+
+    // Call Export
+    const ExportItemRaw item3D = dialog.getExportItem();
+    exportRAW3D(item3D);
+}
+
+void MainWindow::exportRAW3D(const ExportItemRaw& item) {
+    if (item.representedInLittleEndian() != checkIsBigEndian()) {
+        m_vdh.convertEndianness();
+    }    
+
+    m_vdh.exportRawFile(item.getPath(), item.getBitsPerVoxel());
+
+    if (!m_vdh.exportRawFile(item.getPath(), item.getBitsPerVoxel())) {
+        QMessageBox msgBox(QMessageBox::Critical, "Could not export RAW file",
+                           "Could not export RAW file.");
+        msgBox.exec();
+    } 
+}
+
 void MainWindow::updateFrametime(float frameTime, float renderEverything, float volumeRendering) {
     ui.labelFPSValue->setText(QString::fromStdString(
         std::to_string(static_cast<uint16_t>(std::round(1000.0f / frameTime))) + " FPS"));
@@ -290,6 +319,7 @@ void MainWindow::setupFileMenu() {
     m_actionExportRAW3D = new QAction(m_menuFiles);
     m_actionExportRAW3D->setText(QString("Export RAW 3D"));
     m_menuFiles->addAction(m_actionExportRAW3D);
+    connect(m_actionExportRAW3D, &QAction::triggered, this, &MainWindow::openExportRawDialog);
 
     m_actionExportBitmapSeries = new QAction(m_menuFiles);
     m_actionExportBitmapSeries->setText(QString("Export Bitmap Series"));
@@ -311,6 +341,15 @@ void MainWindow::refreshRecentFiles() {
         m_menuRecentFiles->addAction(action);
         connect(action, &QAction::triggered, this, [this, index] { importRecentFile(index); });
     }
+}
+
+bool MainWindow::checkIsBigEndian() {
+    union {
+        uint32_t i;
+        char c[4];
+    } bint = {0x01020304};
+
+    return bint.c[0] == 1;
 }
 
 } // namespace VDS
