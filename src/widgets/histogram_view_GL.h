@@ -12,6 +12,7 @@ class HistogramViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Cor
 public:
     HistogramViewGL(QWidget* parent);
 
+public slots:
     // ignoreBorders if active, 0 and Max (UINT16MAX) get ingored, since they are crowed by linear
     // windowing
     void updateHistogramData(const std::vector<uint16_t>& histo, bool ignoreBorders);

@@ -31,9 +31,12 @@ public slots:
 
     void updateThresholdFromSlider(int threshold);
 
-    void updateHistogram();
+    void computeHistogram();
 
     void setValueWindowPreset(const QString& preset);
+
+signals:
+    void updateHistogram(const std::vector<uint16_t>& histogram, bool ignoreBorders);
 
 private:
     void updateVolumeData();

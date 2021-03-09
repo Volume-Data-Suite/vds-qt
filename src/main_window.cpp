@@ -8,15 +8,21 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
+#include <QDebug>
 #include <QDoubleSpinBox>
 #include <QFile>
 #include <QGroupBox>
 #include <QJsonDocument>
 #include <QMessageBox>
-#include <QSlider>
+#include <QtConcurrent>
+#include <QFuture>
 
 namespace VDS {
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget* parent)
+    : QMainWindow(parent) {
+    // Register meta types so concurrent threads can pass these in signals
+    qRegisterMetaType<std::vector<uint16_t>>("std::vector<uint16_t>");
+
     ui.setupUi(this);
 
     setWindowTitle(QString("Volume Data Suite"));
@@ -70,19 +76,20 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
             ui.volumeViewWidget, &VolumeViewGL::setValueWindowMethod);
 
     // connect histogram update
-    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, this, &MainWindow::updateHistogram);
+    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, this, &MainWindow::computeHistogram);
     connect(ui.spinBoxApplyWindowValueWindowWidth,
             static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-            &MainWindow::updateHistogram);
+            &MainWindow::computeHistogram);
     connect(ui.spinBoxApplyWindowValueWindowCenter,
             static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-            &MainWindow::updateHistogram);
+            &MainWindow::computeHistogram);
     connect(ui.spinBoxApplyWindowValueWindowOffset,
             static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-            &MainWindow::updateHistogram);
+            &MainWindow::computeHistogram);
     connect(ui.comboBoxApplyWindowFunction,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            &MainWindow::updateHistogram);
+            &MainWindow::computeHistogram);
+    connect(this, &MainWindow::updateHistogram, ui.openGLWidgetHistogram, &HistogramViewGL::updateHistogramData);
 
     // connect bounding box settings
     connect(ui.checkBoxRenderBoundingBox, &QCheckBox::stateChanged, ui.volumeViewWidget,
@@ -224,25 +231,34 @@ void MainWindow::updateThresholdFromSlider(int threshold) {
     ui.volumeViewWidget->setThreshold(thresholdValue);
 }
 
-void MainWindow::updateHistogram() {
-    const bool windowingEnabled = ui.groupBoxApplyWindow->isChecked();
+void MainWindow::computeHistogram() {
+    QFuture<void> future = QtConcurrent::run(
+        [&]() {
+            QThread::currentThread()->setObjectName("Compute Histogram Thread");
 
-    std::vector<uint16_t> histogram{};
-    bool ignoreBorders = windowingEnabled;
+            const bool windowingEnabled = ui.groupBoxApplyWindow->isChecked();
 
-    const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
-    const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
-    const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
-    const VDTK::WindowingFunction function =
-        VDTK::WindowingFunction(ui.comboBoxApplyWindowFunction->currentIndex());
+            bool ignoreBorders = windowingEnabled;
 
-    if (windowingEnabled) {
-        histogram = m_vdh.getHistogramWidthWindowing(function, windowCenter, windowWidth, windowOffset);
-    } else {
-        histogram = m_vdh.getHistogram();
-    }
+            const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
+            const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
+            const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
+            const VDTK::WindowingFunction function =
+                VDTK::WindowingFunction(ui.comboBoxApplyWindowFunction->currentIndex());
 
-    ui.openGLWidgetHistogram->updateHistogramData(histogram, ignoreBorders);
+            std::vector<uint16_t> histogram{};
+
+            if (windowingEnabled) {
+                histogram = m_vdh.getHistogramWidthWindowing(function, windowCenter, windowWidth,
+                                                             windowOffset);
+            } else {
+                histogram = m_vdh.getHistogram();
+            }
+
+            emit(updateHistogram(histogram, ignoreBorders));
+
+            return;
+        });
 }
 
 void MainWindow::setValueWindowPreset(const QString& preset) {
@@ -296,7 +312,7 @@ void MainWindow::updateVolumeData() {
 
     ui.volumeViewWidget->updateVolumeData(size, spacing, m_vdh.getVolumeData().getRawVolumeData());
 
-    updateHistogram();
+    computeHistogram();
 }
 
 void MainWindow::setupFileMenu() {

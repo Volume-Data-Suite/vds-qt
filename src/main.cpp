@@ -1,6 +1,7 @@
 #include "main_window.h"
 
 #include <QSurfaceFormat>
+#include <QThread>
 #include <QtWidgets/QApplication>
 
 int main(int argc, char* argv[]) {
@@ -18,6 +19,8 @@ int main(int argc, char* argv[]) {
     QSurfaceFormat::setDefaultFormat(fmt);
 
     QApplication a(argc, argv);
+
+    QThread::currentThread()->setObjectName("Main Thread");
 
     VDS::MainWindow w;
     w.show();
