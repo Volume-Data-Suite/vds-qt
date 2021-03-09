@@ -153,22 +153,6 @@ void HistogramViewGL::calculateScaledHistogram() {
 
         emit(updateHistogram());
 
-
-        //m_histogramDataScaled.resize(m_width);
-
-        //const std::size_t size = m_histogramData.size();
-        //const std::size_t sectionSize = size / m_width;
-
-        //for (std::size_t index = 0; index < m_width; index++) {
-        //    m_histogramDataScaled[index] =
-        //        *std::max_element(m_histogramData.begin() + index * sectionSize,
-        //                          m_histogramData.begin() + (index + 1) * sectionSize - 1);
-        //}
-
-        //m_max = *std::max_element(m_histogramDataScaled.begin(), m_histogramDataScaled.end());
-
-        //emit(updateHistogram());
-
         return;
     });
 }
