@@ -90,23 +90,61 @@ MainWindow::MainWindow(QWidget* parent)
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             &MainWindow::computeHistogram);
     connect(this, &MainWindow::updateHistogram, ui.openGLWidgetHistogram, &HistogramViewGL::updateHistogramData);
+    connect(this, &MainWindow::updateUIPermissions, this, &MainWindow::setUIPermissions);
 
     // connect bounding box settings
     connect(ui.checkBoxRenderBoundingBox, &QCheckBox::stateChanged, ui.volumeViewWidget,
             &VolumeViewGL::setBoundingBoxRenderStatus);
 }
 
+void MainWindow::setUIPermissions(int read, int write) {
+    readBlockCount += read;
+    writeBlockCount += write;
+
+    switch (readBlockCount) {
+    case 0:
+        // enable read only UI elements
+        m_actionExportRAW3D->setEnabled(true);
+        m_actionExportBitmapSeries->setEnabled(true);
+        break;
+    default:
+        // disable read only UI elements
+        m_actionExportRAW3D->setEnabled(false);
+        m_actionExportBitmapSeries->setEnabled(false);
+        break;
+    }
+
+    switch (writeBlockCount) {
+    case 0:
+        // enable write access UI elements
+        m_actionImportRAW3D->setEnabled(true);
+        m_actionImportBitmapSeries->setEnabled(true);
+        m_actionImportBinarySlices->setEnabled(true);
+        break;
+    default:
+        // disable write access UI elements
+        m_actionImportRAW3D->setEnabled(false);
+        m_actionImportBitmapSeries->setEnabled(false);
+        m_actionImportBinarySlices->setEnabled(false);
+        break;
+    }
+}
+
+
 void MainWindow::openImportRawDialog() {
+    emit(updateUIPermissions(1, 1));
     DialogImportRAW3D dialog;
     dialog.show();
 
     if (dialog.exec() != QDialog::Accepted) {
         // Raw Import got canceled by user
+        emit(updateUIPermissions(-1, -1));
         return;
     }
 
     const ImportItemRaw item3D = dialog.getImportItem();
     importRAW3D(item3D);
+    emit(updateUIPermissions(-1, -1));
 }
 void MainWindow::saveRecentFilesList() {
     QFile saveFile(QStringLiteral("recentlyOpened.json"));
@@ -138,6 +176,8 @@ void MainWindow::loadRecentFilesList() {
     m_importList.deserialize(loadDoc);
 }
 void MainWindow::importRAW3D(const ImportItemRaw& item3D) {
+    emit(updateUIPermissions(1, 1));
+
     const VDTK::VolumeSize size = Helper::QVector3DToVolumeSize(item3D.getSize());
     const VDTK::VolumeSpacing spacing = Helper::QVector3DToVolumeSpacing(item3D.getSpacing());
     if (m_vdh.importRawFile(item3D.getFilePath(), item3D.getBitsPerVoxel(), size, spacing)) {
@@ -158,6 +198,7 @@ void MainWindow::importRAW3D(const ImportItemRaw& item3D) {
                            "Invalid import arguments.");
         msgBox.exec();
     }
+    emit(updateUIPermissions(-1, -1));
 }
 void MainWindow::importRecentFile(std::size_t index) {
     const ImportItemListEntry* const entry = m_importList.getEntry(index);
@@ -188,31 +229,36 @@ void MainWindow::importRecentFile(std::size_t index) {
 }
 
 void MainWindow::openExportRawDialog() {
+    emit(updateUIPermissions(1, 1));
     DialogExportRAW3D dialog;
     dialog.show();
 
     if (dialog.exec() != QDialog::Accepted) {
         // Raw Export got canceled by user
+        emit(updateUIPermissions(-1, -1));
         return;
     }
 
     // Call Export
     const ExportItemRaw item3D = dialog.getExportItem();
     exportRAW3D(item3D);
+    emit(updateUIPermissions(-1, -1));
 }
 
 void MainWindow::exportRAW3D(const ExportItemRaw& item) {
+    emit(updateUIPermissions(0, 1));
+
     if (item.representedInLittleEndian() != checkIsBigEndian()) {
         m_vdh.convertEndianness();
     }    
-
-    m_vdh.exportRawFile(item.getPath(), item.getBitsPerVoxel());
 
     if (!m_vdh.exportRawFile(item.getPath(), item.getBitsPerVoxel())) {
         QMessageBox msgBox(QMessageBox::Critical, "Could not export RAW file",
                            "Could not export RAW file.");
         msgBox.exec();
     } 
+
+    emit(updateUIPermissions(0, -1));
 }
 
 void MainWindow::updateFrametime(float frameTime, float renderEverything, float volumeRendering) {
@@ -235,6 +281,7 @@ void MainWindow::computeHistogram() {
     QFuture<void> future = QtConcurrent::run(
         [&]() {
             QThread::currentThread()->setObjectName("Compute Histogram Thread");
+            emit(updateUIPermissions(0, -1));
 
             const bool windowingEnabled = ui.groupBoxApplyWindow->isChecked();
 
@@ -256,6 +303,7 @@ void MainWindow::computeHistogram() {
             }
 
             emit(updateHistogram(histogram, ignoreBorders));
+            emit(updateUIPermissions(0, 1));
 
             return;
         });
