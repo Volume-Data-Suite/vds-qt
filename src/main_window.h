@@ -40,10 +40,13 @@ public slots:
 
     void setValueWindowPreset(const QString& preset);
 
+    void errorRawExport();
+
 signals:
     void updateHistogram(const std::vector<uint16_t>& histogram, bool ignoreBorders);
     // -1 = allow it, 0 = unchanged, 1 = do not allow it
     void updateUIPermissions(int read, int write);
+    void showErrorExportRaw();
 
 private:
     void updateVolumeData();

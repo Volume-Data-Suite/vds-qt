@@ -90,11 +90,16 @@ MainWindow::MainWindow(QWidget* parent)
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             &MainWindow::computeHistogram);
     connect(this, &MainWindow::updateHistogram, ui.openGLWidgetHistogram, &HistogramViewGL::updateHistogramData);
+
+    // connect UI permisson updates
     connect(this, &MainWindow::updateUIPermissions, this, &MainWindow::setUIPermissions);
 
     // connect bounding box settings
     connect(ui.checkBoxRenderBoundingBox, &QCheckBox::stateChanged, ui.volumeViewWidget,
             &VolumeViewGL::setBoundingBoxRenderStatus);
+
+    // connect error dialogs
+    connect(this, &MainWindow::showErrorExportRaw, this, &MainWindow::errorRawExport);
 }
 
 void MainWindow::setUIPermissions(int read, int write) {
@@ -246,19 +251,32 @@ void MainWindow::openExportRawDialog() {
 }
 
 void MainWindow::exportRAW3D(const ExportItemRaw& item) {
-    emit(updateUIPermissions(0, 1));
+    QFuture<void> future = QtConcurrent::run([=]() {
+        QThread::currentThread()->setObjectName("Export Raw Thread");
+        emit(updateUIPermissions(0, 1));
 
-    if (item.representedInLittleEndian() != checkIsBigEndian()) {
-        m_vdh.convertEndianness();
-    }    
+        const bool convertEndianness = item.representedInLittleEndian() != checkIsBigEndian();
 
-    if (!m_vdh.exportRawFile(item.getPath(), item.getBitsPerVoxel())) {
-        QMessageBox msgBox(QMessageBox::Critical, "Could not export RAW file",
-                           "Could not export RAW file.");
-        msgBox.exec();
-    } 
+        if (convertEndianness) {
+            emit(updateUIPermissions(1, 1));
+            m_vdh.convertEndianness();
+        }
 
-    emit(updateUIPermissions(0, -1));
+        bool success = m_vdh.exportRawFile(item.getPath(), item.getBitsPerVoxel());
+
+        if (!success) {
+            emit(showErrorExportRaw());
+        }
+
+        if (convertEndianness) {
+            m_vdh.convertEndianness();
+            emit(updateUIPermissions(-1, -1));
+        }
+
+        emit(updateUIPermissions(0, -1));
+
+        return;
+    });
 }
 
 void MainWindow::updateFrametime(float frameTime, float renderEverything, float volumeRendering) {
@@ -347,6 +365,12 @@ void MainWindow::setValueWindowPreset(const QString& preset) {
         ui.spinBoxApplyWindowValueWindowWidth->setValue(1800);
         ui.spinBoxApplyWindowValueWindowCenter->setValue(400);
     }
+}
+
+void MainWindow::errorRawExport() {
+    QMessageBox msgBox(QMessageBox::Critical, "Could not export RAW file",
+                       "Could not export RAW file.");
+    msgBox.exec();
 }
 
 void MainWindow::updateVolumeData() {
