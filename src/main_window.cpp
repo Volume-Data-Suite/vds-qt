@@ -252,7 +252,20 @@ void MainWindow::importRecentFile(std::size_t index) {
 
 void MainWindow::openExportRawDialog() {
     emit(updateUIPermissions(1, 1));
-    DialogExportRAW3D dialog;
+
+    const QVector3D size(m_vdh.getVolumeData().getSize().getX(), m_vdh.getVolumeData().getSize().getY(),
+                   m_vdh.getVolumeData().getSize().getZ());
+    const QVector3D spacing(m_vdh.getVolumeData().getSpacing().getX(),
+                      m_vdh.getVolumeData().getSpacing().getY(),
+                      m_vdh.getVolumeData().getSpacing().getZ());
+
+    const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
+    const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
+    const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
+    const QString function = ui.comboBoxApplyWindowFunction->currentText();
+    const ValueWindow valueWindow = ValueWindow(function, windowWidth, windowCenter, windowOffset);
+
+    DialogExportRAW3D dialog(valueWindow, size, spacing);
     dialog.show();
 
     if (dialog.exec() != QDialog::Accepted) {
@@ -271,26 +284,29 @@ void MainWindow::exportRAW3D(const ExportItemRaw& item) {
     QFuture<void> future = QtConcurrent::run([=]() {
         QThread::currentThread()->setObjectName("Export Raw Thread");
         emit(updateUIPermissions(0, 1));
+        auto vdhCopy = m_vdh;
+        emit(updateUIPermissions(0, -1));
 
         const bool convertEndianness = item.representedInLittleEndian() != checkIsBigEndian();
 
-        if (convertEndianness) {
-            emit(updateUIPermissions(1, 1));
-            m_vdh.convertEndianness();
+        if (item.applyValueWindow()) {
+            const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
+            const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
+            const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
+            const VDTK::WindowingFunction function =
+                VDTK::WindowingFunction(ui.comboBoxApplyWindowFunction->currentIndex());
+            vdhCopy.applyWindow(function, windowCenter, windowWidth, windowOffset);
         }
 
-        bool success = m_vdh.exportRawFile(item.getPath(), item.getBitsPerVoxel());
+        if (convertEndianness) {
+            vdhCopy.convertEndianness();
+        }
+
+        bool success = vdhCopy.exportRawFile(item.getPath(), item.getBitsPerVoxel());
 
         if (!success) {
             emit(showErrorExportRaw());
         }
-
-        if (convertEndianness) {
-            m_vdh.convertEndianness();
-            emit(updateUIPermissions(-1, -1));
-        }
-
-        emit(updateUIPermissions(0, -1));
 
         return;
     });
