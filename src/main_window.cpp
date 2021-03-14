@@ -135,12 +135,14 @@ void MainWindow::setUIPermissions(int read, int write) {
         m_actionImportRAW3D->setEnabled(true);
         m_actionImportBitmapSeries->setEnabled(true);
         m_actionImportBinarySlices->setEnabled(true);
+        m_menuRecentFiles->setEnabled(true);
         break;
     default:
         // disable write access UI elements
         m_actionImportRAW3D->setEnabled(false);
         m_actionImportBitmapSeries->setEnabled(false);
         m_actionImportBinarySlices->setEnabled(false);
+        m_menuRecentFiles->setEnabled(false);
         break;
     }
 }
