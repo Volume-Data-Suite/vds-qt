@@ -16,10 +16,10 @@ class VolumeViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core {
 public:
     VolumeViewGL(QWidget* parent);
 
-    void updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing,
-                          const std::vector<uint16_t>& volumeData);
 
 public slots:
+    void updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing,
+                          const std::vector<uint16_t>& volumeData);
     void setRenderLoop(bool onlyRerenderOnChange);
     void setBoundingBoxRenderStatus(bool active);
     void setSampleStepLength(double stepLength);

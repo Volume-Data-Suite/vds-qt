@@ -22,6 +22,8 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
     // Register meta types so concurrent threads can pass these in signals
     qRegisterMetaType<std::vector<uint16_t>>("std::vector<uint16_t>");
+    qRegisterMetaType<std::array<std::size_t, 3>>("std::array<std::size_t, 3>");
+    qRegisterMetaType<std::array<float, 3>>("std::array<float, 3>");
 
     ui.setupUi(this);
 
@@ -75,6 +77,10 @@ MainWindow::MainWindow(QWidget* parent)
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             ui.volumeViewWidget, &VolumeViewGL::setValueWindowMethod);
 
+    // connect volume data update
+    connect(this, &MainWindow::updateVolumeView, ui.volumeViewWidget,
+            &VolumeViewGL::updateVolumeData);
+
     // connect histogram update
     connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, this, &MainWindow::computeHistogram);
     connect(ui.spinBoxApplyWindowValueWindowWidth,
@@ -100,6 +106,10 @@ MainWindow::MainWindow(QWidget* parent)
 
     // connect error dialogs
     connect(this, &MainWindow::showErrorExportRaw, this, &MainWindow::errorRawExport);
+    connect(this, &MainWindow::showErrorImportRaw, this, &MainWindow::errorRawImport);
+
+    // connect recent files
+    connect(this, &MainWindow::updateRecentFiles, this, &MainWindow::refreshRecentFileList);
 }
 
 void MainWindow::setUIPermissions(int read, int write) {
@@ -181,29 +191,34 @@ void MainWindow::loadRecentFilesList() {
     m_importList.deserialize(loadDoc);
 }
 void MainWindow::importRAW3D(const ImportItemRaw& item3D) {
-    emit(updateUIPermissions(1, 1));
 
-    const VDTK::VolumeSize size = Helper::QVector3DToVolumeSize(item3D.getSize());
-    const VDTK::VolumeSpacing spacing = Helper::QVector3DToVolumeSpacing(item3D.getSpacing());
-    if (m_vdh.importRawFile(item3D.getFilePath(), item3D.getBitsPerVoxel(), size, spacing)) {
-        if (item3D.representedInLittleEndian() == checkIsBigEndian()) {
-            m_vdh.convertEndianness();
+    QFuture<void> future = QtConcurrent::run([=]() {
+        QThread::currentThread()->setObjectName("Import Raw Thread");
+        emit(updateUIPermissions(1, 1));
+
+        const VDTK::VolumeSize size = Helper::QVector3DToVolumeSize(item3D.getSize());
+        const VDTK::VolumeSpacing spacing = Helper::QVector3DToVolumeSpacing(item3D.getSpacing());
+
+        if (m_vdh.importRawFile(item3D.getFilePath(), item3D.getBitsPerVoxel(), size, spacing)) {
+            if (item3D.representedInLittleEndian() == checkIsBigEndian()) {
+                m_vdh.convertEndianness();
+            }
+
+            updateVolumeData();
+
+            // add to recent files
+            const ImportItem* item = &item3D;
+            ImportItemListEntry* entry = new ImportItemListEntry(item, ImportType::RAW3D);
+            m_importList.addImportItem(entry);
+            saveRecentFilesList();
+            emit(updateRecentFiles());
+        } else {
+            emit(showErrorImportRaw());
         }
+        emit(updateUIPermissions(-1, -1));
 
-        updateVolumeData();
-
-        // add to recent files
-        const ImportItem* item = &item3D;
-        ImportItemListEntry* entry = new ImportItemListEntry(item, ImportType::RAW3D);
-        m_importList.addImportItem(entry);
-        saveRecentFilesList();
-        refreshRecentFiles();
-    } else {
-        QMessageBox msgBox(QMessageBox::Warning, "Could not import 3D RAW",
-                           "Invalid import arguments.");
-        msgBox.exec();
-    }
-    emit(updateUIPermissions(-1, -1));
+        return;
+    });
 }
 void MainWindow::importRecentFile(std::size_t index) {
     const ImportItemListEntry* const entry = m_importList.getEntry(index);
@@ -373,6 +388,12 @@ void MainWindow::errorRawExport() {
     msgBox.exec();
 }
 
+void MainWindow::errorRawImport() {
+    QMessageBox msgBox(QMessageBox::Warning, "Could not import 3D RAW",
+                       "Invalid import arguments.");
+    msgBox.exec();
+}
+
 void MainWindow::updateVolumeData() {
     const std::array<std::size_t, 3> size = {m_vdh.getVolumeData().getSize().getX(),
                                              m_vdh.getVolumeData().getSize().getY(),
@@ -382,7 +403,7 @@ void MainWindow::updateVolumeData() {
                                           m_vdh.getVolumeData().getSpacing().getY(),
                                           m_vdh.getVolumeData().getSpacing().getZ()};
 
-    ui.volumeViewWidget->updateVolumeData(size, spacing, m_vdh.getVolumeData().getRawVolumeData());
+    emit(updateVolumeView(size, spacing, m_vdh.getVolumeData().getRawVolumeData()));
 
     computeHistogram();
 }
@@ -420,10 +441,10 @@ void MainWindow::setupFileMenu() {
     m_actionExportBitmapSeries->setText(QString("Export Bitmap Series"));
     m_menuFiles->addAction(m_actionExportBitmapSeries);
 
-    refreshRecentFiles();
+    refreshRecentFileList();
 }
 
-void MainWindow::refreshRecentFiles() {
+void MainWindow::refreshRecentFileList() {
     for (auto action : m_menuRecentFiles->actions()) {
         delete action;
     }
