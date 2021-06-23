@@ -20,6 +20,10 @@ enum class RenderModes {
 
 class RayCastRenderer : public QObject, protected QOpenGLFunctions_4_3_Core {
 
+public slots:
+    // between 0.0 and 1.0 seconds. Is used for render loops (loading animation for example)
+    void updateTime(float time);
+
 public:
     RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix);
     ~RayCastRenderer();

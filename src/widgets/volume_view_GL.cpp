@@ -4,10 +4,11 @@
 #include <QMetaEnum>
 
 #include <chrono>
+#include <cmath>
 
 VolumeViewGL::VolumeViewGL(QWidget* parent)
-    : QOpenGLWidget(parent),
-      m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix) {
+    : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix),
+      m_firstFrameRendered(std::chrono::high_resolution_clock::now()) {
     setProjectionMatrix(1.0f);
     resetViewMatrix();
 
@@ -141,6 +142,8 @@ void VolumeViewGL::paintGL() {
     const auto startRender = std::chrono::high_resolution_clock::now();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    m_rayCastRenderer.updateTime(calculateFrameTime(m_firstFrameRendered, startRender) / 1000.0f);
 
     const auto startRenderVolume = std::chrono::high_resolution_clock::now();
     m_rayCastRenderer.render();

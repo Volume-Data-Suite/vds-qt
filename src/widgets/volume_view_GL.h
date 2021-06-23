@@ -71,6 +71,7 @@ private:
     float m_rotationSpeed;
 
     bool m_renderloop;
+    const std::chrono::steady_clock::time_point m_firstFrameRendered;
     std::chrono::steady_clock::time_point m_lastFrameTimePoint;
     std::chrono::steady_clock::time_point m_lastFrameTimeGUIUpdate;
 };

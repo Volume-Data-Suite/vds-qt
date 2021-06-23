@@ -23,6 +23,9 @@ static const std::string fragmentBase =
 
     "uniform mat4 viewModelMatrixWithoutModleScale; \n"
 
+    "uniform float time; \n"
+    "uniform mat4 rgbRotationMatrix; \n"
+
     "uniform float focalLength; \n"
     "uniform float aspectRatio; \n"
     "uniform vec2 viewportSize; \n"
@@ -174,7 +177,21 @@ static const std::pair<std::string, std::string> raycastinMethodFirstHitDepth = 
     "		position += step_vector; \n"
     "	} \n"
 
-    "	fragColor.xyz = position + 0.2f * phongShading(ray, position, cameraPosition); \n"
+
+    "	vec4 rotatedPosition = rgbRotationMatrix * vec4(position, 1.0f); \n"
+    "	fragColor.xyz = rotatedPosition.xyz + 0.2f * phongShading(ray, position, cameraPosition); \n"
+
+
+    //"	fragColor.xyz = position - 0.2f + (0.2f * (sin(time) + 1.0f) / 2.0f) + 0.2f * phongShading(ray, position, cameraPosition); \n"
+
+
+    //"	vec3 movedColor = vec3(0.0f); \n"
+    //"	movedColor.x = time + position.x - floor(time + position.x); \n"
+    //"	movedColor.y = time + position.y - floor(time + position.y); \n"
+    //"	movedColor.z = time + position.z - floor(time + position.z); \n"
+    //"	fragColor.xyz = movedColor + 0.2f * phongShading(ray, position, cameraPosition); \n"*/
+
+
     "	fragColor.w = 1.0f; \n");
 
 static const std::pair<std::string, std::string> raycastinMethodAccumulate =

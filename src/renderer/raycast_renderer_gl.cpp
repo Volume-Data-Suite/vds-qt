@@ -373,6 +373,25 @@ void RayCastRenderer::updateCameraPosition() {
 
     glUseProgram(0);
 }
+
+void RayCastRenderer::updateTime(float time) {
+    glUseProgram(m_shaderProgramRayCasting);
+
+    QMatrix4x4 rgbRotation = QMatrix4x4();
+    rgbRotation.rotate(time * 30, 1, 1, 1);
+
+    const GLuint rgbRotationPosition =
+        glGetUniformLocation(m_shaderProgramRayCasting, "rgbRotationMatrix");
+
+    glUniformMatrix4fv(rgbRotationPosition, 1, GL_FALSE, rgbRotation.data());
+
+    const GLuint timePosition =
+        glGetUniformLocation(m_shaderProgramRayCasting, "time");
+    glUniform1f(timePosition, time);
+
+    glUseProgram(0);
+}
+
 void RayCastRenderer::setupBuffers() {
     GLfloat vertices[] = {
         // front
