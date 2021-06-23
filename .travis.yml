@@ -4,6 +4,18 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+    packages:
+      - libxkbcommon-x11-0
+      - libgl1-mesa-dev
+
+
+services: 
+  - xvfb
+
+env:
+  - QT_CI_PACKAGES=qt.qt5.5132.gcc_64,qt.qt5.5132.qtwebengine PATH="$TRAVIS_BUILD_DIR/Qt/5.13.2/gcc_64/bin:${PATH}"
+
+
 
 language: cpp
 compiler:
@@ -34,6 +46,9 @@ before_script:
   - gcc -v && g++ -v && cmake --version
 
 script:
+  - git clone https://github.com/benlau/qtci.git
+  - source qtci/path.env
+  - install-qt 5.13.2
   # Run your build commands next
   - mkdir build-dir
   - cd build-dir
