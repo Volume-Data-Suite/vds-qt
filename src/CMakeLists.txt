@@ -4,7 +4,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-find_package(Qt5 COMPONENTS REQUIRED Core Gui Widgets)
+find_package(Qt5 COMPONENTS REQUIRED Core Gui Widgets Concurrent)
 
 add_executable(VDS 
 	main.cpp
@@ -57,7 +57,7 @@ target_sources(VDS
 
 replicate_directory_structure(VDS)
 
-target_link_libraries(VDS PRIVATE vdtk_lib Qt5::Core Qt5::Gui Qt5::Widgets)
+target_link_libraries(VDS PRIVATE vdtk_lib Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Concurrent)
 
 
 # set C++ language standard to c++17

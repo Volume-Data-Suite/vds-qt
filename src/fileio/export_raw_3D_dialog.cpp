@@ -4,10 +4,14 @@
 #include "export_raw_3D_dialog.h"
 
 #include <limits>
+#include <string>
 
 namespace VDS {
 
-DialogExportRAW3D::DialogExportRAW3D(QWidget* parent) : QDialog(parent) {
+DialogExportRAW3D::DialogExportRAW3D(const ValueWindow& valueWindow, const QVector3D& size,
+                                     const QVector3D& spacing,
+                                     QWidget* parent)
+    : QDialog(parent), m_valueWindow(valueWindow), m_size(size), m_spacing(spacing) {
     setWindowTitle(QString("Export RAW 3D File"));
 
     // disable the context help button
@@ -15,11 +19,15 @@ DialogExportRAW3D::DialogExportRAW3D(QWidget* parent) : QDialog(parent) {
 
     setupSectionPathToFile();
     setupSectionBitsPerVoxel();
+    setupSectionMetaData();
+    setupSectionValueWindow();
     setupSectionEndianess();
     setupSectionOKAndCancel();
 
     m_vLayoutDialog = new QVBoxLayout(this);
     m_vLayoutDialog->addWidget(m_groupPathToFile);
+    m_vLayoutDialog->addWidget(m_metaData);
+    m_vLayoutDialog->addWidget(m_valueWindowGroup);
     m_vLayoutDialog->addWidget(m_groupBitsPerVoxel);
     m_vLayoutDialog->addWidget(m_groupEndianess);
     m_vLayoutDialog->addWidget(m_groupOKAndCancel);
@@ -53,7 +61,9 @@ const ExportItemRaw DialogExportRAW3D::getExportItem() const {
         break;
     }
 
-    return ExportItemRaw(path, bitsPerVoxel, representedInLittleEndian);
+    const bool applyValueWindow = m_valueWindowGroup->isChecked();
+
+    return ExportItemRaw(path, bitsPerVoxel, representedInLittleEndian, applyValueWindow);
 }
 void DialogExportRAW3D::deactiveSectionsIfNecessary(const int bitsPerVoxelIndex) {
     switch (bitsPerVoxelIndex) {
@@ -126,12 +136,91 @@ void DialogExportRAW3D::setupSectionPathToFile() {
     connect(m_buttonPathToFile, &QPushButton::clicked, this, &DialogExportRAW3D::selectFile);
 }
 
+void DialogExportRAW3D::setupSectionMetaData() {
+    // Size
+    m_labelmetaDataSizeX = new QLabel;
+    m_labelmetaDataSizeX->setText(QString("Size X: ") + QString::number(m_size.x()));
+    m_labelmetaDataSizeY = new QLabel;
+    m_labelmetaDataSizeY->setText(QString("Size Y: ") + QString::number(m_size.y()));
+    m_labelmetaDataSizeZ = new QLabel;
+    m_labelmetaDataSizeZ->setText(QString("Size Z: ") + QString::number(m_size.z()));
+
+    m_vLayoutMetaDataSize = new QVBoxLayout;
+    m_vLayoutMetaDataSize->addWidget(m_labelmetaDataSizeX);
+    m_vLayoutMetaDataSize->addWidget(m_labelmetaDataSizeY);
+    m_vLayoutMetaDataSize->addWidget(m_labelmetaDataSizeZ);
+
+    m_metaDataSize = new QGroupBox;
+    m_metaDataSize->setTitle(QString("Size:"));
+    m_metaDataSize->setLayout(m_vLayoutMetaDataSize);
+
+    // Spacing
+    m_labelmetaDataSpacingX = new QLabel;
+    m_labelmetaDataSpacingX->setText(QString("Spacing X: ") + QString::number(m_spacing.x()));
+    m_labelmetaDataSpacingY = new QLabel;
+    m_labelmetaDataSpacingY->setText(QString("Spacing Y: ") + QString::number(m_spacing.y()));
+    m_labelmetaDataSpacingZ = new QLabel;
+    m_labelmetaDataSpacingZ->setText(QString("Spacing Z: ") + QString::number(m_spacing.z()));
+
+    m_vLayoutMetaDataSpacing = new QVBoxLayout;
+    m_vLayoutMetaDataSpacing->addWidget(m_labelmetaDataSpacingX);
+    m_vLayoutMetaDataSpacing->addWidget(m_labelmetaDataSpacingY);
+    m_vLayoutMetaDataSpacing->addWidget(m_labelmetaDataSpacingZ);
+
+    m_metaDataSpacing = new QGroupBox;
+    m_metaDataSpacing->setTitle(QString("Spacing:"));
+    m_metaDataSpacing->setLayout(m_vLayoutMetaDataSpacing);
+
+    // Metadata
+    m_hLayoutMetaData = new QHBoxLayout;
+    m_hLayoutMetaData->addWidget(m_metaDataSize);
+    m_hLayoutMetaData->addWidget(m_metaDataSpacing);
+
+    m_metaData = new QGroupBox;
+    m_metaData->setTitle(QString("Metadata:"));
+    m_metaData->setLayout(m_hLayoutMetaData);
+}
+
+void DialogExportRAW3D::setupSectionValueWindow() {
+    m_labelValueWindowInfo = new QLabel;
+    m_labelValueWindowInfo->setText(QString(
+        "If this section is selected, the current value window will be baked into the raw data."));
+
+    m_verticalSpacer = new QSpacerItem(20, 15, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    m_labelValueWindowFunction = new QLabel;
+    m_labelValueWindowFunction->setText(QString("Function: ") + m_valueWindow.function);
+    m_labelValueWindowWidth = new QLabel;
+    m_labelValueWindowWidth->setText(QString("Window Width: ") +
+                                     QString::number(m_valueWindow.width));
+    m_labelValueWindowCenter = new QLabel;
+    m_labelValueWindowCenter->setText(QString("Window Center: ") +
+                                      QString::number(m_valueWindow.center));
+    m_labelValueWindowOffset = new QLabel;
+    m_labelValueWindowOffset->setText(QString("Window Offset: ") +
+                                      QString::number(m_valueWindow.offset));
+    
+    m_vLayoutValueWindow = new QVBoxLayout;
+    m_vLayoutValueWindow->addWidget(m_labelValueWindowInfo);
+    m_vLayoutValueWindow->addItem(m_verticalSpacer);
+    m_vLayoutValueWindow->addWidget(m_labelValueWindowFunction);
+    m_vLayoutValueWindow->addWidget(m_labelValueWindowWidth);
+    m_vLayoutValueWindow->addWidget(m_labelValueWindowCenter);
+    m_vLayoutValueWindow->addWidget(m_labelValueWindowOffset);
+
+    m_valueWindowGroup = new QGroupBox;
+    m_valueWindowGroup->setTitle(QString("Bake in Value Window:"));
+    m_valueWindowGroup->setCheckable(true);
+    m_valueWindowGroup->setChecked(false);
+    m_valueWindowGroup->setLayout(m_vLayoutValueWindow);
+}
+
 void DialogExportRAW3D::setupSectionBitsPerVoxel() {
     m_labelBitsPerVoxel = new QLabel;
     m_labelBitsPerVoxel->setText(QString("Bits per voxel:"));
 
     m_comboBoxBitsPerVoxelOptions = new QComboBox;
-    m_comboBoxBitsPerVoxelOptions->addItems({"8", "16"});
+    m_comboBoxBitsPerVoxelOptions->addItems({"8", "16 (Recommended)"});
     m_comboBoxBitsPerVoxelOptions->setCurrentIndex(1);
 
     m_hLayoutBitsPerVoxel = new QHBoxLayout;

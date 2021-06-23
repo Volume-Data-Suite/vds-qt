@@ -8,15 +8,23 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
+#include <QDebug>
 #include <QDoubleSpinBox>
 #include <QFile>
 #include <QGroupBox>
 #include <QJsonDocument>
 #include <QMessageBox>
-#include <QSlider>
+#include <QtConcurrent>
+#include <QFuture>
 
 namespace VDS {
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget* parent)
+    : QMainWindow(parent) {
+    // Register meta types so concurrent threads can pass these in signals
+    qRegisterMetaType<std::vector<uint16_t>>("std::vector<uint16_t>");
+    qRegisterMetaType<std::array<std::size_t, 3>>("std::array<std::size_t, 3>");
+    qRegisterMetaType<std::array<float, 3>>("std::array<float, 3>");
+
     ui.setupUi(this);
 
     setWindowTitle(QString("Volume Data Suite"));
@@ -69,37 +77,91 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             ui.volumeViewWidget, &VolumeViewGL::setValueWindowMethod);
 
+    // connect volume data update
+    connect(this, &MainWindow::updateVolumeView, ui.volumeViewWidget,
+            &VolumeViewGL::updateVolumeData);
+
     // connect histogram update
-    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, this, &MainWindow::updateHistogram);
+    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, this, &MainWindow::computeHistogram);
     connect(ui.spinBoxApplyWindowValueWindowWidth,
             static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-            &MainWindow::updateHistogram);
+            &MainWindow::computeHistogram);
     connect(ui.spinBoxApplyWindowValueWindowCenter,
             static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-            &MainWindow::updateHistogram);
+            &MainWindow::computeHistogram);
     connect(ui.spinBoxApplyWindowValueWindowOffset,
             static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
-            &MainWindow::updateHistogram);
+            &MainWindow::computeHistogram);
     connect(ui.comboBoxApplyWindowFunction,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            &MainWindow::updateHistogram);
+            &MainWindow::computeHistogram);
+    connect(this, &MainWindow::updateHistogram, ui.openGLWidgetHistogram, &HistogramViewGL::updateHistogramData);
+
+    // connect UI permisson updates
+    connect(this, &MainWindow::updateUIPermissions, this, &MainWindow::setUIPermissions);
 
     // connect bounding box settings
     connect(ui.checkBoxRenderBoundingBox, &QCheckBox::stateChanged, ui.volumeViewWidget,
             &VolumeViewGL::setBoundingBoxRenderStatus);
+
+    // connect error dialogs
+    connect(this, &MainWindow::showErrorExportRaw, this, &MainWindow::errorRawExport);
+    connect(this, &MainWindow::showErrorImportRaw, this, &MainWindow::errorRawImport);
+
+    // connect recent files
+    connect(this, &MainWindow::updateRecentFiles, this, &MainWindow::refreshRecentFileList);
 }
 
+void MainWindow::setUIPermissions(int read, int write) {
+    readBlockCount += read;
+    writeBlockCount += write;
+
+    switch (readBlockCount) {
+    case 0:
+        // enable read only UI elements
+        m_actionExportRAW3D->setEnabled(true);
+        m_actionExportBitmapSeries->setEnabled(true);
+        break;
+    default:
+        // disable read only UI elements
+        m_actionExportRAW3D->setEnabled(false);
+        m_actionExportBitmapSeries->setEnabled(false);
+        break;
+    }
+
+    switch (writeBlockCount) {
+    case 0:
+        // enable write access UI elements
+        m_actionImportRAW3D->setEnabled(true);
+        m_actionImportBitmapSeries->setEnabled(true);
+        m_actionImportBinarySlices->setEnabled(true);
+        m_menuRecentFiles->setEnabled(true);
+        break;
+    default:
+        // disable write access UI elements
+        m_actionImportRAW3D->setEnabled(false);
+        m_actionImportBitmapSeries->setEnabled(false);
+        m_actionImportBinarySlices->setEnabled(false);
+        m_menuRecentFiles->setEnabled(false);
+        break;
+    }
+}
+
+
 void MainWindow::openImportRawDialog() {
+    emit(updateUIPermissions(1, 1));
     DialogImportRAW3D dialog;
     dialog.show();
 
     if (dialog.exec() != QDialog::Accepted) {
         // Raw Import got canceled by user
+        emit(updateUIPermissions(-1, -1));
         return;
     }
 
     const ImportItemRaw item3D = dialog.getImportItem();
     importRAW3D(item3D);
+    emit(updateUIPermissions(-1, -1));
 }
 void MainWindow::saveRecentFilesList() {
     QFile saveFile(QStringLiteral("recentlyOpened.json"));
@@ -131,26 +193,34 @@ void MainWindow::loadRecentFilesList() {
     m_importList.deserialize(loadDoc);
 }
 void MainWindow::importRAW3D(const ImportItemRaw& item3D) {
-    const VDTK::VolumeSize size = Helper::QVector3DToVolumeSize(item3D.getSize());
-    const VDTK::VolumeSpacing spacing = Helper::QVector3DToVolumeSpacing(item3D.getSpacing());
-    if (m_vdh.importRawFile(item3D.getFilePath(), item3D.getBitsPerVoxel(), size, spacing)) {
-        if (item3D.representedInLittleEndian() == checkIsBigEndian()) {
-            m_vdh.convertEndianness();
+
+    QFuture<void> future = QtConcurrent::run([=]() {
+        QThread::currentThread()->setObjectName("Import Raw Thread");
+        emit(updateUIPermissions(1, 1));
+
+        const VDTK::VolumeSize size = Helper::QVector3DToVolumeSize(item3D.getSize());
+        const VDTK::VolumeSpacing spacing = Helper::QVector3DToVolumeSpacing(item3D.getSpacing());
+
+        if (m_vdh.importRawFile(item3D.getFilePath(), item3D.getBitsPerVoxel(), size, spacing)) {
+            if (item3D.representedInLittleEndian() == checkIsBigEndian()) {
+                m_vdh.convertEndianness();
+            }
+
+            updateVolumeData();
+
+            // add to recent files
+            const ImportItem* item = &item3D;
+            ImportItemListEntry* entry = new ImportItemListEntry(item, ImportType::RAW3D);
+            m_importList.addImportItem(entry);
+            saveRecentFilesList();
+            emit(updateRecentFiles());
+        } else {
+            emit(showErrorImportRaw());
         }
+        emit(updateUIPermissions(-1, -1));
 
-        updateVolumeData();
-
-        // add to recent files
-        const ImportItem* item = &item3D;
-        ImportItemListEntry* entry = new ImportItemListEntry(item, ImportType::RAW3D);
-        m_importList.addImportItem(entry);
-        saveRecentFilesList();
-        refreshRecentFiles();
-    } else {
-        QMessageBox msgBox(QMessageBox::Warning, "Could not import 3D RAW",
-                           "Invalid import arguments.");
-        msgBox.exec();
-    }
+        return;
+    });
 }
 void MainWindow::importRecentFile(std::size_t index) {
     const ImportItemListEntry* const entry = m_importList.getEntry(index);
@@ -181,31 +251,65 @@ void MainWindow::importRecentFile(std::size_t index) {
 }
 
 void MainWindow::openExportRawDialog() {
-    DialogExportRAW3D dialog;
+    emit(updateUIPermissions(1, 1));
+
+    const QVector3D size(m_vdh.getVolumeData().getSize().getX(), m_vdh.getVolumeData().getSize().getY(),
+                   m_vdh.getVolumeData().getSize().getZ());
+    const QVector3D spacing(m_vdh.getVolumeData().getSpacing().getX(),
+                      m_vdh.getVolumeData().getSpacing().getY(),
+                      m_vdh.getVolumeData().getSpacing().getZ());
+
+    const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
+    const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
+    const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
+    const QString function = ui.comboBoxApplyWindowFunction->currentText();
+    const ValueWindow valueWindow = ValueWindow(function, windowWidth, windowCenter, windowOffset);
+
+    DialogExportRAW3D dialog(valueWindow, size, spacing);
     dialog.show();
 
     if (dialog.exec() != QDialog::Accepted) {
         // Raw Export got canceled by user
+        emit(updateUIPermissions(-1, -1));
         return;
     }
 
     // Call Export
     const ExportItemRaw item3D = dialog.getExportItem();
     exportRAW3D(item3D);
+    emit(updateUIPermissions(-1, -1));
 }
 
 void MainWindow::exportRAW3D(const ExportItemRaw& item) {
-    if (item.representedInLittleEndian() != checkIsBigEndian()) {
-        m_vdh.convertEndianness();
-    }    
+    QFuture<void> future = QtConcurrent::run([=]() {
+        QThread::currentThread()->setObjectName("Export Raw Thread");
+        emit(updateUIPermissions(0, 1));
+        auto vdhCopy = m_vdh;
+        emit(updateUIPermissions(0, -1));
 
-    m_vdh.exportRawFile(item.getPath(), item.getBitsPerVoxel());
+        const bool convertEndianness = item.representedInLittleEndian() != checkIsBigEndian();
 
-    if (!m_vdh.exportRawFile(item.getPath(), item.getBitsPerVoxel())) {
-        QMessageBox msgBox(QMessageBox::Critical, "Could not export RAW file",
-                           "Could not export RAW file.");
-        msgBox.exec();
-    } 
+        if (item.applyValueWindow()) {
+            const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
+            const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
+            const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
+            const VDTK::WindowingFunction function =
+                VDTK::WindowingFunction(ui.comboBoxApplyWindowFunction->currentIndex());
+            vdhCopy.applyWindow(function, windowCenter, windowWidth, windowOffset);
+        }
+
+        if (convertEndianness) {
+            vdhCopy.convertEndianness();
+        }
+
+        bool success = vdhCopy.exportRawFile(item.getPath(), item.getBitsPerVoxel());
+
+        if (!success) {
+            emit(showErrorExportRaw());
+        }
+
+        return;
+    });
 }
 
 void MainWindow::updateFrametime(float frameTime, float renderEverything, float volumeRendering) {
@@ -224,22 +328,36 @@ void MainWindow::updateThresholdFromSlider(int threshold) {
     ui.volumeViewWidget->setThreshold(thresholdValue);
 }
 
-void MainWindow::updateHistogram() {
-    const bool windowingEnabled = ui.groupBoxApplyWindow->isChecked();
+void MainWindow::computeHistogram() {
+    QFuture<void> future = QtConcurrent::run(
+        [&]() {
+            QThread::currentThread()->setObjectName("Compute Histogram Thread");
+            emit(updateUIPermissions(0, -1));
 
-    if (!windowingEnabled) {
-        ui.openGLWidgetHistogram->updateHistogramData(m_vdh.getHistogram(), false);
-        return;
-    }
+            const bool windowingEnabled = ui.groupBoxApplyWindow->isChecked();
 
-    const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
-    const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
-    const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
-    const VDTK::WindowingFunction function =
-        VDTK::WindowingFunction(ui.comboBoxApplyWindowFunction->currentIndex());
+            bool ignoreBorders = windowingEnabled;
 
-    ui.openGLWidgetHistogram->updateHistogramData(
-        m_vdh.getHistogramWidthWindowing(function, windowCenter, windowWidth, windowOffset), true);
+            const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
+            const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
+            const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
+            const VDTK::WindowingFunction function =
+                VDTK::WindowingFunction(ui.comboBoxApplyWindowFunction->currentIndex());
+
+            std::vector<uint16_t> histogram{};
+
+            if (windowingEnabled) {
+                histogram = m_vdh.getHistogramWidthWindowing(function, windowCenter, windowWidth,
+                                                             windowOffset);
+            } else {
+                histogram = m_vdh.getHistogram();
+            }
+
+            emit(updateHistogram(histogram, ignoreBorders));
+            emit(updateUIPermissions(0, 1));
+
+            return;
+        });
 }
 
 void MainWindow::setValueWindowPreset(const QString& preset) {
@@ -282,6 +400,18 @@ void MainWindow::setValueWindowPreset(const QString& preset) {
     }
 }
 
+void MainWindow::errorRawExport() {
+    QMessageBox msgBox(QMessageBox::Critical, "Could not export RAW file",
+                       "Could not export RAW file.");
+    msgBox.exec();
+}
+
+void MainWindow::errorRawImport() {
+    QMessageBox msgBox(QMessageBox::Warning, "Could not import 3D RAW",
+                       "Invalid import arguments.");
+    msgBox.exec();
+}
+
 void MainWindow::updateVolumeData() {
     const std::array<std::size_t, 3> size = {m_vdh.getVolumeData().getSize().getX(),
                                              m_vdh.getVolumeData().getSize().getY(),
@@ -291,9 +421,9 @@ void MainWindow::updateVolumeData() {
                                           m_vdh.getVolumeData().getSpacing().getY(),
                                           m_vdh.getVolumeData().getSpacing().getZ()};
 
-    ui.volumeViewWidget->updateVolumeData(size, spacing, m_vdh.getVolumeData().getRawVolumeData());
+    emit(updateVolumeView(size, spacing, m_vdh.getVolumeData().getRawVolumeData()));
 
-    updateHistogram();
+    computeHistogram();
 }
 
 void MainWindow::setupFileMenu() {
@@ -329,10 +459,10 @@ void MainWindow::setupFileMenu() {
     m_actionExportBitmapSeries->setText(QString("Export Bitmap Series"));
     m_menuFiles->addAction(m_actionExportBitmapSeries);
 
-    refreshRecentFiles();
+    refreshRecentFileList();
 }
 
-void MainWindow::refreshRecentFiles() {
+void MainWindow::refreshRecentFileList() {
     for (auto action : m_menuRecentFiles->actions()) {
         delete action;
     }

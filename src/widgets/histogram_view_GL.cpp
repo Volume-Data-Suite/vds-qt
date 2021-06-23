@@ -1,25 +1,33 @@
 #include "histogram_view_GL.h"
 
 #include <algorithm>
+#include <QtConcurrent>
+#include <QFuture>
 
 HistogramViewGL::HistogramViewGL(QWidget* parent)
     : QOpenGLWidget(parent), m_histogramData(UINT16_MAX + 1, 0), m_histogramDataScaled(10, 0) {
     m_width = m_height = 1;
+    is_opengl_initialized = false;
+
+    connect(this, &HistogramViewGL::updateHistogram, this, &HistogramViewGL::updateTexture);
 }
 
 void HistogramViewGL::updateHistogramData(const std::vector<uint16_t>& histo, bool ignoreBorders) {
-    m_histogramData = histo;
+    setHistogramData(histo);
 
     if (ignoreBorders) {
+        QMutexLocker locker(&m_mutexHistogram);
         m_histogramData[0] = 0;
         m_histogramData[UINT16_MAX] = 0;
     }
 
     calculateScaledHistogram();
+    update();
 }
 
 void HistogramViewGL::initializeGL() {
     initializeOpenGLFunctions();
+    is_opengl_initialized = true;
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
@@ -41,14 +49,14 @@ void HistogramViewGL::initializeGL() {
 }
 
 void HistogramViewGL::resizeGL(int w, int h) {
-    m_width = w > 1 ? w : 1;
-    m_height = h > 1 ? h : 1;
-    glViewport(0, 0, m_width, m_height);
+    setWidth(w > 1 ? w : 1);
+    setHeight(h > 1 ? h : 1);
+    glViewport(0, 0, getWidth(), getHeight());
     calculateScaledHistogram();
 
     glUseProgram(m_shaderProgram);
     const GLuint viewport = glGetUniformLocation(m_shaderProgram, "viewport");
-    glUniform2f(viewport, static_cast<float>(m_width), static_cast<float>(m_height));
+    glUniform2f(viewport, static_cast<float>(getWidth()), static_cast<float>(getHeight()));
     glUseProgram(0);
 }
 
@@ -75,24 +83,91 @@ void HistogramViewGL::paintGL() {
     glUseProgram(0);
 }
 
+const std::vector<uint16_t> HistogramViewGL::getHistogramData() {
+    QMutexLocker locker(&m_mutexHistogram);
+    return m_histogramData;
+}
+
+void HistogramViewGL::setHistogramData(const std::vector<uint16_t>& histogram) {
+    QMutexLocker locker(&m_mutexHistogram);
+    m_histogramData = histogram;
+}
+
+const std::vector<uint16_t> HistogramViewGL::getScaledHistogramData() {
+    QMutexLocker locker(&m_mutexScaledHistogram);
+    return m_histogramDataScaled;
+}
+
+void HistogramViewGL::setScaledHistogramData(const std::vector<uint16_t>& histogram) {
+    QMutexLocker locker(&m_mutexScaledHistogram);
+    m_histogramDataScaled = histogram;
+}
+
+int HistogramViewGL::getWidth() {
+    QMutexLocker locker(&m_mutexWidth);
+    return m_width;
+}
+
+void HistogramViewGL::setWidth(int width) {
+    QMutexLocker locker(&m_mutexWidth);
+    m_width = width;
+}
+
+int HistogramViewGL::getHeight() {
+    QMutexLocker locker(&m_mutexHeight);
+    return m_height;
+}
+
+void HistogramViewGL::setHeight(int height) {
+    QMutexLocker locker(&m_mutexHeight);
+    m_height = height;
+}
+
+uint16_t HistogramViewGL::getMax() {
+    QMutexLocker locker(&m_mutexMax);
+    return m_max;
+}
+
+void HistogramViewGL::setMax(uint16_t max) {
+    QMutexLocker locker(&m_mutexMax);
+    m_max = max;
+}
+
 void HistogramViewGL::calculateScaledHistogram() {
-    m_histogramDataScaled.resize(m_width);
+    QFuture<void> future = QtConcurrent::run([&]() {
+        QThread::currentThread()->setObjectName("Compute Scaled Histogram Thread");
 
-    const std::size_t size = m_histogramData.size();
-    const std::size_t sectionSize = size / m_width;
+        const int width = getWidth();
+        std::vector<uint16_t> histogramScaled(width);
+        const std::vector<uint16_t> histogram = getHistogramData();
 
-    for (std::size_t index = 0; index < m_width; index++) {
-        m_histogramDataScaled[index] =
-            *std::max_element(m_histogramData.begin() + index * sectionSize,
-                              m_histogramData.begin() + (index + 1) * sectionSize - 1);
+        const std::size_t size = histogram.size();
+        const std::size_t sectionSize = size / width;
+
+        for (std::size_t index = 0; index < width; index++) {
+            histogramScaled[index] =
+                *std::max_element(histogram.begin() + index * sectionSize,
+                                  histogram.begin() + (index + 1) * sectionSize - 1);
+        }
+
+        setMax(*std::max_element(histogramScaled.begin(), histogramScaled.end()));
+        setScaledHistogramData(histogramScaled);
+
+        emit(updateHistogram());
+
+        return;
+    });
+}
+
+void HistogramViewGL::updateTexture() {
+    if (!is_opengl_initialized) {
+        return;
     }
 
     setupTexture();
 
-    m_max = *std::max_element(m_histogramDataScaled.begin(), m_histogramDataScaled.end());
-
     glUseProgram(m_shaderProgram);
-    const float maxNormalized = static_cast<float>(m_max) / static_cast<float>(UINT16_MAX);
+    const float maxNormalized = static_cast<float>(getMax()) / static_cast<float>(UINT16_MAX);
     const GLuint max = glGetUniformLocation(m_shaderProgram, "max");
     glUniform1f(max, maxNormalized);
     glUseProgram(0);
@@ -190,11 +265,14 @@ void HistogramViewGL::setupTexture() {
 
     glBindTexture(GL_TEXTURE_1D, m_texture);
 
+    // to make it all thread safe so the size and data amount match
+    const auto scaledHistogramCopy = getScaledHistogramData();
+
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, m_histogramDataScaled.size(), 0, GL_RED,
-                 GL_UNSIGNED_SHORT, m_histogramDataScaled.data());
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, scaledHistogramCopy.size(), 0, GL_RED, GL_UNSIGNED_SHORT,
+                 scaledHistogramCopy.data());
 
     // unbind
     glBindTexture(GL_TEXTURE_1D, 0);

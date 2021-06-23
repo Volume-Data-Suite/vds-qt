@@ -17,9 +17,15 @@ public:
     MainWindow(QWidget* parent = Q_NULLPTR);
 
 public slots:
+    // when running a tasks that modifies the volume data on different threads
+    // -1 = allow it, 0 = unchanged, 1 = do not allow it
+    void setUIPermissions(int read, int write);
+
+
     void openImportRawDialog();
     void saveRecentFilesList();
     void loadRecentFilesList();
+    void refreshRecentFileList();
     void importRAW3D(const ImportItemRaw& item);
 
     void importRecentFile(std::size_t index);
@@ -31,14 +37,26 @@ public slots:
 
     void updateThresholdFromSlider(int threshold);
 
-    void updateHistogram();
+    void computeHistogram();
 
     void setValueWindowPreset(const QString& preset);
+
+    void errorRawExport();
+    void errorRawImport();
+
+signals:
+    void updateHistogram(const std::vector<uint16_t>& histogram, bool ignoreBorders);
+    // -1 = allow it, 0 = unchanged, 1 = do not allow it
+    void updateUIPermissions(int read, int write);
+    void showErrorExportRaw();
+    void showErrorImportRaw();
+    void updateRecentFiles();
+    void updateVolumeView(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing,
+                          const std::vector<uint16_t>& volumeData);
 
 private:
     void updateVolumeData();
     void setupFileMenu();
-    void refreshRecentFiles();
 
     bool checkIsBigEndian();
 
@@ -56,5 +74,8 @@ private:
     VDTK::VolumeDataHandler m_vdh;
 
     ImportItemList m_importList;
+
+    std::atomic<int> readBlockCount;
+    std::atomic<int> writeBlockCount;
 };
 } // namespace VDS

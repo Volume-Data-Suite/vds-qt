@@ -21,15 +21,17 @@ protected:
 class ExportItemRaw : public ExportItem {
 public:
     ExportItemRaw(const std::filesystem::path& filePath, const uint8_t bitsPerVoxel,
-                  const bool little_endian);
+                  const bool little_endian, const bool applyWindow);
     ~ExportItemRaw() = default;
 
     uint8_t getBitsPerVoxel() const;
     bool representedInLittleEndian() const;
+    bool applyValueWindow() const;
 
 private:
     uint8_t m_bitsPerVoxel;
     bool m_littleEndian;
+    bool m_applyWindow;
 };
 
 } // namespace VDS
