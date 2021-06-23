@@ -22,8 +22,6 @@ RayCastRenderer::RayCastRenderer(const QMatrix4x4* const projectionMatrix,
 
 RayCastRenderer::~RayCastRenderer() {}
 void RayCastRenderer::render() {
-    renderVolume();
-
     if (m_renderBoundingBox) {
         setupVertexArray(RenderModes::Borders);
         glCullFace(GL_BACK);
@@ -31,6 +29,8 @@ void RayCastRenderer::render() {
         glCullFace(GL_FRONT);
         setupVertexArray(RenderModes::Mesh);
     }
+    
+    renderVolume();
 }
 
 bool RayCastRenderer::setup() {
