@@ -3,16 +3,17 @@ matrix:
   include:
   - name: Ubuntu Build
     os: linux
-    dist: bionic
+    dist: focal
     group: stable
     services:
         - xvfb
     compiler: gcc
+    language: cpp
     addons:
       apt:
         sources:
         - ubuntu-toolchain-r-test
-        - sourceline: 'ppa:beineri/opt-qt-5.14.2-bionic'
+        - sourceline: 'ppa:beineri/opt-qt-5.14.2-focal'
         update: true
         packages:
         - qt514base
