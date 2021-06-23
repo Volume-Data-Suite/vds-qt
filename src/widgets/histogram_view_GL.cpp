@@ -7,6 +7,7 @@
 HistogramViewGL::HistogramViewGL(QWidget* parent)
     : QOpenGLWidget(parent), m_histogramData(UINT16_MAX + 1, 0), m_histogramDataScaled(10, 0) {
     m_width = m_height = 1;
+    is_opengl_initialized = false;
 
     connect(this, &HistogramViewGL::updateHistogram, this, &HistogramViewGL::updateTexture);
 }
@@ -26,6 +27,7 @@ void HistogramViewGL::updateHistogramData(const std::vector<uint16_t>& histo, bo
 
 void HistogramViewGL::initializeGL() {
     initializeOpenGLFunctions();
+    is_opengl_initialized = true;
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
@@ -158,6 +160,10 @@ void HistogramViewGL::calculateScaledHistogram() {
 }
 
 void HistogramViewGL::updateTexture() {
+    if (!is_opengl_initialized) {
+        return;
+    }
+
     setupTexture();
 
     glUseProgram(m_shaderProgram);
