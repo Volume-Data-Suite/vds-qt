@@ -53,6 +53,8 @@ private:
     std::vector<uint16_t> m_histogramData;
     std::vector<uint16_t> m_histogramDataScaled;
 
+    bool is_opengl_initialized;
+
     uint16_t m_max;
 
     int m_width;
