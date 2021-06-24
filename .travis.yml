@@ -1,4 +1,8 @@
 os: linux
+arch:
+  - arm64
+  - ppc64le
+  - s390x
 dist: focal
 group: stable
 language: cpp
