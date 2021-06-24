@@ -7,8 +7,7 @@
 #include <cmath>
 
 VolumeViewGL::VolumeViewGL(QWidget* parent)
-    : QOpenGLWidget(parent),
-      m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix) {
+    : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix) {
     setProjectionMatrix(1.0f);
     resetViewMatrix();
 
@@ -304,8 +303,9 @@ QVector3D VolumeViewGL::getArcBallVector(QPoint p) {
     return arcBallVector;
 }
 
-float VolumeViewGL::calculateFrameTime(std::chrono::steady_clock::time_point start,
-                                       std::chrono::steady_clock::time_point end) const {
+float VolumeViewGL::calculateFrameTime(
+    std::chrono::time_point<std::chrono::steady_clock> start,
+    std::chrono::time_point<std::chrono::steady_clock> end) const {
     const std::chrono::duration<float> duration = end - start;
     const std::chrono::nanoseconds nanoSeconds =
         std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
