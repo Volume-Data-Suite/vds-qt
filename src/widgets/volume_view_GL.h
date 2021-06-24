@@ -56,8 +56,8 @@ private:
 
     QVector3D getArcBallVector(QPoint p);
 
-    float calculateFrameTime(std::chrono::time_point<std::chrono::steady_clock> start,
-                             std::chrono::time_point<std::chrono::steady_clock> end) const;
+    float calculateFrameTime(std::chrono::time_point<std::chrono::high_resolution_clock> start,
+                             std::chrono::time_point<std::chrono::high_resolution_clock> end) const;
 
     VDS::RayCastRenderer m_rayCastRenderer;
 
@@ -70,6 +70,6 @@ private:
     float m_rotationSpeed;
 
     bool m_renderloop;
-    std::chrono::time_point<std::chrono::steady_clock> m_lastFrameTimePoint;
-    std::chrono::time_point<std::chrono::steady_clock> m_lastFrameTimeGUIUpdate;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_lastFrameTimePoint;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_lastFrameTimeGUIUpdate;
 };

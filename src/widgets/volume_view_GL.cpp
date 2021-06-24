@@ -304,8 +304,8 @@ QVector3D VolumeViewGL::getArcBallVector(QPoint p) {
 }
 
 float VolumeViewGL::calculateFrameTime(
-    std::chrono::time_point<std::chrono::steady_clock> start,
-    std::chrono::time_point<std::chrono::steady_clock> end) const {
+    std::chrono::time_point<std::chrono::high_resolution_clock> start,
+    std::chrono::time_point<std::chrono::high_resolution_clock> end) const {
     const std::chrono::duration<float> duration = end - start;
     const std::chrono::nanoseconds nanoSeconds =
         std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
