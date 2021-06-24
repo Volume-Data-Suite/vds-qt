@@ -271,8 +271,8 @@ void HistogramViewGL::setupTexture() {
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, scaledHistogramCopy.size(), 0, GL_RED, GL_UNSIGNED_SHORT,
-                 scaledHistogramCopy.data());
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, static_cast<GLsizei>(scaledHistogramCopy.size()), 0,
+                 GL_RED, GL_UNSIGNED_SHORT, scaledHistogramCopy.data());
 
     // unbind
     glBindTexture(GL_TEXTURE_1D, 0);

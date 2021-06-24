@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <string>
+#include <cmath>
 
 namespace VDS {
 
@@ -614,7 +615,7 @@ bool RayCastRenderer::checkShaderCompileStatus(GLuint shader) {
         glDeleteShader(shader); // Don't leak the shader.
 
         // Log error
-        qDebug(errorLog.data());
+        qDebug() << errorLog.data();
     }
 
     return isCompiled;
@@ -634,7 +635,7 @@ bool RayCastRenderer::checkShaderProgramLinkStatus(GLuint shaderProgram) {
         glDeleteProgram(shaderProgram);
 
         // Log error
-        qDebug(errorLog.data());
+        qDebug() << errorLog.data();
     }
 
     return isLinked;

@@ -168,7 +168,7 @@ void VolumeViewGL::paintGL() {
     // check OpenGL error
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        qDebug() << "OpenGL error: " << err << endl;
+        qDebug() << "OpenGL error: " << err << Qt::endl;
     }
 #endif // _DEBUG
 
@@ -225,7 +225,7 @@ void VolumeViewGL::mouseMoveEvent(QMouseEvent* e) {
 }
 
 void VolumeViewGL::wheelEvent(QWheelEvent* e) {
-    const float translateAmount = static_cast<float>(e->delta()) / 2500.0f;
+    const float translateAmount = static_cast<float>(e->angleDelta().y()) / 2500.0f;
     m_viewMatrix.translate(0, 0, translateAmount);
     m_rayCastRenderer.applyMatrices();
 
