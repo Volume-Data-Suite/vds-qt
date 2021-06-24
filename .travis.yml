@@ -1,8 +1,9 @@
 os: linux
 arch:
   - arm64
-  - ppc64le
   - s390x
+  if: branch = master
+    - amd64
 dist: focal
 group: stable
 language: cpp
