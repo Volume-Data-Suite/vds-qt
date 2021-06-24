@@ -4,6 +4,7 @@
 #include <QMetaEnum>
 
 #include <chrono>
+#include <cmath>
 
 VolumeViewGL::VolumeViewGL(QWidget* parent)
     : QOpenGLWidget(parent),
