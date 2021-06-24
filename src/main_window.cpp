@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget* parent)
     setWindowTitle(QString("Volume Data Suite"));
 
     setupFileMenu();
+    setupShaderEditor();
 
     // as long as its not functional
     ui.groupBoxSliceView->hide();
@@ -110,6 +111,12 @@ MainWindow::MainWindow(QWidget* parent)
 
     // connect recent files
     connect(this, &MainWindow::updateRecentFiles, this, &MainWindow::refreshRecentFileList);
+
+    // connect Shader Debug Editor
+    connect(ui.volumeViewWidget, &VolumeViewGL::sendVertexShaderToUI, this,
+            &MainWindow::setVertexDebugShaderEditor);
+    connect(ui.volumeViewWidget, &VolumeViewGL::sendFragmentShaderToUI, this,
+            &MainWindow::setFragmentDebugShaderEditor);
 }
 
 void MainWindow::setUIPermissions(int read, int write) {
@@ -400,6 +407,14 @@ void MainWindow::setValueWindowPreset(const QString& preset) {
     }
 }
 
+void MainWindow::setVertexDebugShaderEditor(const QString& vertexShader) {
+    m_vertexShaderEdit->setText(vertexShader);
+}
+
+void MainWindow::setFragmentDebugShaderEditor(const QString& fragmentShader) {
+    m_fragmentShaderEdit->setText(fragmentShader);
+}
+
 void MainWindow::errorRawExport() {
     QMessageBox msgBox(QMessageBox::Critical, "Could not export RAW file",
                        "Could not export RAW file.");
@@ -460,6 +475,49 @@ void MainWindow::setupFileMenu() {
     m_menuFiles->addAction(m_actionExportBitmapSeries);
 
     refreshRecentFileList();
+}
+
+void MainWindow::setupShaderEditor() {
+    m_vertexShaderEdit = new QTextEdit();
+    m_vertexShaderEdit->setPlaceholderText("Current Vertex Shader");
+    m_vertexShaderEdit->setLineWrapMode(QTextEdit::LineWrapMode::NoWrap);
+    m_buttonApplyVertexShader = new QPushButton;
+    m_buttonApplyVertexShader->setText(QString("Apply"));
+    m_vertexShaderEditLayout = new QVBoxLayout();
+    m_vertexShaderEditLayout->addWidget(m_vertexShaderEdit);
+    m_vertexShaderEditLayout->addWidget(m_buttonApplyVertexShader);
+    m_vertexShaderEditorSection = new ExpandableSectionWidget(QString("Vertex Shader"));
+    m_vertexShaderEditorSection->setContentLayout(*m_vertexShaderEditLayout);
+
+    m_fragmentShaderEdit = new QTextEdit();
+    m_fragmentShaderEdit->setPlaceholderText("Current Fragment Shader");
+    m_fragmentShaderEdit->setLineWrapMode(QTextEdit::LineWrapMode::NoWrap);
+    m_buttonApplyFragmentShader = new QPushButton;
+    m_buttonApplyFragmentShader->setText(QString("Apply"));
+    m_fragmentShaderEditLayout = new QVBoxLayout();
+    m_fragmentShaderEditLayout->addWidget(m_fragmentShaderEdit);
+    m_fragmentShaderEditLayout->addWidget(m_buttonApplyFragmentShader);
+    m_fragmentShaderEditorSection = new ExpandableSectionWidget(QString("Fragment Shader"));
+    m_fragmentShaderEditorSection->setContentLayout(*m_fragmentShaderEditLayout);
+
+    m_shaderEditorInfo = new QLabel();
+    m_shaderEditorInfo->setWordWrap(true);
+    m_shaderEditorInfo->setText(
+        QString("VDS generates its shaders dynamically depending on the different setting applied. "
+                "In case you change things like the ray casting method, value "
+                "windows and so on. a complete new shader is generated. This will overwrite all "
+                "manual changes of the shader code within this debug editor."));
+    
+
+    m_groupBoxShaderEditorLayout = new QVBoxLayout;
+    m_groupBoxShaderEditorLayout->setContentsMargins(9, 17 , 9 , 9);
+    m_groupBoxShaderEditorLayout->addWidget(m_shaderEditorInfo);
+    m_groupBoxShaderEditorLayout->addWidget(m_vertexShaderEditorSection);
+    m_groupBoxShaderEditorLayout->addWidget(m_fragmentShaderEditorSection);
+
+    // remove the existing layout from the group box
+    qDeleteAll(ui.groupBoxShaderEditor->children());
+    ui.groupBoxShaderEditor->setLayout(m_groupBoxShaderEditorLayout);        
 }
 
 void MainWindow::refreshRecentFileList() {

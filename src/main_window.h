@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QtWidgets/QMainWindow>
+#include <QTextEdit>
+#include <QPushButton>
 #include "ui_main_window.h"
 
 #include <VDTK/VolumeDataHandler.h>
@@ -8,6 +10,7 @@
 #include "fileio/import_item_list.h"
 #include "fileio/import_item.h"
 #include "fileio/export_item.h"
+#include "widgets/expandable_section_widget.h"
 
 namespace VDS {
 class MainWindow : public QMainWindow {
@@ -41,6 +44,9 @@ public slots:
 
     void setValueWindowPreset(const QString& preset);
 
+    void setVertexDebugShaderEditor(const QString& vertexShader);
+    void setFragmentDebugShaderEditor(const QString& fragmentShader);
+
     void errorRawExport();
     void errorRawImport();
 
@@ -51,12 +57,15 @@ signals:
     void showErrorExportRaw();
     void showErrorImportRaw();
     void updateRecentFiles();
+    void updateVertexShaderFromEditor(const QString& vertexShader);
+    void updateFragmentShaderFromEditor(const QString& fragmentShader);
     void updateVolumeView(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing,
                           const std::vector<uint16_t>& volumeData);
 
 private:
     void updateVolumeData();
     void setupFileMenu();
+    void setupShaderEditor();
 
     bool checkIsBigEndian();
 
@@ -71,9 +80,22 @@ private:
     QAction* m_actionExportRAW3D;
     QAction* m_actionExportBitmapSeries;
 
-    VDTK::VolumeDataHandler m_vdh;
-
     ImportItemList m_importList;
+
+    // Debug Shader Editor
+    QLabel* m_shaderEditorInfo;
+    QTextEdit* m_vertexShaderEdit;
+    QVBoxLayout* m_vertexShaderEditLayout;
+    ExpandableSectionWidget* m_vertexShaderEditorSection;
+    QPushButton* m_buttonApplyVertexShader;
+    QTextEdit* m_fragmentShaderEdit;
+    QVBoxLayout* m_fragmentShaderEditLayout;
+    ExpandableSectionWidget* m_fragmentShaderEditorSection;
+    QPushButton* m_buttonApplyFragmentShader;
+    QVBoxLayout* m_groupBoxShaderEditorLayout;
+
+
+    VDTK::VolumeDataHandler m_vdh;
 
     std::atomic<int> readBlockCount;
     std::atomic<int> writeBlockCount;
