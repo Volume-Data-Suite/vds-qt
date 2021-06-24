@@ -9,8 +9,15 @@ jobs:
     group: stable
     compiler: 
       - gcc-9
-      - clang
   
+  - os: linux
+    arch:
+      - arm64
+    dist: focal
+    group: stable
+    compiler:
+      - clang
+
   - os: linux
     arch:
       - s390x
