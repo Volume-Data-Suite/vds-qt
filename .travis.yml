@@ -1,8 +1,41 @@
-os: linux
-dist: focal
-group: stable
 language: cpp
-compiler: gcc-9
+
+jobs:
+  include:
+  - os: linux
+    arch:
+      - arm64
+    dist: focal
+    group: stable
+    compiler: 
+      - gcc-9
+  
+  - os: linux
+    if: branch = master
+    arch:
+      - arm64
+    dist: focal
+    group: stable
+    compiler:
+      - clang
+
+  - os: linux
+    if: branch = master
+    arch:
+      - s390x
+    dist: focal
+    group: stable
+    compiler: gcc-9
+
+  - os: linux
+    if: branch = master
+    arch:
+      - amd64
+    dist: focal
+    group: stable
+    compiler: gcc-9
+
+
 services:
   - xvfb
 
