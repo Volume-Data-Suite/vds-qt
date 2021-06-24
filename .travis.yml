@@ -1,34 +1,32 @@
-matrix:
-  fast_finish: true
-  include:
-  - name: Ubuntu Build
-    language: cpp
-    compiler: gcc
-    os: linux
-    dist: focal
-    group: stable
-    services:
-        - xvfb
-    addons:
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        - sourceline: 'ppa:beineri/opt-qt-5.14.2-focal'
-        update: true
-        packages:
-        - qt514base
-        - qt514tools
-        - gcc-9
-        - g++-9
-        - libc6-i386
-        - libgl-dev
-        - libgl1-mesa-dev
-        - mesa-common-dev
-    script:
-        - /opt/qt514/bin/qt514-env.sh
-        - CXX="g++-9"
-        - CC="gcc-9"
-        - mkdir ./build
-        - cd ./build
-        - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ../
-        - cmake --build .
+os: linux
+dist: focal
+group: stable
+language: cpp
+compiler: gcc-9
+services:
+  - xvfb
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - sourceline: 'ppa:beineri/opt-qt-5.14.2-focal'
+    update: true
+    packages:
+      - qt514base
+      - qt514tools
+      - gcc-9
+      - g++-9
+      - libc6-i386
+      - libgl-dev
+      - libgl1-mesa-dev
+      - mesa-common-dev
+
+script:
+  - /opt/qt514/bin/qt514-env.sh
+  - CXX="g++-9"
+  - CC="gcc-9"
+  - mkdir ./build
+  - cd ./build
+  - cmake -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ../
+  - cmake --build .
