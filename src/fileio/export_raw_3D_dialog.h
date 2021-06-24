@@ -15,15 +15,15 @@
 namespace VDS {
 
 struct ValueWindow {
-    ValueWindow::ValueWindow() = default;
+    ValueWindow() = default;
 
-    ValueWindow::ValueWindow(const ValueWindow& valueWindow) {
+    ValueWindow(const ValueWindow& valueWindow) {
         this->function = valueWindow.function;
         this->width = valueWindow.width;
         this->center = valueWindow.center;
         this->offset = valueWindow.offset;
     }
-    ValueWindow::ValueWindow(const QString& function, int width, int center, int offset) {
+    ValueWindow(const QString& function, int width, int center, int offset) {
         this->function = function;
         this->width = width;
         this->center = center;

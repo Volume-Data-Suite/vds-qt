@@ -16,7 +16,6 @@ class VolumeViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core {
 public:
     VolumeViewGL(QWidget* parent);
 
-
 public slots:
     void updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing,
                           const std::vector<uint16_t>& volumeData);
@@ -57,8 +56,8 @@ private:
 
     QVector3D getArcBallVector(QPoint p);
 
-    float calculateFrameTime(std::chrono::steady_clock::time_point start,
-                             std::chrono::steady_clock::time_point end) const;
+    float calculateFrameTime(std::chrono::time_point<std::chrono::high_resolution_clock> start,
+                             std::chrono::time_point<std::chrono::high_resolution_clock> end) const;
 
     VDS::RayCastRenderer m_rayCastRenderer;
 
@@ -71,6 +70,6 @@ private:
     float m_rotationSpeed;
 
     bool m_renderloop;
-    std::chrono::steady_clock::time_point m_lastFrameTimePoint;
-    std::chrono::steady_clock::time_point m_lastFrameTimeGUIUpdate;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_lastFrameTimePoint;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_lastFrameTimeGUIUpdate;
 };

@@ -4,10 +4,10 @@
 #include <QMetaEnum>
 
 #include <chrono>
+#include <cmath>
 
 VolumeViewGL::VolumeViewGL(QWidget* parent)
-    : QOpenGLWidget(parent),
-      m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix) {
+    : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix) {
     setProjectionMatrix(1.0f);
     resetViewMatrix();
 
@@ -168,7 +168,7 @@ void VolumeViewGL::paintGL() {
     // check OpenGL error
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        qDebug() << "OpenGL error: " << err << endl;
+        qDebug() << "OpenGL error: " << err << Qt::endl;
     }
 #endif // _DEBUG
 
@@ -225,7 +225,7 @@ void VolumeViewGL::mouseMoveEvent(QMouseEvent* e) {
 }
 
 void VolumeViewGL::wheelEvent(QWheelEvent* e) {
-    const float translateAmount = static_cast<float>(e->delta()) / 2500.0f;
+    const float translateAmount = static_cast<float>(e->angleDelta().y()) / 2500.0f;
     m_viewMatrix.translate(0, 0, translateAmount);
     m_rayCastRenderer.applyMatrices();
 
@@ -303,8 +303,9 @@ QVector3D VolumeViewGL::getArcBallVector(QPoint p) {
     return arcBallVector;
 }
 
-float VolumeViewGL::calculateFrameTime(std::chrono::steady_clock::time_point start,
-                                       std::chrono::steady_clock::time_point end) const {
+float VolumeViewGL::calculateFrameTime(
+    std::chrono::time_point<std::chrono::high_resolution_clock> start,
+    std::chrono::time_point<std::chrono::high_resolution_clock> end) const {
     const std::chrono::duration<float> duration = end - start;
     const std::chrono::nanoseconds nanoSeconds =
         std::chrono::duration_cast<std::chrono::nanoseconds>(duration);
