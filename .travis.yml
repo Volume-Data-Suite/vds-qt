@@ -11,6 +11,7 @@ jobs:
       - gcc-9
   
   - os: linux
+    if: branch = master
     arch:
       - arm64
     dist: focal
@@ -19,6 +20,7 @@ jobs:
       - clang
 
   - os: linux
+    if: branch = master
     arch:
       - s390x
     dist: focal
