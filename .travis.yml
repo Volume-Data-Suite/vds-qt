@@ -2,13 +2,13 @@ matrix:
   fast_finish: true
   include:
   - name: Ubuntu Build
+    language: cpp
+    compiler: gcc
     os: linux
     dist: focal
     group: stable
     services:
         - xvfb
-    compiler: gcc
-    language: cpp
     addons:
       apt:
         sources:

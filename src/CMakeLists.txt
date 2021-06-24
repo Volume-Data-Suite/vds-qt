@@ -3,6 +3,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
 
 find_package(Qt5 COMPONENTS REQUIRED Core Gui Widgets Concurrent)
 
@@ -57,7 +60,7 @@ target_sources(VDS
 
 replicate_directory_structure(VDS)
 
-target_link_libraries(VDS PRIVATE vdtk_lib Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Concurrent)
+target_link_libraries(VDS PRIVATE vdtk_lib Threads::Threads Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Concurrent)
 
 
 # set C++ language standard to c++17
