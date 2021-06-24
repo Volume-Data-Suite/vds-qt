@@ -5,12 +5,21 @@ jobs:
   - os: linux
     arch:
       - arm64
+    dist: focal
+    group: stable
+    compiler: 
+      - gcc-9
+      - clang
+  
+  - os: linux
+    arch:
       - s390x
     dist: focal
     group: stable
     compiler: gcc-9
-  
+
   - os: linux
+    if: branch = master
     arch:
       - amd64
     dist: focal
