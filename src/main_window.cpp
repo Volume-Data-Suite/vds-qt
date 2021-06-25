@@ -117,6 +117,14 @@ MainWindow::MainWindow(QWidget* parent)
             &MainWindow::setVertexDebugShaderEditor);
     connect(ui.volumeViewWidget, &VolumeViewGL::sendFragmentShaderToUI, this,
             &MainWindow::setFragmentDebugShaderEditor);
+    connect(this, &MainWindow::updateVertexShaderFromEditor, ui.volumeViewWidget,
+            &VolumeViewGL::recieveVertexShaderFromUI);
+    connect(this, &MainWindow::updateFragmentShaderFromEditor, ui.volumeViewWidget,
+            &VolumeViewGL::recieveFragmentShaderFromUI);
+    connect(m_buttonApplyVertexShader, &QAbstractButton::clicked, this,
+            &MainWindow::triggerManualVertexShaderUpdateFromEditor);
+    connect(m_buttonApplyFragmentShader, &QAbstractButton::clicked, this,
+            &MainWindow::triggerManualFragmentShaderUpdateFromEditor);
 }
 
 void MainWindow::setUIPermissions(int read, int write) {
@@ -415,6 +423,14 @@ void MainWindow::setFragmentDebugShaderEditor(const QString& fragmentShader) {
     m_fragmentShaderEdit->setText(fragmentShader);
 }
 
+void MainWindow::triggerManualVertexShaderUpdateFromEditor() {
+    updateVertexShaderFromEditor(m_vertexShaderEdit->toPlainText());
+}
+
+void MainWindow::triggerManualFragmentShaderUpdateFromEditor() {
+    updateFragmentShaderFromEditor(m_fragmentShaderEdit->toPlainText());
+}
+
 void MainWindow::errorRawExport() {
     QMessageBox msgBox(QMessageBox::Critical, "Could not export RAW file",
                        "Could not export RAW file.");
@@ -502,12 +518,12 @@ void MainWindow::setupShaderEditor() {
 
     m_shaderEditorInfo = new QLabel();
     m_shaderEditorInfo->setWordWrap(true);
-    m_shaderEditorInfo->setText(
-        QString("VDS generates its shaders dynamically depending on the different setting applied. "
-                "In case you change things like the ray casting method, value "
-                "windows and so on. a complete new shader is generated. This will overwrite all "
-                "manual changes of the shader code within this debug editor."));
-    
+    m_shaderEditorInfo->setText(QString(
+        "VDS generates its shaders dynamically depending on the different setting applied. "
+        "In case you change things like the ray casting method, value "
+        "windows and so on. a complete new shader is generated. This will overwrite all "
+        "manual changes of the shader code within this debug editor.\nPlease be aware that this "
+        "could break the visual output until you switch back to a ray casting method preset."));
 
     m_groupBoxShaderEditorLayout = new QVBoxLayout;
     m_groupBoxShaderEditorLayout->setContentsMargins(9, 17 , 9 , 9);

@@ -85,6 +85,8 @@ private:
     bool setupShaderProgramRayCasting();
 
     bool generateRaycastShaderProgram();
+    
+    void updateShaderUniforms();
 
     bool setupVertexShaderBoundingBox();
     bool setupFragmentShaderBoundingBox();

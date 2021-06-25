@@ -308,9 +308,13 @@ void RayCastRenderer::setRayCastMethod(int method) {
 }
 void RayCastRenderer::overwriteVertexShaderRayCasting(const QString& vertexShaderSource) {
     setupVertexShaderRayCasting(vertexShaderSource.toStdString());
+    setupShaderProgramRayCasting();
+    updateShaderUniforms();
 }
 void RayCastRenderer::overwriteFragmentShaderRayCasting(const QString& fragmentShaderSource) {
     setupFragmentShaderRayCasting(fragmentShaderSource.toStdString());
+    setupShaderProgramRayCasting();
+    updateShaderUniforms();
 }
 const std::array<float, 3> RayCastRenderer::getPosition() const {
     const QMatrix4x4 modelMatrix = m_rotationMatrix * m_translationMatrix * m_scaleMatrix;
@@ -464,7 +468,6 @@ void RayCastRenderer::setupVertexArray(RenderModes renderMode) {
 }
 
 bool RayCastRenderer::setupVertexShaderRayCasting(const std::string& vertexShaderSource) {
-    provideGeneratedVertexShader(QString::fromStdString(vertexShaderSource));
     const GLchar* const shaderGLSL = vertexShaderSource.c_str();
 
     m_vertexShaderRayCasting = glCreateShader(GL_VERTEX_SHADER);
@@ -481,7 +484,6 @@ bool RayCastRenderer::setupVertexShaderRayCasting(const std::string& vertexShade
 }
 
 bool RayCastRenderer::setupFragmentShaderRayCasting(const std::string& fragmentShaderSource) {
-    provideGeneratedFragmentShader(QString::fromStdString(fragmentShaderSource));
     const GLchar* const shaderGLSL = fragmentShaderSource.c_str();
 
     m_fragmentShaderRayCasting = glCreateShader(GL_FRAGMENT_SHADER);
@@ -508,8 +510,12 @@ bool RayCastRenderer::setupShaderProgramRayCasting() {
 }
 
 bool RayCastRenderer::generateRaycastShaderProgram() {
-    if (!setupVertexShaderRayCasting(VDS::ShaderGenerator::getVertexShaderCode()) ||
-        !setupFragmentShaderRayCasting(VDS::ShaderGenerator::getFragmentShaderCode(m_settings))) {
+    const std::string vertexShaderSource = VDS::ShaderGenerator::getVertexShaderCode();
+    const std::string fragmentShaderSource =
+        VDS::ShaderGenerator::getFragmentShaderCode(m_settings);
+
+    if (!setupVertexShaderRayCasting(vertexShaderSource) ||
+        !setupFragmentShaderRayCasting(fragmentShaderSource)) {
         return false;
     }
 
@@ -517,6 +523,15 @@ bool RayCastRenderer::generateRaycastShaderProgram() {
         return false;
     }
 
+    provideGeneratedVertexShader(QString::fromStdString(vertexShaderSource));
+    provideGeneratedFragmentShader(QString::fromStdString(fragmentShaderSource));
+
+    updateShaderUniforms();
+
+    return true;
+}
+
+void RayCastRenderer::updateShaderUniforms() {
     applyMatrices();
 
     // Resize volume to texture
@@ -532,8 +547,6 @@ bool RayCastRenderer::generateRaycastShaderProgram() {
     updateValueWindowOffset(m_settings.windowSettings.valueWindowOffset);
     updateSampleStepLength(m_settings.sampleStepLength);
     updateCameraPosition();
-
-    return true;
 }
 
 bool RayCastRenderer::setupVertexShaderBoundingBox() {

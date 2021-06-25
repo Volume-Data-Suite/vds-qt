@@ -46,6 +46,8 @@ public slots:
 
     void setVertexDebugShaderEditor(const QString& vertexShader);
     void setFragmentDebugShaderEditor(const QString& fragmentShader);
+    void triggerManualVertexShaderUpdateFromEditor();
+    void triggerManualFragmentShaderUpdateFromEditor();
 
     void errorRawExport();
     void errorRawImport();

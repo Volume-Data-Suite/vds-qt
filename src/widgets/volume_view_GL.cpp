@@ -110,6 +110,16 @@ void VolumeViewGL::recieveFragmentShaderFromRenderer(const QString& fragmentShad
     sendFragmentShaderToUI(fragmentShaderSource);
 }
 
+void VolumeViewGL::recieveVertexShaderFromUI(const QString& vertexShaderSource) {
+    m_rayCastRenderer.overwriteVertexShaderRayCasting(vertexShaderSource);
+    update();
+}
+
+void VolumeViewGL::recieveFragmentShaderFromUI(const QString& fragmentShaderSource) {
+    m_rayCastRenderer.overwriteFragmentShaderRayCasting(fragmentShaderSource);
+    update();
+}
+
 void VolumeViewGL::initializeGL() {
     initializeOpenGLFunctions();
 

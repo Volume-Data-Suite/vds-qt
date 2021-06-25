@@ -32,6 +32,8 @@ public slots:
     void updateValueWindowOffset(float windowOffset);
     void recieveVertexShaderFromRenderer(const QString& vertexShaderSource);
     void recieveFragmentShaderFromRenderer(const QString& fragmentShaderSource);
+    void recieveVertexShaderFromUI(const QString& vertexShaderSource);
+    void recieveFragmentShaderFromUI(const QString& fragmentShaderSource);
 
 protected:
     void initializeGL() override;
