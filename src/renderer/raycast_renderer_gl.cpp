@@ -7,6 +7,7 @@
 
 #include <QDebug>
 #include <QMetaEnum>
+#include <QString>
 
 #include <algorithm>
 #include <string>
@@ -305,6 +306,16 @@ void RayCastRenderer::setRayCastMethod(int method) {
     m_settings.method = static_cast<RayCastMethods>(method);
     generateRaycastShaderProgram();
 }
+void RayCastRenderer::overwriteVertexShaderRayCasting(const QString& vertexShaderSource) {
+    setupVertexShaderRayCasting(vertexShaderSource.toStdString());
+    setupShaderProgramRayCasting();
+    updateShaderUniforms();
+}
+void RayCastRenderer::overwriteFragmentShaderRayCasting(const QString& fragmentShaderSource) {
+    setupFragmentShaderRayCasting(fragmentShaderSource.toStdString());
+    setupShaderProgramRayCasting();
+    updateShaderUniforms();
+}
 const std::array<float, 3> RayCastRenderer::getPosition() const {
     const QMatrix4x4 modelMatrix = m_rotationMatrix * m_translationMatrix * m_scaleMatrix;
 
@@ -456,8 +467,7 @@ void RayCastRenderer::setupVertexArray(RenderModes renderMode) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-bool RayCastRenderer::setupVertexShaderRayCasting() {
-    const std::string vertexShaderSource = VDS::ShaderGenerator::getVertexShaderCode();
+bool RayCastRenderer::setupVertexShaderRayCasting(const std::string& vertexShaderSource) {
     const GLchar* const shaderGLSL = vertexShaderSource.c_str();
 
     m_vertexShaderRayCasting = glCreateShader(GL_VERTEX_SHADER);
@@ -473,9 +483,7 @@ bool RayCastRenderer::setupVertexShaderRayCasting() {
     return compileStatus;
 }
 
-bool RayCastRenderer::setupFragmentShaderRayCasting() {
-    const std::string fragmentShaderSource =
-        VDS::ShaderGenerator::getFragmentShaderCode(m_settings);
+bool RayCastRenderer::setupFragmentShaderRayCasting(const std::string& fragmentShaderSource) {
     const GLchar* const shaderGLSL = fragmentShaderSource.c_str();
 
     m_fragmentShaderRayCasting = glCreateShader(GL_FRAGMENT_SHADER);
@@ -502,7 +510,12 @@ bool RayCastRenderer::setupShaderProgramRayCasting() {
 }
 
 bool RayCastRenderer::generateRaycastShaderProgram() {
-    if (!setupVertexShaderRayCasting() || !setupFragmentShaderRayCasting()) {
+    const std::string vertexShaderSource = VDS::ShaderGenerator::getVertexShaderCode();
+    const std::string fragmentShaderSource =
+        VDS::ShaderGenerator::getFragmentShaderCode(m_settings);
+
+    if (!setupVertexShaderRayCasting(vertexShaderSource) ||
+        !setupFragmentShaderRayCasting(fragmentShaderSource)) {
         return false;
     }
 
@@ -510,6 +523,15 @@ bool RayCastRenderer::generateRaycastShaderProgram() {
         return false;
     }
 
+    provideGeneratedVertexShader(QString::fromStdString(vertexShaderSource));
+    provideGeneratedFragmentShader(QString::fromStdString(fragmentShaderSource));
+
+    updateShaderUniforms();
+
+    return true;
+}
+
+void RayCastRenderer::updateShaderUniforms() {
     applyMatrices();
 
     // Resize volume to texture
@@ -525,8 +547,6 @@ bool RayCastRenderer::generateRaycastShaderProgram() {
     updateValueWindowOffset(m_settings.windowSettings.valueWindowOffset);
     updateSampleStepLength(m_settings.sampleStepLength);
     updateCameraPosition();
-
-    return true;
 }
 
 bool RayCastRenderer::setupVertexShaderBoundingBox() {

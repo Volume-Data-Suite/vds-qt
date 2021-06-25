@@ -30,6 +30,10 @@ public slots:
     void updateValueWindowWidth(float windowWidth);
     void updateValueWindowCenter(float windowCenter);
     void updateValueWindowOffset(float windowOffset);
+    void recieveVertexShaderFromRenderer(const QString& vertexShaderSource);
+    void recieveFragmentShaderFromRenderer(const QString& fragmentShaderSource);
+    void recieveVertexShaderFromUI(const QString& vertexShaderSource);
+    void recieveFragmentShaderFromUI(const QString& fragmentShaderSource);
 
 protected:
     void initializeGL() override;
@@ -46,6 +50,8 @@ protected:
 signals:
     void updateFrametime(float frameTime, float renderEverything, float volumeRendering);
     void updateSampleStepLength(double stepLength);
+    void sendVertexShaderToUI(const QString& vertexShaderSource);
+    void sendFragmentShaderToUI(const QString& fragmentShaderSource);
 
 private:
     void logQSurfaceFormat() const;
