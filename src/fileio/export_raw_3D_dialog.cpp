@@ -33,6 +33,9 @@ DialogExportRAW3D::DialogExportRAW3D(const ValueWindow& valueWindow, const QVect
     m_vLayoutDialog->addWidget(m_groupOKAndCancel);
 
     setLayout(m_vLayoutDialog);
+
+    // surpress setGeometry warning. Probably related to some weird stylesheet parsing.
+    setMinimumSize(443, 523);
 }
 
 const ExportItemRaw DialogExportRAW3D::getExportItem() const {
