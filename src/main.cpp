@@ -18,12 +18,17 @@ int main(int argc, char* argv[]) {
 #endif
     QSurfaceFormat::setDefaultFormat(fmt);
 
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
+
+    QFile file(":/stylesheets/stylesheets/style.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    app.setStyleSheet(styleSheet);
 
     QThread::currentThread()->setObjectName("Main Thread");
 
-    VDS::MainWindow w;
-    w.show();
+    VDS::MainWindow window;
+    window.show();
 
-    return a.exec();
+    return app.exec();
 }

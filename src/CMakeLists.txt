@@ -52,12 +52,17 @@ set(UI_FILES
 	main_window.ui
 )
 
+set(RESOURCE_FILES
+	qt_resources/resources.qrc
+	qt_resources/stylesheets/style.qss)
+
 qt5_wrap_ui(UI_HDRS ${UI_FILES})
 
 target_sources(VDS
     PRIVATE
 	${UI_FILES}
 	${UI_HDRS}
+	${RESOURCE_FILES}
 )
 
 replicate_directory_structure(VDS)
