@@ -19,6 +19,12 @@ VolumeViewGL::VolumeViewGL(QWidget* parent)
     m_lastFrameTimePoint = std::chrono::high_resolution_clock::now();
 
     m_rotationSpeed = 200.0f;
+
+    // connect Shader Debug Editor
+    connect(&m_rayCastRenderer, &VDS::RayCastRenderer::provideGeneratedVertexShader, this,
+            &VolumeViewGL::recieveVertexShaderFromRenderer);
+    connect(&m_rayCastRenderer, &VDS::RayCastRenderer::provideGeneratedFragmentShader, this,
+            &VolumeViewGL::recieveFragmentShaderFromRenderer);
 }
 
 void VolumeViewGL::updateVolumeData(const std::array<std::size_t, 3> size,
@@ -93,6 +99,24 @@ void VolumeViewGL::updateValueWindowCenter(float windowCenter) {
 
 void VolumeViewGL::updateValueWindowOffset(float windowOffset) {
     m_rayCastRenderer.updateValueWindowOffset(1.0f / static_cast<float>(UINT16_MAX) * windowOffset);
+    update();
+}
+
+void VolumeViewGL::recieveVertexShaderFromRenderer(const QString& vertexShaderSource) {
+    sendVertexShaderToUI(vertexShaderSource);
+}
+
+void VolumeViewGL::recieveFragmentShaderFromRenderer(const QString& fragmentShaderSource) {
+    sendFragmentShaderToUI(fragmentShaderSource);
+}
+
+void VolumeViewGL::recieveVertexShaderFromUI(const QString& vertexShaderSource) {
+    m_rayCastRenderer.overwriteVertexShaderRayCasting(vertexShaderSource);
+    update();
+}
+
+void VolumeViewGL::recieveFragmentShaderFromUI(const QString& fragmentShaderSource) {
+    m_rayCastRenderer.overwriteFragmentShaderRayCasting(fragmentShaderSource);
     update();
 }
 

@@ -20,6 +20,12 @@ enum class RenderModes {
 
 class RayCastRenderer : public QObject, protected QOpenGLFunctions_4_3_Core {
 
+    Q_OBJECT
+
+signals:
+    void provideGeneratedVertexShader(const QString& vertexShaderSource);
+    void provideGeneratedFragmentShader(const QString& fragmentShaderSource);
+
 public:
     RayCastRenderer(const QMatrix4x4* const projectionMatrix, const QMatrix4x4* const viewMatrix);
     ~RayCastRenderer();
@@ -55,6 +61,9 @@ public:
 
     void setRayCastMethod(int method);
 
+    void overwriteVertexShaderRayCasting(const QString& vertexShaderSource);
+    void overwriteFragmentShaderRayCasting(const QString& fragmentShaderSource);
+
     const std::array<float, 3> getPosition() const;
     const QMatrix4x4 getModelMatrix() const;
     // returns the sample step length which is required, if we do not want to skip any voxels
@@ -71,11 +80,13 @@ private:
 
     void setupBuffers();
     void setupVertexArray(RenderModes renderMode);
-    bool setupVertexShaderRayCasting();
-    bool setupFragmentShaderRayCasting();
+    bool setupVertexShaderRayCasting(const std::string& vertexShaderSource);
+    bool setupFragmentShaderRayCasting(const std::string& fragmentShaderSource);
     bool setupShaderProgramRayCasting();
 
     bool generateRaycastShaderProgram();
+    
+    void updateShaderUniforms();
 
     bool setupVertexShaderBoundingBox();
     bool setupFragmentShaderBoundingBox();

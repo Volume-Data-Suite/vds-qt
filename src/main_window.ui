@@ -13,9 +13,6 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <property name="styleSheet">
-   <string notr="true">border:none</string>
-  </property>
   <widget class="QWidget" name="centralWidget">
    <property name="minimumSize">
     <size>
@@ -75,7 +72,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabSettingsRayCasting">
        <attribute name="title">
@@ -110,7 +107,7 @@
               <double>1.000000000000000</double>
              </property>
              <property name="singleStep">
-              <double>0.010000000000000</double>
+              <double>0.000500000000000</double>
              </property>
              <property name="value">
               <double>0.010000000000000</double>
@@ -149,7 +146,7 @@
         <item>
          <widget class="QGroupBox" name="groupBoxShader">
           <property name="title">
-           <string>Rey Casting Method</string>
+           <string>Ray Casting Method</string>
           </property>
           <layout class="QFormLayout" name="formLayout_4">
            <property name="topMargin">
@@ -533,6 +530,18 @@
              </property>
             </widget>
            </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBoxShaderEditor">
+          <property name="title">
+           <string>Shader Editor</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <property name="topMargin">
+            <number>17</number>
+           </property>
           </layout>
          </widget>
         </item>
