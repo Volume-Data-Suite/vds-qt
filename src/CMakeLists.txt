@@ -72,6 +72,3 @@ target_link_libraries(VDS PRIVATE vdtk_lib Threads::Threads Qt5::Core Qt5::Gui Q
 
 # set C++ language standard to c++17
 target_compile_features(VDS PRIVATE cxx_std_17)
-
-# Set VDS project as default start up project in Visual Studio
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT VDS)
