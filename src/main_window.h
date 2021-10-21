@@ -26,10 +26,12 @@ public slots:
 
 
     void openImportRawDialog();
+    void openImportBinarySlicesDialog();
     void saveRecentFilesList();
     void loadRecentFilesList();
     void refreshRecentFileList();
-    void importRAW3D(const ImportItemRaw& item);
+    void importRAW3D(const ImportItemRaw& item3D);
+    void importBinarySlices(const ImportItemBinarySlices& item3D);
 
     void importRecentFile(std::size_t index);
 
@@ -51,6 +53,7 @@ public slots:
 
     void errorRawExport();
     void errorRawImport();
+    void errorBinarySlicesImport();
 
 signals:
     void updateHistogram(const std::vector<uint16_t>& histogram, bool ignoreBorders);
@@ -58,6 +61,7 @@ signals:
     void updateUIPermissions(int read, int write);
     void showErrorExportRaw();
     void showErrorImportRaw();
+    void showErrorImportBinarySlices();
     void updateRecentFiles();
     void updateVertexShaderFromEditor(const QString& vertexShader);
     void updateFragmentShaderFromEditor(const QString& fragmentShader);
