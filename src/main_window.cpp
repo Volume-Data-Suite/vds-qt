@@ -29,6 +29,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     setWindowTitle(QString("Volume Data Suite"));
 
+    setupViewMenu();
     setupFileMenu();
     setupShaderEditor();
 
@@ -491,6 +492,18 @@ void MainWindow::setupFileMenu() {
     m_menuFiles->addAction(m_actionExportBitmapSeries);
 
     refreshRecentFileList();
+}
+
+void MainWindow::setupViewMenu() {
+    m_menuView = new QMenu(ui.menuBar);
+    m_menuView->setTitle(QString("View"));
+    ui.menuBar->addMenu(m_menuView);
+
+    m_actionResetView = new QAction(m_menuView);
+    m_actionResetView->setText(QString("Reset View"));
+    m_menuView->addAction(m_actionResetView);
+    connect(m_actionResetView, &QAction::triggered, ui.volumeViewWidget,
+            &VolumeViewGL::resetViewMatrixAndUpdate);
 }
 
 void MainWindow::setupShaderEditor() {

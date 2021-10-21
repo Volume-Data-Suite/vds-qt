@@ -67,6 +67,7 @@ signals:
 private:
     void updateVolumeData();
     void setupFileMenu();
+    void setupViewMenu();
     void setupShaderEditor();
 
     bool checkIsBigEndian();
@@ -81,8 +82,11 @@ private:
     QMenu* m_menuRecentFiles;
     QAction* m_actionExportRAW3D;
     QAction* m_actionExportBitmapSeries;
-
     ImportItemList m_importList;
+
+    // View Menu
+    QMenu* m_menuView;
+    QAction* m_actionResetView;
 
     // Debug Shader Editor
     QLabel* m_shaderEditorInfo;

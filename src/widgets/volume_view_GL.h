@@ -34,6 +34,7 @@ public slots:
     void recieveFragmentShaderFromRenderer(const QString& fragmentShaderSource);
     void recieveVertexShaderFromUI(const QString& vertexShaderSource);
     void recieveFragmentShaderFromUI(const QString& fragmentShaderSource);
+    void resetViewMatrixAndUpdate();
 
 protected:
     void initializeGL() override;
