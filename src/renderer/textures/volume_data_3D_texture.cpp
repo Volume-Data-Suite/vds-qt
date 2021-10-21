@@ -67,6 +67,10 @@ void VolumeData3DTexture::update(const std::array<std::size_t, 3> size,
 
     glBindTexture(GL_TEXTURE_3D, m_texture);
 
+    // set pixel alignment to 2 Byte, so support odd volume data pixel sizes with a bit size of 16
+    // bits. Default is often set to 4 bytes, which can result in memory access violations.
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
