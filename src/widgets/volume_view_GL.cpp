@@ -192,7 +192,7 @@ void VolumeViewGL::paintGL() {
     // check OpenGL error
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        qDebug() << "OpenGL error: " << err << Qt::endl;
+        qDebug() << "OpenGL error: " << err << endl;
     }
 #endif // _DEBUG
 
@@ -305,6 +305,12 @@ void VolumeViewGL::resetViewMatrix() {
     m_viewMatrix.setToIdentity();
     m_viewMatrix.lookAt(eye, lookAt, up);
     m_viewMatrix.translate(0.0f, 0.0f, -0.2f);
+}
+
+void VolumeViewGL::resetViewMatrixAndUpdate() {
+    resetViewMatrix();
+    m_rayCastRenderer.resetModelMatrix();
+    update();
 }
 
 QVector3D VolumeViewGL::getArcBallVector(QPoint p) {
