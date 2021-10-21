@@ -69,4 +69,25 @@ void ImportItemRaw::deserialize(const QJsonObject& json) {
     m_bitsPerVoxel = static_cast<uint8_t>(json["bitPerVoxel"].toInt());
     m_littleEndian = static_cast<uint8_t>(json["littleEndian"].toBool());
 }
+ImportItemBinarySlices::ImportItemBinarySlices(const std::filesystem::path& directoryPath,
+                                               const uint8_t bitsPerVoxel, const bool little_endian,
+                                               const VDTK::VolumeAxis axis,
+                                               const QVector3D& size, const QVector3D& spacing)
+    : ImportItemRaw(directoryPath, bitsPerVoxel, little_endian, size, spacing), m_axis(axis) {}
+
+ImportItemBinarySlices::ImportItemBinarySlices() : ImportItemRaw() {}
+
+const VDTK::VolumeAxis ImportItemBinarySlices::getAxis() const {
+    return m_axis;
+}
+
+const QJsonObject ImportItemBinarySlices::serialize() const {
+    QJsonObject json = ImportItemRaw::serialize();
+    json["axis"] = static_cast<int>(m_axis);
+    return json;
+}
+void ImportItemBinarySlices::deserialize(const QJsonObject& json) {
+    ImportItemRaw::deserialize(json);
+    m_axis = static_cast<VDTK::VolumeAxis>(json["axis"].toInt());
+}
 } // namespace VDS

@@ -30,8 +30,10 @@ void ImportItemListEntry::deserialize(const QJsonObject& json) {
         break;
     }
     case VDS::ImportType::BinarySlices: {
-        Q_UNIMPLEMENTED();
-        return;
+        ImportItemBinarySlices* importItem = new ImportItemBinarySlices();
+        importItem->deserialize(item);
+        delete m_item;
+        m_item = importItem;
         break;
     }
     case VDS::ImportType::BitmapSlices: {

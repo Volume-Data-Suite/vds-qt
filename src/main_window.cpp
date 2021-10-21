@@ -1,5 +1,6 @@
 #include "main_window.h"
 
+#include "fileio/import_binary_slices_dialog.h"
 #include "fileio/import_raw_3D_dialog.h"
 #include "fileio/export_raw_3D_dialog.h"
 
@@ -109,6 +110,8 @@ MainWindow::MainWindow(QWidget* parent)
     // connect error dialogs
     connect(this, &MainWindow::showErrorExportRaw, this, &MainWindow::errorRawExport);
     connect(this, &MainWindow::showErrorImportRaw, this, &MainWindow::errorRawImport);
+    connect(this, &MainWindow::showErrorImportBinarySlices, this,
+            &MainWindow::errorBinarySlicesImport);
 
     // connect recent files
     connect(this, &MainWindow::updateRecentFiles, this, &MainWindow::refreshRecentFileList);
@@ -179,6 +182,23 @@ void MainWindow::openImportRawDialog() {
     importRAW3D(item3D);
     emit(updateUIPermissions(-1, -1));
 }
+
+void MainWindow::openImportBinarySlicesDialog() {
+    emit(updateUIPermissions(1, 1));
+    DialogImportBinarySlices dialog;
+    dialog.show();
+
+    if (dialog.exec() != QDialog::Accepted) {
+        // Raw Import got canceled by user
+        emit(updateUIPermissions(-1, -1));
+        return;
+    }
+
+    const ImportItemBinarySlices item3D = dialog.getImportItem();
+    importBinarySlices(item3D);
+    emit(updateUIPermissions(-1, -1));
+}
+
 void MainWindow::saveRecentFilesList() {
     QFile saveFile(QStringLiteral("recentlyOpened.json"));
 
@@ -238,6 +258,37 @@ void MainWindow::importRAW3D(const ImportItemRaw& item3D) {
         return;
     });
 }
+void MainWindow::importBinarySlices(const ImportItemBinarySlices& item3D) {
+    QFuture<void> future = QtConcurrent::run([=]() {
+        QThread::currentThread()->setObjectName("Import Raw Thread");
+        emit(updateUIPermissions(1, 1));
+
+        const VDTK::VolumeSize size = Helper::QVector3DToVolumeSize(item3D.getSize());
+        const VDTK::VolumeSpacing spacing = Helper::QVector3DToVolumeSpacing(item3D.getSpacing());
+
+        if (m_vdh.importBinarySlices(item3D.getFilePath(), item3D.getBitsPerVoxel(), item3D.getAxis(), size,
+                                     spacing)) {
+            if (item3D.representedInLittleEndian() == checkIsBigEndian()) {
+                m_vdh.convertEndianness();
+            }
+
+            updateVolumeData();
+
+            // add to recent files
+            const ImportItem* item = &item3D;
+            ImportItemListEntry* entry = new ImportItemListEntry(item, ImportType::BinarySlices);
+            m_importList.addImportItem(entry);
+            saveRecentFilesList();
+            emit(updateRecentFiles());
+        } else {
+            emit(showErrorImportBinarySlices());
+        }
+        emit(updateUIPermissions(-1, -1));
+
+        return;
+    });
+}
+
 void MainWindow::importRecentFile(std::size_t index) {
     const ImportItemListEntry* const entry = m_importList.getEntry(index);
 
@@ -249,8 +300,9 @@ void MainWindow::importRecentFile(std::size_t index) {
         break;
     }
     case VDS::ImportType::BinarySlices: {
-        Q_UNIMPLEMENTED();
-        return;
+        const ImportItemBinarySlices* const importItem =
+            reinterpret_cast<const ImportItemBinarySlices*>(entry->getItem());
+        importBinarySlices(*importItem);
         break;
     }
     case VDS::ImportType::BitmapSlices: {
@@ -444,6 +496,12 @@ void MainWindow::errorRawImport() {
     msgBox.exec();
 }
 
+void MainWindow::errorBinarySlicesImport() {
+    QMessageBox msgBox(QMessageBox::Warning, "Could not import Binary Slices",
+                       "Invalid import arguments.");
+    msgBox.exec();
+}
+
 void MainWindow::updateVolumeData() {
     const std::array<std::size_t, 3> size = {m_vdh.getVolumeData().getSize().getX(),
                                              m_vdh.getVolumeData().getSize().getY(),
@@ -471,6 +529,8 @@ void MainWindow::setupFileMenu() {
     m_actionImportBinarySlices = new QAction(m_menuFiles);
     m_actionImportBinarySlices->setText(QString("Import Binary Slices"));
     m_menuFiles->addAction(m_actionImportBinarySlices);
+    connect(m_actionImportBinarySlices, &QAction::triggered, this,
+            &MainWindow::openImportBinarySlicesDialog);
 
     m_actionImportBitmapSeries = new QAction(m_menuFiles);
     m_actionImportBitmapSeries->setText(QString("Import Bitmap Series"));

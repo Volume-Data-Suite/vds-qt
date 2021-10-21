@@ -5,6 +5,8 @@
 #include <QString>
 #include <QVector3D>
 
+#include <VDTK//common/CommonDataTypes.h>
+
 namespace VDS {
 // Interface class for processing different kind of import item for the "last opened" section in
 // import menu section
@@ -40,11 +42,29 @@ public:
     const QJsonObject serialize() const;
     void deserialize(const QJsonObject& json);
 
-private:
+protected:
     uint8_t m_bitsPerVoxel;
     bool m_littleEndian;
     QVector3D m_size;
     QVector3D m_spacing;
+};
+
+class ImportItemBinarySlices : public ImportItemRaw {
+public:
+    ImportItemBinarySlices(const std::filesystem::path& directoryPath, const uint8_t bitsPerVoxel,
+                           const bool little_endian,
+                           const VDTK::VolumeAxis axis, const QVector3D& size,
+                           const QVector3D& spacing);
+    ImportItemBinarySlices();
+    ~ImportItemBinarySlices() = default;
+
+    const VDTK::VolumeAxis getAxis() const;
+    
+    const QJsonObject serialize() const override;
+    void deserialize(const QJsonObject& json) override;
+
+protected:
+    VDTK::VolumeAxis m_axis;
 };
 
 } // namespace VDS

@@ -26,6 +26,8 @@ add_executable(VDS
 	fileio/import_item_list.cpp
 	fileio/import_raw_3D_dialog.h
 	fileio/import_raw_3D_dialog.cpp
+	fileio/import_binary_slices_dialog.h
+	fileio/import_binary_slices_dialog.cpp
 	
 	renderer/shader/shader_code_constants.h
 	renderer/shader/shader_settings.h
