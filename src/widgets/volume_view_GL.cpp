@@ -41,6 +41,10 @@ void VolumeViewGL::updateVolumeData(const std::array<std::size_t, 3> size,
     this->update();
 }
 
+int VolumeViewGL::getTextureSizeMaximum() {
+    return m_maxiumTextureSize;
+}
+
 void VolumeViewGL::setRenderLoop(bool onlyRerenderOnChange) {
     m_renderloop = !onlyRerenderOnChange;
     if (m_renderloop) {
@@ -148,6 +152,8 @@ void VolumeViewGL::initializeGL() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     m_rayCastRenderer.setup();
+
+    glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &m_maxiumTextureSize);
 }
 
 void VolumeViewGL::resizeGL(int w, int h) {

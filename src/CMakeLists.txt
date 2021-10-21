@@ -41,6 +41,9 @@ add_executable(VDS
 	renderer/raycast_renderer_gl.h
 	renderer/raycast_renderer_gl.cpp
 
+	tools/resize_volume_data.h
+	tools/resize_volume_data.cpp
+
 	widgets/expandable_section_widget.h
 	widgets/expandable_section_widget.cpp
 	widgets/histogram_view_GL.h

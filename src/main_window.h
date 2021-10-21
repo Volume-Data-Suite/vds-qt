@@ -38,9 +38,13 @@ public slots:
     void openExportRawDialog();
     void exportRAW3D(const ExportItemRaw& item);
 
+    void openVolumeDataResizeDialog();
+
     void updateFrametime(float frameTime, float renderEverything, float volumeRendering);
 
     void updateThresholdFromSlider(int threshold);
+
+    void resizeVolumeData(QVector3D newSize, int interpolationMethod);
 
     void computeHistogram();
 
@@ -72,6 +76,7 @@ private:
     void updateVolumeData();
     void setupFileMenu();
     void setupViewMenu();
+    void setupToolsMenu();
     void setupShaderEditor();
 
     bool checkIsBigEndian();
@@ -91,6 +96,10 @@ private:
     // View Menu
     QMenu* m_menuView;
     QAction* m_actionResetView;
+
+    // Tools Menu
+    QMenu* m_menuTools;
+    QAction* m_actionResizeVolumeData;
 
     // Debug Shader Editor
     QLabel* m_shaderEditorInfo;

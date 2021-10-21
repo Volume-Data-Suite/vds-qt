@@ -15,6 +15,7 @@ class VolumeViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core {
 
 public:
     VolumeViewGL(QWidget* parent);
+    int getTextureSizeMaximum();
 
 public slots:
     void updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing,
@@ -79,4 +80,7 @@ private:
     bool m_renderloop;
     std::chrono::time_point<std::chrono::high_resolution_clock> m_lastFrameTimePoint;
     std::chrono::time_point<std::chrono::high_resolution_clock> m_lastFrameTimeGUIUpdate;
+
+    // maxium texture size supported by the current GPU driver
+    int m_maxiumTextureSize;
 };

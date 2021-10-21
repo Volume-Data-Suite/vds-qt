@@ -5,8 +5,6 @@
 
 #include <limits>
 
-#include <VDTK//common/CommonDataTypes.h>
-
 namespace VDS {
 
 DialogImportBinarySlices::DialogImportBinarySlices(QWidget* parent) : QDialog(parent) {
