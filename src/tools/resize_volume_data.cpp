@@ -6,6 +6,8 @@
 #include <limits>
 #include <string>
 
+#include <cmath>
+
 namespace VDS {
 
 DialogResizeVolumeData::DialogResizeVolumeData(const QVector3D& size, const QVector3D& spacing,
