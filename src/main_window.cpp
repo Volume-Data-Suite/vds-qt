@@ -3,6 +3,7 @@
 #include "fileio/import_binary_slices_dialog.h"
 #include "fileio/import_raw_3D_dialog.h"
 #include "fileio/export_raw_3D_dialog.h"
+#include "tools/resize_volume_data.h"
 
 #include "common/vdtk_helper_functions.h"
 
@@ -32,6 +33,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     setupViewMenu();
     setupFileMenu();
+    setupToolsMenu();
+    m_actionResizeVolumeData->setEnabled(false);
     setupShaderEditor();
 
     // as long as its not functional
@@ -155,6 +158,7 @@ void MainWindow::setUIPermissions(int read, int write) {
         m_actionImportBitmapSeries->setEnabled(true);
         m_actionImportBinarySlices->setEnabled(true);
         m_menuRecentFiles->setEnabled(true);
+        m_actionResizeVolumeData->setEnabled(true);
         break;
     default:
         // disable write access UI elements
@@ -162,6 +166,7 @@ void MainWindow::setUIPermissions(int read, int write) {
         m_actionImportBitmapSeries->setEnabled(false);
         m_actionImportBinarySlices->setEnabled(false);
         m_menuRecentFiles->setEnabled(false);
+        m_actionResizeVolumeData->setEnabled(false);
         break;
     }
 }
@@ -229,7 +234,6 @@ void MainWindow::loadRecentFilesList() {
     m_importList.deserialize(loadDoc);
 }
 void MainWindow::importRAW3D(const ImportItemRaw& item3D) {
-
     QFuture<void> future = QtConcurrent::run([=]() {
         QThread::currentThread()->setObjectName("Import Raw Thread");
         emit(updateUIPermissions(1, 1));
@@ -380,6 +384,35 @@ void MainWindow::exportRAW3D(const ExportItemRaw& item) {
     });
 }
 
+void MainWindow::openVolumeDataResizeDialog() {
+    emit(updateUIPermissions(1, 1));
+
+    const QVector3D size(m_vdh.getVolumeSize().getX(),
+                         m_vdh.getVolumeSize().getY(),
+                         m_vdh.getVolumeSize().getZ());
+    const QVector3D spacing(m_vdh.getVolumeSpacing().getX(),
+                            m_vdh.getVolumeSpacing().getY(),
+                            m_vdh.getVolumeSpacing().getZ());
+
+    DialogResizeVolumeData dialog(size, spacing, ui.volumeViewWidget->getTextureSizeMaximum());
+    connect(&dialog, &DialogResizeVolumeData::requestVRAMinfoUpdate, ui.volumeViewWidget,
+            &VolumeViewGL::recieveVRAMinfoUpdateRequest);
+    connect(ui.volumeViewWidget, &VolumeViewGL::sendVRAMinfoUpdate, &dialog,
+            &DialogResizeVolumeData::recieveVRAMinfoUpdate);
+    dialog.show();
+
+    if (dialog.exec() != QDialog::Accepted) {
+        // Raw Export got canceled by user
+        emit(updateUIPermissions(-1, -1));
+        return;
+    }
+
+    // Call Export
+    resizeVolumeData(dialog.getNewSize(), dialog.getInterploationMethod());
+
+    emit(updateUIPermissions(-1, -1));
+}
+
 void MainWindow::updateFrametime(float frameTime, float renderEverything, float volumeRendering) {
     ui.labelFPSValue->setText(QString::fromStdString(
         std::to_string(static_cast<uint16_t>(std::round(1000.0f / frameTime))) + " FPS"));
@@ -394,6 +427,37 @@ void MainWindow::updateThresholdFromSlider(int threshold) {
 
     ui.doubleSpinBoxThreshold->setValue(thresholdValue);
     ui.volumeViewWidget->setThreshold(thresholdValue);
+}
+
+void MainWindow::resizeVolumeData(QVector3D newSize, int interpolationMethod) {
+    QFuture<void> future = QtConcurrent::run([=]() {
+        QThread::currentThread()->setObjectName("Resize Volume Data Thread");
+        emit(updateUIPermissions(1, 1));
+
+        VDTK::ScaleMode scaleMode;
+        switch (interpolationMethod) {
+        case 2:
+            scaleMode = VDTK::ScaleMode::Cubic;
+            break;
+        case 1:
+            scaleMode = VDTK::ScaleMode::Linear;
+            break;
+        case 0:
+        default:
+            scaleMode = VDTK::ScaleMode::NearestNeighbor;
+            break;
+        }
+
+        VDTK::VolumeSize size(newSize.x(), newSize.y(), newSize.z());
+
+        m_vdh.scaleToSize(scaleMode, size);
+
+        updateVolumeData();
+
+        emit(updateUIPermissions(-1, -1));
+
+        return;
+    });
 }
 
 void MainWindow::computeHistogram() {
@@ -564,6 +628,18 @@ void MainWindow::setupViewMenu() {
     m_menuView->addAction(m_actionResetView);
     connect(m_actionResetView, &QAction::triggered, ui.volumeViewWidget,
             &VolumeViewGL::resetViewMatrixAndUpdate);
+}
+
+void MainWindow::setupToolsMenu() {
+    m_menuTools = new QMenu(ui.menuBar);
+    m_menuTools->setTitle(QString("Tools"));
+    ui.menuBar->addMenu(m_menuTools);
+
+    m_actionResizeVolumeData = new QAction(m_menuTools);
+    m_actionResizeVolumeData->setText(QString("Resize Volume Data"));
+    m_menuTools->addAction(m_actionResizeVolumeData);
+    connect(m_actionResizeVolumeData, &QAction::triggered, this,
+            &MainWindow::openVolumeDataResizeDialog);
 }
 
 void MainWindow::setupShaderEditor() {

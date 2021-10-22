@@ -6,6 +6,17 @@
 #include <chrono>
 #include <cmath>
 
+//  dedicated video memory, total size (in kb) of the GPU memory
+#define GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX 0x9047
+// total available memory, total size (in Kb) of the memory available for allocations
+#define GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX 0x9048
+// current available dedicated video memory (in kb), currently unused GPU memory
+#define GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX 0x9049
+// count of total evictions seen by system
+#define GPU_MEMORY_INFO_EVICTION_COUNT_NVX 0x904A
+// size of total video memory evicted (in kb)
+#define GPU_MEMORY_INFO_EVICTED_MEMORY_NVX 0x904B
+
 VolumeViewGL::VolumeViewGL(QWidget* parent)
     : QOpenGLWidget(parent), m_rayCastRenderer(&m_projectionMatrix, &m_viewMatrix) {
     setProjectionMatrix(1.0f);
@@ -39,6 +50,10 @@ void VolumeViewGL::updateVolumeData(const std::array<std::size_t, 3> size,
     m_rayCastRenderer.applyMatrices();
 
     this->update();
+}
+
+int VolumeViewGL::getTextureSizeMaximum() {
+    return m_maxiumTextureSize;
 }
 
 void VolumeViewGL::setRenderLoop(bool onlyRerenderOnChange) {
@@ -148,6 +163,8 @@ void VolumeViewGL::initializeGL() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     m_rayCastRenderer.setup();
+
+    glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &m_maxiumTextureSize);
 }
 
 void VolumeViewGL::resizeGL(int w, int h) {
@@ -307,10 +324,46 @@ void VolumeViewGL::resetViewMatrix() {
     m_viewMatrix.translate(0.0f, 0.0f, -0.2f);
 }
 
+bool VolumeViewGL::collectVRAMInfo(GLint& dedicatedMemory, GLint& totalAvailableMemory,
+                                   GLint& availableDedicatedMemory, GLint& envictionCount,
+                                   GLint& envictedMemory) {
+
+    if (GL_NVX_gpu_memory_info) {
+        glGetIntegerv(GPU_MEMORY_INFO_DEDICATED_VIDMEM_NVX, &dedicatedMemory);
+        glGetIntegerv(GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX, &totalAvailableMemory);
+        glGetIntegerv(GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &availableDedicatedMemory);
+        glGetIntegerv(GPU_MEMORY_INFO_EVICTION_COUNT_NVX, &envictionCount);
+        glGetIntegerv(GPU_MEMORY_INFO_EVICTED_MEMORY_NVX, &envictedMemory);
+        return dedicatedMemory != 0;
+    } else {
+        dedicatedMemory = 0;
+        totalAvailableMemory = 0;
+        availableDedicatedMemory = 0;
+        envictionCount = 0;
+        envictedMemory = 0;
+        return false;
+    }
+}
+
 void VolumeViewGL::resetViewMatrixAndUpdate() {
     resetViewMatrix();
     m_rayCastRenderer.resetModelMatrix();
     update();
+}
+
+void VolumeViewGL::recieveVRAMinfoUpdateRequest() {
+
+    int dedicatedMemory = 0;
+    int totalAvailableMemory = 0;
+    int availableDedicatedMemory = 0;
+    int envictionCount = 0;
+    int envictedMemory = 0;
+    bool success = collectVRAMInfo(dedicatedMemory, totalAvailableMemory, availableDedicatedMemory,
+                                   envictionCount, envictedMemory);
+
+    emit sendVRAMinfoUpdate(success, dedicatedMemory, totalAvailableMemory,
+                            availableDedicatedMemory,
+                            envictionCount, envictedMemory);
 }
 
 QVector3D VolumeViewGL::getArcBallVector(QPoint p) {
