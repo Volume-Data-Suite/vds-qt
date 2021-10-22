@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QVector3D>
+#include <QTimer>
 
 namespace VDS {
 
@@ -30,6 +31,12 @@ public slots:
     void updateSpacingX();
     void updateSpacingY();
     void updateSpacingZ();
+    void recieveVRAMinfoUpdate(bool success, int dedicatedMemory, int totalAvailableMemory,
+                               int availableDedicatedMemory, int envictionCount,
+                               int envictedMemory);
+
+signals:
+    void requestVRAMinfoUpdate();
 
 private:
     bool checkCurrentInput();
@@ -39,6 +46,8 @@ private:
     void setupSectionTextureSize();
     void setupSectionInterpolationMethod();
     void setupSectionOKAndCancel();
+    void setupVRAMTimer();
+    void updateVRAMLabels();
 
     // Dialog Window
     QVBoxLayout* m_vLayoutDialog;
@@ -105,9 +114,16 @@ private:
     QLabel* m_labelTextureSizeOriginal;
     QLabel* m_labelTextureSizeNew;
     QLabel* m_labelTextureSizeDriverMax;
+    QLabel* m_labelTotalGPUVRAM;
+    QLabel* m_labelAvailableGPUVRAM;
+    // Size in MB
+    float m_availableGPUVRAM;
     float m_textureSizeOriginal;
     float m_textureSizeNew;
     float m_textureSizeDriverMax;
+
+    // VRAM update
+    QTimer* m_timerVRAMupdate;
 
     // OK and Cancel
     QGroupBox* m_groupOKAndCancel;

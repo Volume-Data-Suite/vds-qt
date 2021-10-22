@@ -395,6 +395,10 @@ void MainWindow::openVolumeDataResizeDialog() {
                             m_vdh.getVolumeSpacing().getZ());
 
     DialogResizeVolumeData dialog(size, spacing, ui.volumeViewWidget->getTextureSizeMaximum());
+    connect(&dialog, &DialogResizeVolumeData::requestVRAMinfoUpdate, ui.volumeViewWidget,
+            &VolumeViewGL::recieveVRAMinfoUpdateRequest);
+    connect(ui.volumeViewWidget, &VolumeViewGL::sendVRAMinfoUpdate, &dialog,
+            &DialogResizeVolumeData::recieveVRAMinfoUpdate);
     dialog.show();
 
     if (dialog.exec() != QDialog::Accepted) {

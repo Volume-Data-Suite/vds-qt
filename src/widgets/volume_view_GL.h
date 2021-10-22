@@ -36,6 +36,7 @@ public slots:
     void recieveVertexShaderFromUI(const QString& vertexShaderSource);
     void recieveFragmentShaderFromUI(const QString& fragmentShaderSource);
     void resetViewMatrixAndUpdate();
+    void recieveVRAMinfoUpdateRequest();
 
 protected:
     void initializeGL() override;
@@ -54,6 +55,8 @@ signals:
     void updateSampleStepLength(double stepLength);
     void sendVertexShaderToUI(const QString& vertexShaderSource);
     void sendFragmentShaderToUI(const QString& fragmentShaderSource);
+    void sendVRAMinfoUpdate(bool success, int dedicatedMemory, int totalAvailableMemory,
+                            int availableDedicatedMemory, int envictionCount, int envictedMemory);
 
 private:
     void logQSurfaceFormat() const;
@@ -61,6 +64,11 @@ private:
 
     void setProjectionMatrix(float aspectRatio);
     void resetViewMatrix();
+
+    // returns false if NVIDA OpenGL extensions are not available
+    bool collectVRAMInfo(GLint& dedicatedMemory, GLint& totalAvailableMemory,
+                         GLint& availableDedicatedMemory, GLint& envictionCount,
+                         GLint& envictedMemory);
 
     QVector3D getArcBallVector(QPoint p);
 

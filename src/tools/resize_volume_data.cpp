@@ -11,7 +11,8 @@
 namespace VDS {
 
 DialogResizeVolumeData::DialogResizeVolumeData(const QVector3D& size, const QVector3D& spacing,
-                                               const int textureSizeMax, QWidget* parent)
+                                               const int textureSizeMax,
+                                               QWidget* parent)
     : QDialog(parent), m_sizeOriginal(size), m_spacingOriginal(spacing) {
     setWindowTitle(QString("Resize Volume Data"));
 
@@ -39,7 +40,9 @@ DialogResizeVolumeData::DialogResizeVolumeData(const QVector3D& size, const QVec
     setLayout(m_vLayoutDialog);
 
     // surpress setGeometry warning. Probably related to some weird stylesheet parsing.
-    setMinimumSize(443, 523);
+    setMinimumSize(443, 563);
+
+    setupVRAMTimer();
 }
 
 void DialogResizeVolumeData::onOKButtonClicked() {
@@ -98,6 +101,35 @@ void DialogResizeVolumeData::updateSpacingZ() {
     m_lineEditMetaDataNewSpacingZ->setText(QString::number(m_spacingOriginal.z() * scaleFactor));
 
     computeTextureSizeNew();
+}
+void DialogResizeVolumeData::recieveVRAMinfoUpdate(bool success, int dedicatedMemory,
+                                                   int totalAvailableMemory,
+                                                   int availableDedicatedMemory, int envictionCount,
+                                                   int envictedMemory) {
+    if (success) {
+        m_labelTotalGPUVRAM->setText(QString("GPU Total VRAM: ") +
+                                     QString::number(dedicatedMemory / 1024.0f) + " MB");
+        m_availableGPUVRAM = availableDedicatedMemory / 1024.0f;
+        m_labelAvailableGPUVRAM->setText(QString("GPU Available VRAM: ") +
+                                         QString::number(m_availableGPUVRAM) + " MB");
+    }
+    updateVRAMLabels();
+}
+void DialogResizeVolumeData::updateVRAMLabels() {
+    if (m_availableGPUVRAM * 0.8f > m_availableGPUVRAM - m_textureSizeNew &&
+        m_availableGPUVRAM > m_textureSizeNew) {
+        m_labelTextureSizeNew->setStyleSheet("QLabel { color : orange; }");
+        m_labelAvailableGPUVRAM->setStyleSheet("QLabel { color : orange; }");
+    } else if (m_availableGPUVRAM > m_textureSizeNew) {
+        m_labelTextureSizeNew->setStyleSheet("QLabel { color : #80E015; }");
+        m_labelAvailableGPUVRAM->setStyleSheet("QLabel { color : #80E015; }");
+    } else if (m_availableGPUVRAM < m_textureSizeNew) {
+        m_labelTextureSizeNew->setStyleSheet("QLabel { color : #FF483F; }");
+        m_labelAvailableGPUVRAM->setStyleSheet("QLabel { color : #FF483F; }");
+    }
+    if (m_textureSizeNew <= 0.0f) {
+        m_labelTextureSizeNew->setStyleSheet("QLabel { color : #FF483F; }");
+    }
 }
 bool DialogResizeVolumeData::checkCurrentInput() {
     if (m_lineEditMetaDataNewSizeX->text().isEmpty() ||
@@ -291,10 +323,19 @@ void DialogResizeVolumeData::setupSectionTextureSize() {
                                          QString::number(m_textureSizeDriverMax) + " x " +
                                          QString::number(m_textureSizeDriverMax) + " pixel");
 
+    m_labelTotalGPUVRAM = new QLabel;
+    m_labelTotalGPUVRAM->setText(
+        QString("GPU Total VRAM: N.A. (Only NVIDIA GPU driver is supported.)"));
+    m_labelAvailableGPUVRAM = new QLabel;
+    m_labelAvailableGPUVRAM->setText(
+        QString("GPU Available VRAM: N.A. (Only NVIDIA GPU driver is supported.)"));
+
     // textureSize
     m_hLayouttextureSize = new QVBoxLayout;
     m_hLayouttextureSize->addWidget(m_labelTextureSizeOriginal);
     m_hLayouttextureSize->addWidget(m_labelTextureSizeNew);
+    m_hLayouttextureSize->addWidget(m_labelAvailableGPUVRAM);
+    m_hLayouttextureSize->addWidget(m_labelTotalGPUVRAM);
     m_hLayouttextureSize->addWidget(m_labelTextureSizeDriverMax);
 
     m_textureSize = new QGroupBox;
@@ -337,5 +378,10 @@ void DialogResizeVolumeData::setupSectionOKAndCancel() {
     connect(m_buttonOK, &QPushButton::clicked, this, &DialogResizeVolumeData::onOKButtonClicked);
     connect(m_buttonCancel, &QPushButton::clicked, this,
             &DialogResizeVolumeData::onCancelButtonClicked);
+}
+void DialogResizeVolumeData::setupVRAMTimer() {
+    m_timerVRAMupdate = new QTimer(this);
+    connect(m_timerVRAMupdate, &QTimer::timeout, this, &DialogResizeVolumeData::requestVRAMinfoUpdate);
+    m_timerVRAMupdate->start(250);
 }
 } // namespace VDS
