@@ -112,8 +112,8 @@ void DialogResizeVolumeData::recieveVRAMinfoUpdate(bool success, int dedicatedMe
         m_availableGPUVRAM = availableDedicatedMemory / 1024.0f;
         m_labelAvailableGPUVRAM->setText(QString("GPU Available VRAM: ") +
                                          QString::number(m_availableGPUVRAM) + " MB");
+        updateVRAMLabels();
     }
-    updateVRAMLabels();
 }
 void DialogResizeVolumeData::updateVRAMLabels() {
     if (m_availableGPUVRAM * 0.8f > m_availableGPUVRAM - m_textureSizeNew &&

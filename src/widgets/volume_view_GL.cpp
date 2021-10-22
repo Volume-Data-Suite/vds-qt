@@ -334,7 +334,7 @@ bool VolumeViewGL::collectVRAMInfo(GLint& dedicatedMemory, GLint& totalAvailable
         glGetIntegerv(GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &availableDedicatedMemory);
         glGetIntegerv(GPU_MEMORY_INFO_EVICTION_COUNT_NVX, &envictionCount);
         glGetIntegerv(GPU_MEMORY_INFO_EVICTED_MEMORY_NVX, &envictedMemory);
-        return true;
+        return dedicatedMemory != 0;
     } else {
         dedicatedMemory = 0;
         totalAvailableMemory = 0;
