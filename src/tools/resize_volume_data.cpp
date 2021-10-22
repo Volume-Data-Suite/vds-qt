@@ -61,14 +61,15 @@ void DialogResizeVolumeData::onCancelButtonClicked() {
     this->reject();
 }
 void DialogResizeVolumeData::computeTextureSizeOriginal() {
-    m_textureSizeOriginal = sizeof(std::uint16_t) * m_sizeOriginal.x() *
-                            m_sizeOriginal.y() * m_sizeOriginal.z() / std::powf(1024, 2);
+    m_textureSizeOriginal = static_cast<float>(sizeof(std::uint16_t)) * m_sizeOriginal.x() *
+                            m_sizeOriginal.y() * m_sizeOriginal.z() /
+                            static_cast<float>(std::pow(1024, 2));
 }
 void DialogResizeVolumeData::computeTextureSizeNew() {
-    m_textureSizeNew = sizeof(std::uint16_t) *
-                       m_lineEditMetaDataNewSizeX->text().toFloat() *
-                       m_lineEditMetaDataNewSizeY->text().toFloat() *
-                       m_lineEditMetaDataNewSizeZ->text().toFloat() / std::powf(1024, 2);
+    m_textureSizeNew =
+        static_cast<float>(sizeof(std::uint16_t)) * m_lineEditMetaDataNewSizeX->text().toFloat() *
+        m_lineEditMetaDataNewSizeY->text().toFloat() *
+        m_lineEditMetaDataNewSizeZ->text().toFloat() / static_cast<float>(std::pow(1024, 2));
 
     m_labelTextureSizeNew->setText(QString("New: ") + QString::number(m_textureSizeNew) + " MB");
 }
