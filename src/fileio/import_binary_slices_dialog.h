@@ -7,8 +7,8 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QVBoxLayout>
 #include <QTextEdit>
+#include <QVBoxLayout>
 
 #include "import_item.h"
 
@@ -37,9 +37,9 @@ private:
     void setupSectionEndianess();
     void setupSectionSize();
     void setupSectionSpacing();
-    void setupSectionOKAndCancel();
     void setupImportOrderPreview();
     void setupAxis();
+    void setupSectionOKAndCancel();
 
     void previewImportOrder();
 
@@ -91,7 +91,7 @@ private:
     QLineEdit* m_textSpacingY;
     QLineEdit* m_textSpacingZ;
     QRegExpValidator* m_validatorSpacing;
-        
+
     // File Import Order Preview
     QGroupBox* m_groupFileImportPreview;
     QVBoxLayout* m_vLayoutFileImportPreview;

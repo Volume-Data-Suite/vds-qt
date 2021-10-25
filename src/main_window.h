@@ -37,6 +37,8 @@ public slots:
 
     void openExportRawDialog();
     void exportRAW3D(const ExportItemRaw& item);
+    void openExportImageSeriesDialog();
+    void exportImageSeries(const ExportItemImageSeries& item);
 
     void openVolumeDataResizeDialog();
 
@@ -56,6 +58,7 @@ public slots:
     void triggerManualFragmentShaderUpdateFromEditor();
 
     void errorRawExport();
+    void errorImageSeriesExport();
     void errorRawImport();
     void errorBinarySlicesImport();
 
@@ -64,6 +67,7 @@ signals:
     // -1 = allow it, 0 = unchanged, 1 = do not allow it
     void updateUIPermissions(int read, int write);
     void showErrorExportRaw();
+    void showErrorExportImagesSeries();
     void showErrorImportRaw();
     void showErrorImportBinarySlices();
     void updateRecentFiles();
@@ -86,7 +90,6 @@ private:
     // File Menu
     QMenu* m_menuFiles;
     QAction* m_actionImportRAW3D;
-    QAction* m_actionImportBitmapSeries;
     QAction* m_actionImportBinarySlices;
     QMenu* m_menuRecentFiles;
     QAction* m_actionExportRAW3D;

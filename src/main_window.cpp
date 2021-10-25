@@ -3,6 +3,7 @@
 #include "fileio/import_binary_slices_dialog.h"
 #include "fileio/import_raw_3D_dialog.h"
 #include "fileio/export_raw_3D_dialog.h"
+#include "fileio/export_image_series_dialog.h"
 #include "tools/resize_volume_data.h"
 
 #include "common/vdtk_helper_functions.h"
@@ -112,6 +113,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     // connect error dialogs
     connect(this, &MainWindow::showErrorExportRaw, this, &MainWindow::errorRawExport);
+    connect(this, &MainWindow::showErrorExportImagesSeries, this,
+            &MainWindow::errorImageSeriesExport);
     connect(this, &MainWindow::showErrorImportRaw, this, &MainWindow::errorRawImport);
     connect(this, &MainWindow::showErrorImportBinarySlices, this,
             &MainWindow::errorBinarySlicesImport);
@@ -132,6 +135,10 @@ MainWindow::MainWindow(QWidget* parent)
             &MainWindow::triggerManualVertexShaderUpdateFromEditor);
     connect(m_buttonApplyFragmentShader, &QAbstractButton::clicked, this,
             &MainWindow::triggerManualFragmentShaderUpdateFromEditor);
+
+    // Disable all exports until a file is loaded
+    m_actionExportRAW3D->setEnabled(false);
+    m_actionExportBitmapSeries->setEnabled(false);
 }
 
 void MainWindow::setUIPermissions(int read, int write) {
@@ -155,18 +162,18 @@ void MainWindow::setUIPermissions(int read, int write) {
     case 0:
         // enable write access UI elements
         m_actionImportRAW3D->setEnabled(true);
-        m_actionImportBitmapSeries->setEnabled(true);
         m_actionImportBinarySlices->setEnabled(true);
         m_menuRecentFiles->setEnabled(true);
         m_actionResizeVolumeData->setEnabled(true);
+        ui.groupBoxApplyWindow->setEnabled(true);
         break;
     default:
         // disable write access UI elements
         m_actionImportRAW3D->setEnabled(false);
-        m_actionImportBitmapSeries->setEnabled(false);
         m_actionImportBinarySlices->setEnabled(false);
         m_menuRecentFiles->setEnabled(false);
         m_actionResizeVolumeData->setEnabled(false);
+        ui.groupBoxApplyWindow->setEnabled(false);
         break;
     }
 }
@@ -384,6 +391,62 @@ void MainWindow::exportRAW3D(const ExportItemRaw& item) {
     });
 }
 
+void MainWindow::openExportImageSeriesDialog() {
+    emit(updateUIPermissions(1, 1));
+
+    const QVector3D size(m_vdh.getVolumeData().getSize().getX(),
+                         m_vdh.getVolumeData().getSize().getY(),
+                         m_vdh.getVolumeData().getSize().getZ());
+    const QVector3D spacing(m_vdh.getVolumeData().getSpacing().getX(),
+                            m_vdh.getVolumeData().getSpacing().getY(),
+                            m_vdh.getVolumeData().getSpacing().getZ());
+
+    const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
+    const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
+    const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
+    const QString function = ui.comboBoxApplyWindowFunction->currentText();
+    const ValueWindow valueWindow = ValueWindow(function, windowWidth, windowCenter, windowOffset);
+
+    DialogExportImageSeries dialog(size, spacing);
+    dialog.show();
+
+    if (dialog.exec() != QDialog::Accepted) {
+        // Raw Export got canceled by user
+        emit(updateUIPermissions(-1, -1));
+        return;
+    }
+
+    // Call Export
+    const ExportItemImageSeries item = dialog.getExportItem();
+    exportImageSeries(item);
+    emit(updateUIPermissions(-1, -1));
+}
+
+void MainWindow::exportImageSeries(const ExportItemImageSeries& item) {
+    QFuture<void> future = QtConcurrent::run([=]() {
+        QThread::currentThread()->setObjectName("Export Images Series Thread");
+        emit(updateUIPermissions(0, 1));
+        auto vdhCopy = m_vdh;
+
+        if (item.applyValueWindow()) {
+            const int32_t windowWidth = ui.spinBoxApplyWindowValueWindowWidth->value();
+            const int32_t windowCenter = ui.spinBoxApplyWindowValueWindowCenter->value();
+            const int32_t windowOffset = ui.spinBoxApplyWindowValueWindowOffset->value();
+            const VDTK::WindowingFunction function =
+                VDTK::WindowingFunction(ui.comboBoxApplyWindowFunction->currentIndex());
+            vdhCopy.applyWindow(function, windowCenter, windowWidth, windowOffset);
+        }
+
+        bool success = vdhCopy.exportToBitmapMonochrom(item.getPath());
+
+        if (!success) {
+            emit(showErrorExportImagesSeries());
+        }
+
+        emit(updateUIPermissions(0, -1));
+    });
+}
+
 void MainWindow::openVolumeDataResizeDialog() {
     emit(updateUIPermissions(1, 1));
 
@@ -554,6 +617,12 @@ void MainWindow::errorRawExport() {
     msgBox.exec();
 }
 
+void MainWindow::errorImageSeriesExport() {
+    QMessageBox msgBox(QMessageBox::Critical, "Could not export images series",
+                       "Could not export images series.");
+    msgBox.exec();
+}
+
 void MainWindow::errorRawImport() {
     QMessageBox msgBox(QMessageBox::Warning, "Could not import 3D RAW",
                        "Invalid import arguments.");
@@ -596,10 +665,6 @@ void MainWindow::setupFileMenu() {
     connect(m_actionImportBinarySlices, &QAction::triggered, this,
             &MainWindow::openImportBinarySlicesDialog);
 
-    m_actionImportBitmapSeries = new QAction(m_menuFiles);
-    m_actionImportBitmapSeries->setText(QString("Import Bitmap Series"));
-    m_menuFiles->addAction(m_actionImportBitmapSeries);
-
     m_menuRecentFiles = new QMenu(m_menuFiles);
     m_menuRecentFiles->setTitle(QString("Recent Files"));
     m_menuFiles->addMenu(m_menuRecentFiles);
@@ -614,6 +679,8 @@ void MainWindow::setupFileMenu() {
     m_actionExportBitmapSeries = new QAction(m_menuFiles);
     m_actionExportBitmapSeries->setText(QString("Export Bitmap Series"));
     m_menuFiles->addAction(m_actionExportBitmapSeries);
+    connect(m_actionExportBitmapSeries, &QAction::triggered, this,
+            &MainWindow::openExportImageSeriesDialog);
 
     refreshRecentFileList();
 }

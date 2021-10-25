@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+#include <VDTK//common/CommonDataTypes.h>
+
 namespace VDS {
 // Interface class for processing different kind of import item for the "last opened" section in
 // import menu section
@@ -31,6 +33,17 @@ public:
 private:
     uint8_t m_bitsPerVoxel;
     bool m_littleEndian;
+    bool m_applyWindow;
+};
+
+class ExportItemImageSeries : public ExportItem {
+public:
+    ExportItemImageSeries(const std::filesystem::path& directoryPath, const bool applyWindow);
+    ~ExportItemImageSeries() = default;
+
+    bool applyValueWindow() const;
+
+private:
     bool m_applyWindow;
 };
 
