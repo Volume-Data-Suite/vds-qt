@@ -50,6 +50,8 @@ add_executable(VDS
 	widgets/expandable_section_widget.cpp
 	widgets/histogram_view_GL.h
 	widgets/histogram_view_GL.cpp
+	widgets/slice_view_GL.h
+	widgets/slice_view_GL.cpp
 	widgets/volume_view_GL.h
 	widgets/volume_view_GL.cpp
 )

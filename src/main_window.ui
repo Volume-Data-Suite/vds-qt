@@ -34,9 +34,6 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="VolumeViewGL" name="volumeViewWidget"/>
-    </item>
-    <item>
      <widget class="QGroupBox" name="groupBoxSliceView">
       <property name="enabled">
        <bool>true</bool>
@@ -44,15 +41,18 @@
       <property name="title">
        <string>Slice View</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QOpenGLWidget" name="openGLWidget_4"/>
+      <layout class="QGridLayout" name="gridLayout" rowminimumheight="0,0,0,0">
+       <item row="3" column="0">
+        <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderZ"/>
        </item>
-       <item>
-        <widget class="QOpenGLWidget" name="openGLWidget_2"/>
+       <item row="0" column="0">
+        <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderX"/>
        </item>
-       <item>
-        <widget class="QOpenGLWidget" name="openGLWidget_3"/>
+       <item row="1" column="0">
+        <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderY"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="VolumeViewGL" name="volumeViewWidget"/>
        </item>
       </layout>
      </widget>

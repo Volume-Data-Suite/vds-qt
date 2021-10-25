@@ -38,9 +38,6 @@ MainWindow::MainWindow(QWidget* parent)
     m_actionResizeVolumeData->setEnabled(false);
     setupShaderEditor();
 
-    // as long as its not functional
-    ui.groupBoxSliceView->hide();
-
     // connect debug infos
     connect(ui.volumeViewWidget, &VolumeViewGL::updateFrametime, this,
             &MainWindow::updateFrametime);
@@ -635,6 +632,22 @@ void MainWindow::errorBinarySlicesImport() {
     msgBox.exec();
 }
 
+void MainWindow::toggleSliceViewEnabled() {
+    if (m_actionToggleSliceView->isChecked()) {
+        ui.groupBoxSliceView->setHidden(false);
+    } else {
+        ui.groupBoxSliceView->setHidden(true);
+    }
+}
+
+void MainWindow::toggleControllViewEnabled() {
+    if (m_actionToggleControlView->isChecked()) {
+        ui.tabSettings->setHidden(false);
+    } else {
+        ui.tabSettings->setHidden(true);
+    }
+}
+
 void MainWindow::updateVolumeData() {
     const std::array<std::size_t, 3> size = {m_vdh.getVolumeData().getSize().getX(),
                                              m_vdh.getVolumeData().getSize().getY(),
@@ -695,6 +708,22 @@ void MainWindow::setupViewMenu() {
     m_menuView->addAction(m_actionResetView);
     connect(m_actionResetView, &QAction::triggered, ui.volumeViewWidget,
             &VolumeViewGL::resetViewMatrixAndUpdate);
+
+    m_actionToggleControlView = new QAction(m_menuView);
+    m_actionToggleControlView->setText(QString("Show Controls"));
+    m_actionToggleControlView->setCheckable(true);
+    m_actionToggleControlView->setChecked(true);
+    m_menuView->addAction(m_actionToggleControlView);
+    connect(m_actionToggleControlView, &QAction::triggered, this,
+            &MainWindow::toggleControllViewEnabled);
+
+    m_actionToggleSliceView = new QAction(m_menuView);
+    m_actionToggleSliceView->setText(QString("Show Slice View"));
+    m_actionToggleSliceView->setCheckable(true);
+    m_actionToggleSliceView->setChecked(true);
+    m_menuView->addAction(m_actionToggleSliceView);
+    connect(m_actionToggleSliceView, &QAction::triggered, this,
+            &MainWindow::toggleSliceViewEnabled);
 }
 
 void MainWindow::setupToolsMenu() {

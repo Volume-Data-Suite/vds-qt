@@ -62,6 +62,9 @@ public slots:
     void errorRawImport();
     void errorBinarySlicesImport();
 
+    void toggleSliceViewEnabled();
+    void toggleControllViewEnabled();
+
 signals:
     void updateHistogram(const std::vector<uint16_t>& histogram, bool ignoreBorders);
     // -1 = allow it, 0 = unchanged, 1 = do not allow it
@@ -99,6 +102,8 @@ private:
     // View Menu
     QMenu* m_menuView;
     QAction* m_actionResetView;
+    QAction* m_actionToggleControlView;
+    QAction* m_actionToggleSliceView;
 
     // Tools Menu
     QMenu* m_menuTools;
