@@ -109,7 +109,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderZ"/>
+           <widget class="SliceViewGL" name="openGLWidgetSliceRenderZ"/>
           </item>
          </layout>
         </widget>
@@ -136,7 +136,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderY"/>
+           <widget class="SliceViewGL" name="openGLWidgetSliceRenderY"/>
           </item>
          </layout>
         </widget>
@@ -163,7 +163,7 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderX"/>
+           <widget class="SliceViewGL" name="openGLWidgetSliceRenderX"/>
           </item>
          </layout>
         </widget>
@@ -725,6 +725,11 @@
    <class>HistogramViewGL</class>
    <extends>QOpenGLWidget</extends>
    <header>widgets/histogram_view_GL.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SliceViewGL</class>
+   <extends>QOpenGLWidget</extends>
+   <header>widgets/slice_view_GL.h</header>
   </customwidget>
  </customwidgets>
  <resources>

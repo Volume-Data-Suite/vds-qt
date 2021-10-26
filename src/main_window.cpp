@@ -653,6 +653,72 @@ void MainWindow::toggleControllViewEnabled() {
     }
 }
 
+void MainWindow::enableSliceRendererXMetaInfo() {    
+    ui.groupBoxSliceRenderX->setStyleSheet(
+        "QGroupBox { border: 2px solid red; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 1px solid red; background: red; } "
+        "QSlider::handle:vertical { border: 1px solid red; background: red; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererX->setHidden(false);
+}
+
+void MainWindow::enableSliceRendererYMetaInfo() {    
+    ui.groupBoxSliceRenderY->setStyleSheet(
+        "QGroupBox { border: 2px solid green; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 1px solid green; background: green; } "
+        "QSlider::handle:vertical { border: 1px solid green; background: green; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererY->setHidden(false);
+}
+
+void MainWindow::enableSliceRendererZMetaInfo() {    
+    ui.groupBoxSliceRenderZ->setStyleSheet(
+        "QGroupBox { border: 2px solid blue; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 1px solid blue; background: blue; } "
+        "QSlider::handle:vertical { border: 1px solid blue; background: blue; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererZ->setHidden(false);
+}
+
+void MainWindow::disableSliceRendererXMetaInfo() {
+    ui.groupBoxSliceRenderX->setStyleSheet(
+        "QGroupBox { border: 2px solid red; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 0px solid red; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid red; background: transparent; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererX->setHidden(true);
+}
+
+void MainWindow::disableSliceRendererYMetaInfo() {
+    ui.groupBoxSliceRenderY->setStyleSheet(
+        "QGroupBox { border: 2px solid green; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 0px solid green; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid green; background: transparent; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererY->setHidden(true);
+}
+
+void MainWindow::disableSliceRendererZMetaInfo() {
+    ui.groupBoxSliceRenderZ->setStyleSheet(
+        "QGroupBox { border: 2px solid blue; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 0px solid blue; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid blue; background: transparent; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererZ->setHidden(true);
+}
+
 void MainWindow::updateVolumeData() {
     const std::array<std::size_t, 3> size = {m_vdh.getVolumeData().getSize().getX(),
                                              m_vdh.getVolumeData().getSize().getY(),
@@ -749,46 +815,45 @@ void MainWindow::setupRendererView() {
     ui.groupBoxSliceRenderX->setStyleSheet(
         "QGroupBox { border: 2px solid red; margin-top: 0ex; } "
         "QGroupBox::title { padding: 0 0px; }"
-        "QSlider::groove:vertical { border: 1px solid red; background: red; } "
-        "QSlider::handle:vertical { border: 1px solid red; background: red; } "
+        "QSlider::groove:vertical { border: 0px solid red; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid red; background: transparent; } "
         "QSlider { background: transparent; }");
     ui.groupBoxSliceRenderY->setStyleSheet(
         "QGroupBox { border: 2px solid green; margin-top: 0ex; "
         "} QGroupBox::title { padding: 0 0px; }"
-        "QSlider::groove:vertical { border: 1px solid green; background: green; } "
-        "QSlider::handle:vertical { border: 1px solid green; background: green; } "
+        "QSlider::groove:vertical { border: 0px solid green; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid green; background: transparent; } "
         "QSlider { background: transparent; }");
     ui.groupBoxSliceRenderZ->setStyleSheet(
         "QGroupBox { border: 2px solid blue; margin-top: 0ex; } "
         "QGroupBox::title { padding: 0 0px; }"
-        "QSlider::groove:vertical { border: 1px solid blue; background: blue; } "
-        "QSlider::handle:vertical { border: 1px solid blue; background: blue; } "
+        "QSlider::groove:vertical { border: 0px solid blue; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid blue; background: transparent; } "
         "QSlider { background: transparent; }");
     ui.groupBoxVolumeView->setStyleSheet("QGroupBox { border: 0px solid white; margin-top: 0ex; } "
                                          "QGroupBox::title { padding: 0 0px; }");
 
-    m_labelRenderer = new QLabel(ui.volumeViewWidget);
-    m_labelRenderer->setText("Volume Renderer");
-    m_labelRenderer->setAttribute(Qt::WA_TranslucentBackground);
-    m_labelRenderer->move(3, 1);
 
     m_labelSliceRendererX = new QLabel(ui.openGLWidgetSliceRenderX);
     m_labelSliceRendererX->setText("X-Axis");
     m_labelSliceRendererX->setAttribute(Qt::WA_TranslucentBackground);
     m_labelSliceRendererX->setStyleSheet("QLabel { color: red; }");
     m_labelSliceRendererX->move(3, -8);
+    m_labelSliceRendererX->setHidden(true);
 
     m_labelSliceRendererY = new QLabel(ui.openGLWidgetSliceRenderY);
     m_labelSliceRendererY->setText("Y-Axis");
     m_labelSliceRendererY->setAttribute(Qt::WA_TranslucentBackground);
     m_labelSliceRendererY->setStyleSheet("QLabel { color: green; }");
     m_labelSliceRendererY->move(3, -8);
+    m_labelSliceRendererY->setHidden(true);
 
     m_labelSliceRendererZ = new QLabel(ui.openGLWidgetSliceRenderZ);
     m_labelSliceRendererZ->setText("Z-Axis");
     m_labelSliceRendererZ->setAttribute(Qt::WA_TranslucentBackground);
     m_labelSliceRendererZ->setStyleSheet("QLabel { color: blue; }");
     m_labelSliceRendererZ->move(3, -8);
+    m_labelSliceRendererZ->setHidden(true);
     
     m_sliderSliceRendererX = new QSlider();
     m_sliderSliceRendererXLayout = new QHBoxLayout();
@@ -807,6 +872,21 @@ void MainWindow::setupRendererView() {
     m_sliderSliceRendererZLayout->addStretch();
     m_sliderSliceRendererZLayout->addWidget(m_sliderSliceRendererZ);
     ui.openGLWidgetSliceRenderZ->setLayout(m_sliderSliceRendererZLayout);
+
+    connect(ui.openGLWidgetSliceRenderX, &SliceViewGL::enterEventSignaled, this,
+            &MainWindow::enableSliceRendererXMetaInfo);
+    connect(ui.openGLWidgetSliceRenderX, &SliceViewGL::leaveEventSignaled, this,
+            &MainWindow::disableSliceRendererXMetaInfo);
+
+    connect(ui.openGLWidgetSliceRenderY, &SliceViewGL::enterEventSignaled, this,
+            &MainWindow::enableSliceRendererYMetaInfo);
+    connect(ui.openGLWidgetSliceRenderY, &SliceViewGL::leaveEventSignaled, this,
+            &MainWindow::disableSliceRendererYMetaInfo);
+
+    connect(ui.openGLWidgetSliceRenderZ, &SliceViewGL::enterEventSignaled, this,
+            &MainWindow::enableSliceRendererZMetaInfo);
+    connect(ui.openGLWidgetSliceRenderZ, &SliceViewGL::leaveEventSignaled, this,
+            &MainWindow::disableSliceRendererZMetaInfo);
 }
 
 void MainWindow::setupShaderEditor() {

@@ -66,6 +66,14 @@ void SliceViewGL::paintGL() {
     glUseProgram(0);
 }
 
+void SliceViewGL::enterEvent(QEvent* ev) {
+    emit(enterEventSignaled());
+}
+
+void SliceViewGL::leaveEvent(QEvent* ev) {
+    emit(leaveEventSignaled());
+}
+
 void SliceViewGL::updateTexture() {
     if (!is_opengl_initialized) {
         return;
@@ -138,7 +146,7 @@ void SliceViewGL::setupFragmentShader() {
 
         "void main() \n"
         "{ \n"
-        "	FragColor = vec4(vec3(1.0f, 0.0f, 0.0f), 1.0f); \n"
+        "	FragColor = vec4(vec3(0.0f, 0.0f, 0.0f), 1.0f); \n"
         "} \n";
 
     m_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);

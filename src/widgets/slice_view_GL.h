@@ -20,9 +20,13 @@ protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
+    void enterEvent(QEvent* ev) override;
+    void leaveEvent(QEvent* ev) override;
 
 signals:
     void updateHistogram();
+    void enterEventSignaled();
+    void leaveEventSignaled();
 
 private:
 

@@ -65,6 +65,13 @@ public slots:
     void toggleSliceViewEnabled();
     void toggleControllViewEnabled();
 
+    void enableSliceRendererXMetaInfo();
+    void enableSliceRendererYMetaInfo();
+    void enableSliceRendererZMetaInfo();
+    void disableSliceRendererXMetaInfo();
+    void disableSliceRendererYMetaInfo();
+    void disableSliceRendererZMetaInfo();
+
 signals:
     void updateHistogram(const std::vector<uint16_t>& histogram, bool ignoreBorders);
     // -1 = allow it, 0 = unchanged, 1 = do not allow it
@@ -114,7 +121,6 @@ private:
     QLabel* m_labelSliceRendererX;
     QLabel* m_labelSliceRendererY;
     QLabel* m_labelSliceRendererZ;
-    QLabel* m_labelRenderer;
     QSlider* m_sliderSliceRendererX;
     QSlider* m_sliderSliceRendererY;
     QSlider* m_sliderSliceRendererZ;
