@@ -7,6 +7,10 @@
 
 #include <vector>
 
+#include "renderer/shader/shader_settings.h"
+
+#include <VDTK/common/CommonDataTypes.h>
+
 class SliceViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core {
     Q_OBJECT
 
@@ -15,6 +19,7 @@ public:
 
 public slots:
     void updateTexture();
+    void setAxis(VDTK::VolumeAxis axis);
 
 protected:
     void initializeGL() override;
@@ -24,7 +29,6 @@ protected:
     void leaveEvent(QEvent* ev) override;
 
 signals:
-    void updateHistogram();
     void enterEventSignaled();
     void leaveEventSignaled();
 
@@ -47,6 +51,8 @@ private:
     GLuint m_vertexShader;
     GLuint m_fragmentShader;
     GLuint m_shaderProgram;
-    // globatl texture handles
+    // global texture handles
     GLuint m_texture;
+        
+    VDS::Slice2DShaderSettings m_settings;
 };

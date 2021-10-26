@@ -510,9 +510,9 @@ bool RayCastRenderer::setupShaderProgramRayCasting() {
 }
 
 bool RayCastRenderer::generateRaycastShaderProgram() {
-    const std::string vertexShaderSource = VDS::ShaderGenerator::getVertexShaderCode();
+    const std::string vertexShaderSource = VDS::ShaderGenerator::getVertexShaderCodeRaycasting();
     const std::string fragmentShaderSource =
-        VDS::ShaderGenerator::getFragmentShaderCode(m_settings);
+        VDS::ShaderGenerator::getFragmentShaderCodeRaycasting(m_settings);
 
     if (!setupVertexShaderRayCasting(vertexShaderSource) ||
         !setupFragmentShaderRayCasting(fragmentShaderSource)) {

@@ -5,7 +5,29 @@ namespace VDS::GLSL {
 static const std::pair<std::string, std::string> glslVersion =
     std::make_pair("{{ glslVersion }}", "#version 430 core");
 
-static const std::string vertrexBase =
+static const std::string vertrexBaseSlice2D =
+    glslVersion.first + "\n"
+
+                        "in vec3 inPos; \n"
+
+                        "void main() \n"
+                        "{ \n"
+                        "	gl_Position = vec4(inPos, 1.0f); \n"
+                        "} \n";
+
+static const std::string fragmentBaseSlice2D =
+    glslVersion.first + "\n"
+
+                        "uniform vec2 viewport; \n"
+
+                        "out vec4 FragColor; \n"
+
+                        "void main() \n"
+                        "{ \n"
+                        "	FragColor = vec4({{ color }}, 1.0f); \n "
+                        "} \n";
+
+static const std::string vertrexBaseRaycasting =
     glslVersion.first +
     "\n"
 
@@ -17,7 +39,7 @@ static const std::string vertrexBase =
     "	gl_Position = projectionViewModelMatrix * vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
     "} \n";
 
-static const std::string fragmentBase =
+static const std::string fragmentBaseRaycasting =
     glslVersion.first +
     "\n"
 

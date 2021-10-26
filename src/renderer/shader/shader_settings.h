@@ -2,6 +2,8 @@
 #include <array>
 #include <vector>
 
+#include <VDTK/common/CommonDataTypes.h>
+
 namespace VDS {
 enum class RayCastMethods {
     MIP,
@@ -33,4 +35,11 @@ struct RaycastShaderSettings {
     float sampleStepLength = 0.01f;
     float threshold = 0.05f;
 };
+
+struct Slice2DShaderSettings {
+    ValueWindowSettings windowSettings;
+    VDTK::VolumeAxis axis;
+    std::uint32_t position;
+};
+
 } // namespace VDS

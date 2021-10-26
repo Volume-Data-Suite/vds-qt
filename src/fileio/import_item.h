@@ -5,7 +5,7 @@
 #include <QString>
 #include <QVector3D>
 
-#include <VDTK//common/CommonDataTypes.h>
+#include <VDTK/common/CommonDataTypes.h>
 
 namespace VDS {
 // Interface class for processing different kind of import item for the "last opened" section in

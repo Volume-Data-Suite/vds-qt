@@ -885,18 +885,21 @@ void MainWindow::setupRendererView() {
     m_labelSliceRendererZ->setHidden(true);
     
     m_sliderSliceRendererX = new QSlider();
+    m_sliderSliceRendererX->setMaximum(0);
     m_sliderSliceRendererXLayout = new QHBoxLayout();
     m_sliderSliceRendererXLayout->addStretch();
     m_sliderSliceRendererXLayout->addWidget(m_sliderSliceRendererX);
     ui.openGLWidgetSliceRenderX->setLayout(m_sliderSliceRendererXLayout);
         
     m_sliderSliceRendererY = new QSlider();
+    m_sliderSliceRendererY->setMaximum(0);
     m_sliderSliceRendererYLayout = new QHBoxLayout();
     m_sliderSliceRendererYLayout->addStretch();
     m_sliderSliceRendererYLayout->addWidget(m_sliderSliceRendererY);
     ui.openGLWidgetSliceRenderY->setLayout(m_sliderSliceRendererYLayout);
 
     m_sliderSliceRendererZ = new QSlider();
+    m_sliderSliceRendererZ->setMaximum(0);
     m_sliderSliceRendererZLayout = new QHBoxLayout();
     m_sliderSliceRendererZLayout->addStretch();
     m_sliderSliceRendererZLayout->addWidget(m_sliderSliceRendererZ);

@@ -1,14 +1,20 @@
+#pragma once
 #include "slice_view_GL.h"
+#include "renderer/shader/shader_generator.h"
 
 #include <algorithm>
 #include <QtConcurrent>
 #include <QFuture>
 
+
 SliceViewGL::SliceViewGL(QWidget* parent)
     : QOpenGLWidget(parent) {
     is_opengl_initialized = false;
+}
 
-    connect(this, &SliceViewGL::updateHistogram, this, &SliceViewGL::updateTexture);
+void SliceViewGL::setAxis(VDTK::VolumeAxis axis) {
+    m_settings.axis = axis;
+    initializeGL();
 }
 
 void SliceViewGL::initializeGL() {
@@ -122,14 +128,8 @@ void SliceViewGL::setupVertexArray() {
 }
 
 void SliceViewGL::setupVertexShader() {
-    const GLchar* const shaderGLSL = "#version 430 core \n"
-
-                                     "in vec3 inPos; \n"
-
-                                     "void main() \n"
-                                     "{ \n"
-                                     "	gl_Position = vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
-                                     "} \n";
+    const std::string vertexShaderSource = VDS::ShaderGenerator::getVertexShaderCodeSlice2D();
+    const GLchar* const shaderGLSL = vertexShaderSource.c_str();
 
     m_vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(m_vertexShader, 1, &shaderGLSL, NULL);
@@ -137,17 +137,8 @@ void SliceViewGL::setupVertexShader() {
 }
 
 void SliceViewGL::setupFragmentShader() {
-    const GLchar* const shaderGLSL =
-        "#version 430 core \n"
-
-        "uniform vec2 viewport; \n"
-
-        "out vec4 FragColor; \n"
-
-        "void main() \n"
-        "{ \n"
-        "	FragColor = vec4(vec3(0.0f, 0.0f, 0.0f), 1.0f); \n"
-        "} \n";
+    const std::string fragmenntShaderSource = VDS::ShaderGenerator::getFragmentShaderCodeSlice2D(m_settings);
+    const GLchar* const shaderGLSL = fragmenntShaderSource.c_str();
 
     m_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(m_fragmentShader, 1, &shaderGLSL, NULL);
