@@ -733,16 +733,16 @@ void MainWindow::updateSliceRendererZPosition(int position) {
 
 void MainWindow::updateSliceRenderSliderValueRanges() {
     m_sliderSliceRendererX->setMinimum(1);
-    m_sliderSliceRendererX->setMaximum(m_vdh.getVolumeSize().getX());
-    m_sliderSliceRendererX->setValue(m_vdh.getVolumeSize().getX() / 2);
+    m_sliderSliceRendererX->setMaximum(static_cast<int>(m_vdh.getVolumeSize().getX()));
+    m_sliderSliceRendererX->setValue(static_cast<int>(m_vdh.getVolumeSize().getX()) / 2);
 
     m_sliderSliceRendererY->setMinimum(1);
-    m_sliderSliceRendererY->setMaximum(m_vdh.getVolumeSize().getY());
-    m_sliderSliceRendererY->setValue(m_vdh.getVolumeSize().getY() / 2);
+    m_sliderSliceRendererY->setMaximum(static_cast<int>(m_vdh.getVolumeSize().getY()));
+    m_sliderSliceRendererY->setValue(static_cast<int>(m_vdh.getVolumeSize().getY()) / 2);
 
     m_sliderSliceRendererZ->setMinimum(1);
-    m_sliderSliceRendererZ->setMaximum(m_vdh.getVolumeSize().getZ());
-    m_sliderSliceRendererZ->setValue(m_vdh.getVolumeSize().getZ() / 2);
+    m_sliderSliceRendererZ->setMaximum(static_cast<int>(m_vdh.getVolumeSize().getZ()));
+    m_sliderSliceRendererZ->setValue(static_cast<int>(m_vdh.getVolumeSize().getZ()) / 2);
 }
 
 void MainWindow::updateVolumeData() {
@@ -922,10 +922,22 @@ void MainWindow::setupRendererView() {
 
     connect(m_sliderSliceRendererX, &QSlider::valueChanged, this,
             &MainWindow::updateSliceRendererXPosition);
+    connect(m_sliderSliceRendererX, &QSlider::valueChanged, ui.openGLWidgetSliceRenderX,
+            &SliceViewGL::setPosition);
+
     connect(m_sliderSliceRendererY, &QSlider::valueChanged, this,
             &MainWindow::updateSliceRendererYPosition);
+    connect(m_sliderSliceRendererY, &QSlider::valueChanged, ui.openGLWidgetSliceRenderY,
+            &SliceViewGL::setPosition);
+
     connect(m_sliderSliceRendererZ, &QSlider::valueChanged, this,
             &MainWindow::updateSliceRendererZPosition);
+    connect(m_sliderSliceRendererZ, &QSlider::valueChanged, ui.openGLWidgetSliceRenderZ,
+            &SliceViewGL::setPosition);
+
+    ui.openGLWidgetSliceRenderX->setAxis(VDTK::VolumeAxis::YZAxis);
+    ui.openGLWidgetSliceRenderY->setAxis(VDTK::VolumeAxis::XZAxis);
+    ui.openGLWidgetSliceRenderZ->setAxis(VDTK::VolumeAxis::XYAxis);
 }
 
 void MainWindow::setupShaderEditor() {

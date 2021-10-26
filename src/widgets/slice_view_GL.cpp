@@ -14,7 +14,10 @@ SliceViewGL::SliceViewGL(QWidget* parent)
 
 void SliceViewGL::setAxis(VDTK::VolumeAxis axis) {
     m_settings.axis = axis;
-    initializeGL();
+}
+
+void SliceViewGL::setPosition(int position) {
+    m_settings.position = position;
 }
 
 void SliceViewGL::initializeGL() {

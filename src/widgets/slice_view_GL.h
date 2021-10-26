@@ -20,6 +20,7 @@ public:
 public slots:
     void updateTexture();
     void setAxis(VDTK::VolumeAxis axis);
+    void setPosition(int position);
 
 protected:
     void initializeGL() override;
