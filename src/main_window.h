@@ -84,6 +84,7 @@ private:
     void setupFileMenu();
     void setupViewMenu();
     void setupToolsMenu();
+    void setupRendererView();
     void setupShaderEditor();
 
     bool checkIsBigEndian();

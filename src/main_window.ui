@@ -34,25 +34,139 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QGroupBox" name="groupBoxSliceView">
+     <widget class="QGroupBox" name="groupBoxRenderer">
       <property name="enabled">
        <bool>true</bool>
       </property>
       <property name="title">
-       <string>Slice View</string>
+       <string/>
       </property>
-      <layout class="QGridLayout" name="gridLayout" rowminimumheight="0,0,0,0">
-       <item row="3" column="0">
-        <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderZ"/>
+      <property name="flat">
+       <bool>false</bool>
+      </property>
+      <layout class="QGridLayout" name="gridLayout">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item row="0" column="1">
+        <widget class="QGroupBox" name="groupBoxVolumeView">
+         <property name="title">
+          <string/>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="VolumeViewGL" name="volumeViewWidget"/>
+          </item>
+         </layout>
+        </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderX"/>
+       <item row="1" column="1">
+        <widget class="QGroupBox" name="groupBoxSliceRenderZ">
+         <property name="title">
+          <string/>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderZ"/>
+          </item>
+         </layout>
+        </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderY"/>
+        <widget class="QGroupBox" name="groupBoxSliceRenderY">
+         <property name="title">
+          <string/>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderY"/>
+          </item>
+         </layout>
+        </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="VolumeViewGL" name="volumeViewWidget"/>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBoxSliceRenderX">
+         <property name="title">
+          <string/>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QOpenGLWidget" name="openGLWidgetSliceRenderX"/>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -613,6 +727,8 @@
    <header>widgets/histogram_view_GL.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="qt_resources/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

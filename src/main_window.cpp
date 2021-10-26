@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget* parent)
     setupViewMenu();
     setupFileMenu();
     setupToolsMenu();
-    m_actionResizeVolumeData->setEnabled(false);
+    setupRendererView();
     setupShaderEditor();
 
     // connect debug infos
@@ -136,6 +136,7 @@ MainWindow::MainWindow(QWidget* parent)
     // Disable all exports until a file is loaded
     m_actionExportRAW3D->setEnabled(false);
     m_actionExportBitmapSeries->setEnabled(false);
+    m_actionResizeVolumeData->setEnabled(false);
 }
 
 void MainWindow::setUIPermissions(int read, int write) {
@@ -634,9 +635,13 @@ void MainWindow::errorBinarySlicesImport() {
 
 void MainWindow::toggleSliceViewEnabled() {
     if (m_actionToggleSliceView->isChecked()) {
-        ui.groupBoxSliceView->setHidden(false);
+        ui.groupBoxSliceRenderX->setHidden(false);
+        ui.groupBoxSliceRenderY->setHidden(false);
+        ui.groupBoxSliceRenderZ->setHidden(false);
     } else {
-        ui.groupBoxSliceView->setHidden(true);
+        ui.groupBoxSliceRenderX->setHidden(true);
+        ui.groupBoxSliceRenderY->setHidden(true);
+        ui.groupBoxSliceRenderZ->setHidden(true);
     }
 }
 
@@ -736,6 +741,19 @@ void MainWindow::setupToolsMenu() {
     m_menuTools->addAction(m_actionResizeVolumeData);
     connect(m_actionResizeVolumeData, &QAction::triggered, this,
             &MainWindow::openVolumeDataResizeDialog);
+}
+
+void MainWindow::setupRendererView() {
+    ui.groupBoxRenderer->setStyleSheet("QGroupBox { border: 0px solid white; margin-top: 0ex; } "
+                                       "QGroupBox::title { padding: 0 0px; }");
+    ui.groupBoxSliceRenderX->setStyleSheet("QGroupBox { border: 2px solid red; margin-top: 0ex; } "
+                                           "QGroupBox::title { padding: 0 0px; }");
+    ui.groupBoxSliceRenderY->setStyleSheet("QGroupBox { border: 2px solid green; margin-top: 0ex; "
+                                           "} QGroupBox::title { padding: 0 0px; }");
+    ui.groupBoxSliceRenderZ->setStyleSheet("QGroupBox { border: 2px solid blue; margin-top: 0ex; } "
+                                           "QGroupBox::title { padding: 0 0px; }");
+    ui.groupBoxVolumeView->setStyleSheet("QGroupBox { border: 0px solid white; margin-top: 0ex; } "
+                                         "QGroupBox::title { padding: 0 0px; }");
 }
 
 void MainWindow::setupShaderEditor() {
