@@ -110,6 +110,18 @@ private:
     QMenu* m_menuTools;
     QAction* m_actionResizeVolumeData;
 
+    // Renderer View
+    QLabel* m_labelSliceRendererX;
+    QLabel* m_labelSliceRendererY;
+    QLabel* m_labelSliceRendererZ;
+    QLabel* m_labelRenderer;
+    QSlider* m_sliderSliceRendererX;
+    QSlider* m_sliderSliceRendererY;
+    QSlider* m_sliderSliceRendererZ;
+    QHBoxLayout* m_sliderSliceRendererXLayout;
+    QHBoxLayout* m_sliderSliceRendererYLayout;
+    QHBoxLayout* m_sliderSliceRendererZLayout;
+
     // Debug Shader Editor
     QLabel* m_shaderEditorInfo;
     QTextEdit* m_vertexShaderEdit;

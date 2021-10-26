@@ -746,14 +746,67 @@ void MainWindow::setupToolsMenu() {
 void MainWindow::setupRendererView() {
     ui.groupBoxRenderer->setStyleSheet("QGroupBox { border: 0px solid white; margin-top: 0ex; } "
                                        "QGroupBox::title { padding: 0 0px; }");
-    ui.groupBoxSliceRenderX->setStyleSheet("QGroupBox { border: 2px solid red; margin-top: 0ex; } "
-                                           "QGroupBox::title { padding: 0 0px; }");
-    ui.groupBoxSliceRenderY->setStyleSheet("QGroupBox { border: 2px solid green; margin-top: 0ex; "
-                                           "} QGroupBox::title { padding: 0 0px; }");
-    ui.groupBoxSliceRenderZ->setStyleSheet("QGroupBox { border: 2px solid blue; margin-top: 0ex; } "
-                                           "QGroupBox::title { padding: 0 0px; }");
+    ui.groupBoxSliceRenderX->setStyleSheet(
+        "QGroupBox { border: 2px solid red; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 1px solid red; background: red; } "
+        "QSlider::handle:vertical { border: 1px solid red; background: red; } "
+        "QSlider { background: transparent; }");
+    ui.groupBoxSliceRenderY->setStyleSheet(
+        "QGroupBox { border: 2px solid green; margin-top: 0ex; "
+        "} QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 1px solid green; background: green; } "
+        "QSlider::handle:vertical { border: 1px solid green; background: green; } "
+        "QSlider { background: transparent; }");
+    ui.groupBoxSliceRenderZ->setStyleSheet(
+        "QGroupBox { border: 2px solid blue; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 1px solid blue; background: blue; } "
+        "QSlider::handle:vertical { border: 1px solid blue; background: blue; } "
+        "QSlider { background: transparent; }");
     ui.groupBoxVolumeView->setStyleSheet("QGroupBox { border: 0px solid white; margin-top: 0ex; } "
                                          "QGroupBox::title { padding: 0 0px; }");
+
+    m_labelRenderer = new QLabel(ui.volumeViewWidget);
+    m_labelRenderer->setText("Volume Renderer");
+    m_labelRenderer->setAttribute(Qt::WA_TranslucentBackground);
+    m_labelRenderer->move(3, 1);
+
+    m_labelSliceRendererX = new QLabel(ui.openGLWidgetSliceRenderX);
+    m_labelSliceRendererX->setText("X-Axis");
+    m_labelSliceRendererX->setAttribute(Qt::WA_TranslucentBackground);
+    m_labelSliceRendererX->setStyleSheet("QLabel { color: red; }");
+    m_labelSliceRendererX->move(3, -8);
+
+    m_labelSliceRendererY = new QLabel(ui.openGLWidgetSliceRenderY);
+    m_labelSliceRendererY->setText("Y-Axis");
+    m_labelSliceRendererY->setAttribute(Qt::WA_TranslucentBackground);
+    m_labelSliceRendererY->setStyleSheet("QLabel { color: green; }");
+    m_labelSliceRendererY->move(3, -8);
+
+    m_labelSliceRendererZ = new QLabel(ui.openGLWidgetSliceRenderZ);
+    m_labelSliceRendererZ->setText("Z-Axis");
+    m_labelSliceRendererZ->setAttribute(Qt::WA_TranslucentBackground);
+    m_labelSliceRendererZ->setStyleSheet("QLabel { color: blue; }");
+    m_labelSliceRendererZ->move(3, -8);
+    
+    m_sliderSliceRendererX = new QSlider();
+    m_sliderSliceRendererXLayout = new QHBoxLayout();
+    m_sliderSliceRendererXLayout->addStretch();
+    m_sliderSliceRendererXLayout->addWidget(m_sliderSliceRendererX);
+    ui.openGLWidgetSliceRenderX->setLayout(m_sliderSliceRendererXLayout);
+        
+    m_sliderSliceRendererY = new QSlider();
+    m_sliderSliceRendererYLayout = new QHBoxLayout();
+    m_sliderSliceRendererYLayout->addStretch();
+    m_sliderSliceRendererYLayout->addWidget(m_sliderSliceRendererY);
+    ui.openGLWidgetSliceRenderY->setLayout(m_sliderSliceRendererYLayout);
+
+    m_sliderSliceRendererZ = new QSlider();
+    m_sliderSliceRendererZLayout = new QHBoxLayout();
+    m_sliderSliceRendererZLayout->addStretch();
+    m_sliderSliceRendererZLayout->addWidget(m_sliderSliceRendererZ);
+    ui.openGLWidgetSliceRenderZ->setLayout(m_sliderSliceRendererZLayout);
 }
 
 void MainWindow::setupShaderEditor() {
