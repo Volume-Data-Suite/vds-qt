@@ -719,14 +719,41 @@ void MainWindow::disableSliceRendererZMetaInfo() {
     m_labelSliceRendererZ->setHidden(true);
 }
 
-void MainWindow::updateVolumeData() {
-    const std::array<std::size_t, 3> size = {m_vdh.getVolumeData().getSize().getX(),
-                                             m_vdh.getVolumeData().getSize().getY(),
-                                             m_vdh.getVolumeData().getSize().getZ()};
+void MainWindow::updateSliceRendererXPosition(int position) {
+    m_labelSliceRendererX->setText("X-Axis: " + QString::number(position));
+}
 
-    const std::array<float, 3> spacing = {m_vdh.getVolumeData().getSpacing().getX(),
-                                          m_vdh.getVolumeData().getSpacing().getY(),
-                                          m_vdh.getVolumeData().getSpacing().getZ()};
+void MainWindow::updateSliceRendererYPosition(int position) {
+    m_labelSliceRendererY->setText("Y-Axis: " + QString::number(position));
+}
+
+void MainWindow::updateSliceRendererZPosition(int position) {
+    m_labelSliceRendererZ->setText("Z-Axis: " + QString::number(position));
+}
+
+void MainWindow::updateSliceRenderSliderValueRanges() {
+    m_sliderSliceRendererX->setMinimum(1);
+    m_sliderSliceRendererX->setMaximum(m_vdh.getVolumeSize().getX());
+    m_sliderSliceRendererX->setValue(m_vdh.getVolumeSize().getX() / 2);
+
+    m_sliderSliceRendererY->setMinimum(1);
+    m_sliderSliceRendererY->setMaximum(m_vdh.getVolumeSize().getY());
+    m_sliderSliceRendererY->setValue(m_vdh.getVolumeSize().getY() / 2);
+
+    m_sliderSliceRendererZ->setMinimum(1);
+    m_sliderSliceRendererZ->setMaximum(m_vdh.getVolumeSize().getZ());
+    m_sliderSliceRendererZ->setValue(m_vdh.getVolumeSize().getZ() / 2);
+}
+
+void MainWindow::updateVolumeData() {
+    const std::array<std::size_t, 3> size = {
+        m_vdh.getVolumeSize().getX(), m_vdh.getVolumeSize().getY(), m_vdh.getVolumeSize().getZ()};
+
+    const std::array<float, 3> spacing = {m_vdh.getVolumeSpacing().getX(),
+                                          m_vdh.getVolumeSpacing().getY(),
+                                          m_vdh.getVolumeSpacing().getZ()};
+
+    updateSliceRenderSliderValueRanges();
 
     emit(updateVolumeView(size, spacing, m_vdh.getVolumeData().getRawVolumeData()));
 
@@ -779,6 +806,8 @@ void MainWindow::setupViewMenu() {
     m_menuView->addAction(m_actionResetView);
     connect(m_actionResetView, &QAction::triggered, ui.volumeViewWidget,
             &VolumeViewGL::resetViewMatrixAndUpdate);
+    connect(m_actionResetView, &QAction::triggered, this,
+            &MainWindow::updateSliceRenderSliderValueRanges);
 
     m_actionToggleControlView = new QAction(m_menuView);
     m_actionToggleControlView->setText(QString("Show Controls"));
@@ -887,6 +916,13 @@ void MainWindow::setupRendererView() {
             &MainWindow::enableSliceRendererZMetaInfo);
     connect(ui.openGLWidgetSliceRenderZ, &SliceViewGL::leaveEventSignaled, this,
             &MainWindow::disableSliceRendererZMetaInfo);
+
+    connect(m_sliderSliceRendererX, &QSlider::valueChanged, this,
+            &MainWindow::updateSliceRendererXPosition);
+    connect(m_sliderSliceRendererY, &QSlider::valueChanged, this,
+            &MainWindow::updateSliceRendererYPosition);
+    connect(m_sliderSliceRendererZ, &QSlider::valueChanged, this,
+            &MainWindow::updateSliceRendererZPosition);
 }
 
 void MainWindow::setupShaderEditor() {
