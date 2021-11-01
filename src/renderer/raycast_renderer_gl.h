@@ -73,6 +73,8 @@ public:
 
     void setBoundingBoxRenderStatus(bool active);
 
+    GLuint getTextureHandle() const;
+
 private:
     void renderVolume();
     void renderMesh();

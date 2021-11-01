@@ -751,6 +751,13 @@ void MainWindow::updateSliceRendererSizeParameters() {
     ui.openGLWidgetSliceRenderZ->setSize(m_vdh.getVolumeSize());
 }
 
+void MainWindow::updateSliceRendererTexture() {
+    const GLuint textureHandle = ui.volumeViewWidget->getTextureHandle();
+    ui.openGLWidgetSliceRenderX->updateTexture(textureHandle);
+    ui.openGLWidgetSliceRenderY->updateTexture(textureHandle);
+    ui.openGLWidgetSliceRenderZ->updateTexture(textureHandle);
+}
+
 void MainWindow::updateVolumeData() {
     const std::array<std::size_t, 3> size = {
         m_vdh.getVolumeSize().getX(), m_vdh.getVolumeSize().getY(), m_vdh.getVolumeSize().getZ()};
@@ -759,10 +766,11 @@ void MainWindow::updateVolumeData() {
                                           m_vdh.getVolumeSpacing().getY(),
                                           m_vdh.getVolumeSpacing().getZ()};
 
+    emit(updateVolumeView(size, spacing, m_vdh.getVolumeData().getRawVolumeData()));
+
     updateSliceRenderSliderValueRanges();
     updateSliceRendererSizeParameters();
-
-    emit(updateVolumeView(size, spacing, m_vdh.getVolumeData().getRawVolumeData()));
+    updateSliceRendererTexture();
 
     computeHistogram();
 }

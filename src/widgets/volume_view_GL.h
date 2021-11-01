@@ -16,6 +16,7 @@ class VolumeViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core {
 public:
     VolumeViewGL(QWidget* parent);
     int getTextureSizeMaximum();
+    GLuint getTextureHandle() const;
 
 public slots:
     void updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing,

@@ -17,7 +17,8 @@ void SliceViewGL::setAxis(VDTK::VolumeAxis axis) {
 }
 
 void SliceViewGL::setPosition(int position) {
-    m_settings.position = position;
+    // sliders start with index 1 but texture position index starts with 0
+    m_settings.position = position - 1;
 
     float texturePosition = 0.0;
 
@@ -34,7 +35,6 @@ void SliceViewGL::setPosition(int position) {
     default:
         break;
     }
-        
 
     glUseProgram(m_shaderProgram);
 
@@ -70,7 +70,6 @@ void SliceViewGL::initializeGL() {
     setupVertexShader();
     setupFragmentShader();
     setupShaderProgram();
-    setupTexture();
 }
 
 void SliceViewGL::resizeGL(int w, int h) {
@@ -91,11 +90,11 @@ void SliceViewGL::paintGL() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
     glBindVertexArray(m_vao);
 
-    glBindTexture(GL_TEXTURE_1D, m_texture);
+    glBindTexture(GL_TEXTURE_3D, m_texture);
 
     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
-    glBindTexture(GL_TEXTURE_1D, 0);
+    glBindTexture(GL_TEXTURE_3D, 0);
 
     // Unbind vertex data
     glBindVertexArray(0);
@@ -113,12 +112,13 @@ void SliceViewGL::leaveEvent(QEvent* ev) {
     emit(leaveEventSignaled());
 }
 
-void SliceViewGL::updateTexture() {
+void SliceViewGL::updateTexture(GLuint texture) {
     if (!is_opengl_initialized) {
         return;
     }
 
-    setupTexture();
+    m_texture = texture;
+
     update();
 }
 
@@ -160,45 +160,88 @@ void SliceViewGL::setupVertexArray() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void SliceViewGL::setupVertexShader() {
+bool SliceViewGL::setupVertexShader() {
     const std::string vertexShaderSource = VDS::ShaderGenerator::getVertexShaderCodeSlice2D();
     const GLchar* const shaderGLSL = vertexShaderSource.c_str();
 
     m_vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(m_vertexShader, 1, &shaderGLSL, NULL);
     glCompileShader(m_vertexShader);
+
+    bool compileStatus = checkShaderCompileStatus(m_vertexShader);
+
+    if (!compileStatus) {
+        qDebug() << vertexShaderSource.c_str();
+    }
+
+    return compileStatus;
 }
 
-void SliceViewGL::setupFragmentShader() {
+bool SliceViewGL::setupFragmentShader() {
     const std::string fragmenntShaderSource = VDS::ShaderGenerator::getFragmentShaderCodeSlice2D(m_settings);
     const GLchar* const shaderGLSL = fragmenntShaderSource.c_str();
 
     m_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(m_fragmentShader, 1, &shaderGLSL, NULL);
     glCompileShader(m_fragmentShader);
+
+    bool compileStatus = checkShaderCompileStatus(m_fragmentShader);
+
+    if (!compileStatus) {
+        qDebug() << fragmenntShaderSource.c_str();
+    }
+
+    return compileStatus;
 }
 
-void SliceViewGL::setupShaderProgram() {
+bool SliceViewGL::setupShaderProgram() {
     m_shaderProgram = glCreateProgram();
 
     glAttachShader(m_shaderProgram, m_vertexShader);
     glAttachShader(m_shaderProgram, m_fragmentShader);
     glLinkProgram(m_shaderProgram);
+
+    return checkShaderProgramLinkStatus(m_shaderProgram);
 }
 
-void SliceViewGL::setupTexture() {
-    glDeleteTextures(1, &m_texture);
-    glGenTextures(1, &m_texture);
+bool SliceViewGL::checkShaderCompileStatus(GLuint shader) {
+    GLint isCompiled = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+    if (isCompiled == GL_FALSE) {
+        GLint maxLength = 0;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 
-    glBindTexture(GL_TEXTURE_1D, m_texture);
+        // The maxLength includes the NULL character
+        std::vector<GLchar> errorLog(maxLength);
+        glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
 
+        // Provide the infolog in whatever manor you deem best.
+        // Exit with failure.
+        glDeleteShader(shader); // Don't leak the shader.
 
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //glTexImage1D(GL_TEXTURE_1D, 0, GL_R16, static_cast<GLsizei>(scaledHistogramCopy.size()), 0,
-    //             GL_RED, GL_UNSIGNED_SHORT, scaledHistogramCopy.data());
+        // Log error
+        qDebug() << errorLog.data();
+    }
 
-    // unbind
-    glBindTexture(GL_TEXTURE_1D, 0);
+    return isCompiled;
+}
+bool SliceViewGL::checkShaderProgramLinkStatus(GLuint shaderProgram) {
+    GLint isLinked = 0;
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &isLinked);
+    if (isLinked == GL_FALSE) {
+        GLint maxLength = 0;
+        glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
+
+        // The maxLength includes the NULL character
+        std::vector<GLchar> errorLog(maxLength);
+        glGetProgramInfoLog(shaderProgram, maxLength, &maxLength, &errorLog[0]);
+
+        // The program is useless now. So delete it.
+        glDeleteProgram(shaderProgram);
+
+        // Log error
+        qDebug() << errorLog.data();
+    }
+
+    return isLinked;
 }

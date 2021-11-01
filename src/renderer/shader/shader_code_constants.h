@@ -21,6 +21,8 @@ static const std::string fragmentBaseSlice2D = glslVersion.first +
                                                "uniform sampler3D dataTex; \n"
                                                "uniform float threshold; \n"
 
+                                               "uniform vec2 viewport; \n"
+
                                                "uniform float position; \n"
 
                                                "uniform float valueWindowWidth; \n"
@@ -37,7 +39,8 @@ static const std::string fragmentBaseSlice2D = glslVersion.first +
 
                                                "void main() \n"
                                                "{ \n"
-                                               "	FragColor = vec4({{ color }} * position, 1.0f); \n "
+                                               "	FragColor = vec4(vec3(getVolumeValue({{ position }})), 1.0f); \n "
+                                               "	//FragColor = vec4({{ //position }}, 1.0f); \n "
                                                "} \n";
 
 static const std::string vertrexBaseRaycasting =

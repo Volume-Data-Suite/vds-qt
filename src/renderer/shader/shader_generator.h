@@ -24,7 +24,7 @@ private:
                                         const ValueWindowSettings& windowSettings);
     static void insertPhongShading(std::string& shader, const bool active);
 
-    static void insertColorSlice2D(std::string& shader, const VDTK::VolumeAxis axis);
+    static void insertSlice2DPosition(std::string& shader, const VDTK::VolumeAxis axis);
 };
 
 } // namespace VDS

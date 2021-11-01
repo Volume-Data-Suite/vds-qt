@@ -344,6 +344,9 @@ void RayCastRenderer::setBoundingBoxColor(const std::array<float, 4>& color) {
 void RayCastRenderer::setBoundingBoxRenderStatus(bool active) {
     m_renderBoundingBox = active;
 }
+GLuint RayCastRenderer::getTextureHandle() const {
+    return m_texture.getTextureHandle();
+}
 void RayCastRenderer::updateFieldOfView() {
     const float projectionMatrixValue1x1 = m_projectionMatrix->constData()[1 * 4 + 1];
     const float fov = std::atan(1.0f / projectionMatrixValue1x1);

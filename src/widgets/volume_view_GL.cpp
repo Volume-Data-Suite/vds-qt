@@ -56,6 +56,10 @@ int VolumeViewGL::getTextureSizeMaximum() {
     return m_maxiumTextureSize;
 }
 
+GLuint VolumeViewGL::getTextureHandle() const {
+    return m_rayCastRenderer.getTextureHandle();
+}
+
 void VolumeViewGL::setRenderLoop(bool onlyRerenderOnChange) {
     m_renderloop = !onlyRerenderOnChange;
     if (m_renderloop) {

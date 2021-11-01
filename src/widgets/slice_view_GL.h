@@ -18,7 +18,7 @@ public:
     SliceViewGL(QWidget* parent);
 
 public slots:
-    void updateTexture();
+    void updateTexture(GLuint texture);
     void setAxis(VDTK::VolumeAxis axis);
     void setPosition(int position);
     void setSize(VDTK::VolumeSize size);
@@ -38,10 +38,12 @@ private:
 
     void setupBuffers();
     void setupVertexArray();
-    void setupVertexShader();
-    void setupFragmentShader();
-    void setupShaderProgram();
-    void setupTexture();
+    bool setupVertexShader();
+    bool setupFragmentShader();
+    bool setupShaderProgram();
+
+    bool checkShaderCompileStatus(GLuint shader);
+    bool checkShaderProgramLinkStatus(GLuint shaderProgram);
 
     bool is_opengl_initialized;
 

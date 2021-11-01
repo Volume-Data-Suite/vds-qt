@@ -35,7 +35,7 @@ const std::string ShaderGenerator::getFragmentShaderCodeSlice2D(
     std::string fragmentShader = GLSL::fragmentBaseSlice2D;
 
     insertGLSLVerion(fragmentShader);
-    insertColorSlice2D(fragmentShader, settings.axis);
+    insertSlice2DPosition(fragmentShader, settings.axis);
     insertApplyWindowMethod(fragmentShader, settings.windowSettings);
 
     return fragmentShader;
@@ -135,21 +135,21 @@ void ShaderGenerator::insertPhongShading(std::string& shader, const bool precomp
     shader.replace(shader.find(GLSL::getPhongShading.first), GLSL::getPhongShading.first.length(),
                    GLSL::getPhongShading.second);
 }
-void ShaderGenerator::insertColorSlice2D(std::string& shader, const VDTK::VolumeAxis axis) {
-    std::string color;
+void ShaderGenerator::insertSlice2DPosition(std::string& shader, const VDTK::VolumeAxis axis) {
+    std::string position;
     switch (axis) {
     case VDTK::VolumeAxis::YZAxis:
-        color = "vec3(0.2f, 0.0f, 0.0f)";
+        position = "vec3(position, gl_FragCoord.x / viewport.x, gl_FragCoord.y / viewport.y)";
         break;
     case VDTK::VolumeAxis::XZAxis:
-        color = "vec3(0.0f, 0.2f, 0.0f)";
+        position = "vec3(gl_FragCoord.x / viewport.x, position, gl_FragCoord.y / viewport.y)";
         break;
     case VDTK::VolumeAxis::XYAxis:
     default:
-        color = "vec3(0.0f, 0.0f, 0.2f)";
+        position = "vec3(gl_FragCoord.x / viewport.x, gl_FragCoord.y / viewport.y, position)";
         break;
     }
 
-    shader.replace(shader.find("{{ color }}"), std::string("{{ color }}").length(), color);
+    shader.replace(shader.find("{{ position }}"), std::string("{{ position }}").length(), position);
 }
 } // namespace VDS
