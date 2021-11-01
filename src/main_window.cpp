@@ -745,6 +745,12 @@ void MainWindow::updateSliceRenderSliderValueRanges() {
     m_sliderSliceRendererZ->setValue(static_cast<int>(m_vdh.getVolumeSize().getZ()) / 2);
 }
 
+void MainWindow::updateSliceRendererSizeParameters() {
+    ui.openGLWidgetSliceRenderX->setSize(m_vdh.getVolumeSize());
+    ui.openGLWidgetSliceRenderY->setSize(m_vdh.getVolumeSize());
+    ui.openGLWidgetSliceRenderZ->setSize(m_vdh.getVolumeSize());
+}
+
 void MainWindow::updateVolumeData() {
     const std::array<std::size_t, 3> size = {
         m_vdh.getVolumeSize().getX(), m_vdh.getVolumeSize().getY(), m_vdh.getVolumeSize().getZ()};
@@ -754,6 +760,7 @@ void MainWindow::updateVolumeData() {
                                           m_vdh.getVolumeSpacing().getZ()};
 
     updateSliceRenderSliderValueRanges();
+    updateSliceRendererSizeParameters();
 
     emit(updateVolumeView(size, spacing, m_vdh.getVolumeData().getRawVolumeData()));
 

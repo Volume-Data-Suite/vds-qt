@@ -21,6 +21,7 @@ public slots:
     void updateTexture();
     void setAxis(VDTK::VolumeAxis axis);
     void setPosition(int position);
+    void setSize(VDTK::VolumeSize size);
 
 protected:
     void initializeGL() override;

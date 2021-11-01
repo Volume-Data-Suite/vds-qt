@@ -77,6 +77,7 @@ public slots:
     void updateSliceRendererZPosition(int position);
 
     void updateSliceRenderSliderValueRanges();
+    void updateSliceRendererSizeParameters();
 
 signals:
     void updateHistogram(const std::vector<uint16_t>& histogram, bool ignoreBorders);

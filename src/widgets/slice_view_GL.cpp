@@ -18,6 +18,36 @@ void SliceViewGL::setAxis(VDTK::VolumeAxis axis) {
 
 void SliceViewGL::setPosition(int position) {
     m_settings.position = position;
+
+    float texturePosition = 0.0;
+
+    switch (m_settings.axis) {
+    case VDTK::VolumeAxis::XYAxis:
+        texturePosition = static_cast<float>(position) / static_cast<float>(m_settings.size.getZ());
+        break;
+    case VDTK::VolumeAxis::XZAxis:
+        texturePosition = static_cast<float>(position) / static_cast<float>(m_settings.size.getY());
+        break;
+    case VDTK::VolumeAxis::YZAxis:
+        texturePosition = static_cast<float>(position) / static_cast<float>(m_settings.size.getX());
+        break;
+    default:
+        break;
+    }
+        
+
+    glUseProgram(m_shaderProgram);
+
+    const GLuint shaderPosition = glGetUniformLocation(m_shaderProgram, "position");
+    glUniform1f(shaderPosition, texturePosition);
+
+    glUseProgram(0);
+
+    update();
+}
+
+void SliceViewGL::setSize(VDTK::VolumeSize size) {
+    m_settings.size = size;
 }
 
 void SliceViewGL::initializeGL() {

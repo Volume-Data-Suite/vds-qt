@@ -36,6 +36,7 @@ const std::string ShaderGenerator::getFragmentShaderCodeSlice2D(
 
     insertGLSLVerion(fragmentShader);
     insertColorSlice2D(fragmentShader, settings.axis);
+    insertApplyWindowMethod(fragmentShader, settings.windowSettings);
 
     return fragmentShader;
 }

@@ -38,8 +38,9 @@ struct RaycastShaderSettings {
 
 struct Slice2DShaderSettings {
     ValueWindowSettings windowSettings;
-    VDTK::VolumeAxis axis;
-    std::uint32_t position;
+    VDTK::VolumeAxis axis = VDTK::VolumeAxis::XYAxis;
+    VDTK::VolumeSize size = VDTK::VolumeSize{0, 0, 0};
+    std::uint32_t position = 0;
 };
 
 } // namespace VDS

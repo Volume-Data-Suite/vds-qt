@@ -15,17 +15,30 @@ static const std::string vertrexBaseSlice2D =
                         "	gl_Position = vec4(inPos, 1.0f); \n"
                         "} \n";
 
-static const std::string fragmentBaseSlice2D =
-    glslVersion.first + "\n"
+static const std::string fragmentBaseSlice2D = glslVersion.first +
+                                               "\n"
 
-                        "uniform vec2 viewport; \n"
+                                               "uniform sampler3D dataTex; \n"
+                                               "uniform float threshold; \n"
 
-                        "out vec4 FragColor; \n"
+                                               "uniform float position; \n"
 
-                        "void main() \n"
-                        "{ \n"
-                        "	FragColor = vec4({{ color }}, 1.0f); \n "
-                        "} \n";
+                                               "uniform float valueWindowWidth; \n"
+                                               "uniform float valueWindowCenter; \n"
+                                               "uniform float valueWindowOffset; \n"
+
+                                               "out vec4 FragColor; \n"
+
+                                               "{{ applyWindowFunction }} \n"
+
+                                               "float getVolumeValue(vec3 position) { \n"
+                                               "	return {{ accessVoxel }}; \n"
+                                               "} \n"
+
+                                               "void main() \n"
+                                               "{ \n"
+                                               "	FragColor = vec4({{ color }} * position, 1.0f); \n "
+                                               "} \n";
 
 static const std::string vertrexBaseRaycasting =
     glslVersion.first +
