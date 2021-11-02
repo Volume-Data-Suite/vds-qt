@@ -39,8 +39,9 @@ static const std::string fragmentBaseSlice2D = glslVersion.first +
 
                                                "void main() \n"
                                                "{ \n"
-                                               "	FragColor = vec4(vec3(getVolumeValue({{ position }})), 1.0f); \n "
-                                               "	//FragColor = vec4({{ //position }}, 1.0f); \n "
+                                               "float value = getVolumeValue({{ position }}); \n"
+                                               "value = (value >= threshold) ? value : 0.0f; \n"
+                                               "	FragColor = vec4(vec3(value), 1.0f); \n "
                                                "} \n";
 
 static const std::string vertrexBaseRaycasting =

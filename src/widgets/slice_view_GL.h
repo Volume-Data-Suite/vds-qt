@@ -22,6 +22,13 @@ public slots:
     void setAxis(VDTK::VolumeAxis axis);
     void setPosition(int position);
     void setSize(VDTK::VolumeSize size);
+    void updateThreshold(float threshold);
+
+    void applyValueWindow(bool active);
+    void setValueWindowMethod(int method);
+    void updateValueWindowWidth(float windowWidth);
+    void updateValueWindowCenter(float windowCenter);
+    void updateValueWindowOffset(float windowOffset);
 
 protected:
     void initializeGL() override;
@@ -35,12 +42,16 @@ signals:
     void leaveEventSignaled();
 
 private:
-
     void setupBuffers();
     void setupVertexArray();
     bool setupVertexShader();
     bool setupFragmentShader();
     bool setupShaderProgram();
+    
+    void updateViewPortSize(float width, float heigth);
+
+    bool generateShaderProgram();
+    void updateShaderUniforms();
 
     bool checkShaderCompileStatus(GLuint shader);
     bool checkShaderProgramLinkStatus(GLuint shaderProgram);

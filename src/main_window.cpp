@@ -57,13 +57,19 @@ MainWindow::MainWindow(QWidget* parent)
     // connect threshold
     connect(ui.horizontalSliderThreshold, &QSlider::valueChanged, this,
             &MainWindow::updateThresholdFromSlider);
+    connect(ui.horizontalSliderThreshold, &QSlider::valueChanged, ui.openGLWidgetSliceRenderX,
+            &SliceViewGL::updateThreshold);
+    connect(ui.horizontalSliderThreshold, &QSlider::valueChanged, ui.openGLWidgetSliceRenderY,
+            &SliceViewGL::updateThreshold);
+    connect(ui.horizontalSliderThreshold, &QSlider::valueChanged, ui.openGLWidgetSliceRenderZ,
+            &SliceViewGL::updateThreshold);
 
     // connect raycast method
     connect(ui.comboBoxShaderMethod,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             ui.volumeViewWidget, &VolumeViewGL::setRaycastMethod);
 
-    // connect value window
+    // connect value window to Volume View
     connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, ui.volumeViewWidget,
             &VolumeViewGL::applyValueWindow);
     connect(ui.spinBoxApplyWindowValueWindowWidth,
@@ -80,6 +86,60 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui.comboBoxApplyWindowFunction,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             ui.volumeViewWidget, &VolumeViewGL::setValueWindowMethod);
+
+    // connect value window to Slice View X
+    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, ui.openGLWidgetSliceRenderX,
+            &SliceViewGL::applyValueWindow);
+    connect(ui.spinBoxApplyWindowValueWindowWidth,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderX, &SliceViewGL::updateValueWindowWidth);
+    connect(ui.spinBoxApplyWindowValueWindowCenter,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderX, &SliceViewGL::updateValueWindowCenter);
+    connect(ui.spinBoxApplyWindowValueWindowOffset,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderX, &SliceViewGL::updateValueWindowOffset);
+    connect(ui.comboBoxApplyWindowPresets, &QComboBox::currentTextChanged, this,
+            &MainWindow::setValueWindowPreset);
+    connect(ui.comboBoxApplyWindowFunction,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            ui.openGLWidgetSliceRenderX, &SliceViewGL::setValueWindowMethod);
+
+    // connect value window to Slice View Y
+    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, ui.openGLWidgetSliceRenderY,
+            &SliceViewGL::applyValueWindow);
+    connect(ui.spinBoxApplyWindowValueWindowWidth,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderY, &SliceViewGL::updateValueWindowWidth);
+    connect(ui.spinBoxApplyWindowValueWindowCenter,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderY, &SliceViewGL::updateValueWindowCenter);
+    connect(ui.spinBoxApplyWindowValueWindowOffset,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderY, &SliceViewGL::updateValueWindowOffset);
+    connect(ui.comboBoxApplyWindowPresets, &QComboBox::currentTextChanged, this,
+            &MainWindow::setValueWindowPreset);
+    connect(ui.comboBoxApplyWindowFunction,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            ui.openGLWidgetSliceRenderY, &SliceViewGL::setValueWindowMethod);
+
+    // connect value window to Slice View Z
+    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, ui.openGLWidgetSliceRenderZ,
+            &SliceViewGL::applyValueWindow);
+    connect(ui.spinBoxApplyWindowValueWindowWidth,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderZ, &SliceViewGL::updateValueWindowWidth);
+    connect(ui.spinBoxApplyWindowValueWindowCenter,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderZ, &SliceViewGL::updateValueWindowCenter);
+    connect(ui.spinBoxApplyWindowValueWindowOffset,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderZ, &SliceViewGL::updateValueWindowOffset);
+    connect(ui.comboBoxApplyWindowPresets, &QComboBox::currentTextChanged, this,
+            &MainWindow::setValueWindowPreset);
+    connect(ui.comboBoxApplyWindowFunction,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            ui.openGLWidgetSliceRenderZ, &SliceViewGL::setValueWindowMethod);
 
     // connect volume data update
     connect(this, &MainWindow::updateVolumeView, ui.volumeViewWidget,

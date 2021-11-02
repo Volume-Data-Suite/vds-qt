@@ -50,6 +50,53 @@ void SliceViewGL::setSize(VDTK::VolumeSize size) {
     m_settings.size = size;
 }
 
+void SliceViewGL::applyValueWindow(bool active) {
+    m_settings.windowSettings.enabled = active;
+
+    generateShaderProgram();
+}
+void SliceViewGL::setValueWindowMethod(int method) {
+    m_settings.windowSettings.method = VDS::WindowingMethod(method);
+
+    generateShaderProgram();
+}
+void SliceViewGL::updateValueWindowWidth(float windowWidth) {
+    m_settings.windowSettings.valueWindowWidth = windowWidth;
+
+    glUseProgram(m_shaderProgram);
+
+    const GLuint windowWidthPosition = glGetUniformLocation(m_shaderProgram, "valueWindowWidth");
+    glUniform1f(windowWidthPosition, m_settings.windowSettings.valueWindowWidth);
+
+    glUseProgram(0);
+
+    update();
+}
+void SliceViewGL::updateValueWindowCenter(float windowCenter) {
+    m_settings.windowSettings.valueWindowCenter = windowCenter;
+
+    glUseProgram(m_shaderProgram);
+
+    const GLuint windowCenterPosition = glGetUniformLocation(m_shaderProgram, "valueWindowCenter");
+    glUniform1f(windowCenterPosition, m_settings.windowSettings.valueWindowCenter);
+
+    glUseProgram(0);
+
+    update();
+}
+void SliceViewGL::updateValueWindowOffset(float windowOffset) {
+    m_settings.windowSettings.valueWindowOffset = windowOffset;
+
+    glUseProgram(m_shaderProgram);
+
+    const GLuint windowOffsetPosition = glGetUniformLocation(m_shaderProgram, "valueWindowOffset");
+    glUniform1f(windowOffsetPosition, m_settings.windowSettings.valueWindowOffset);
+
+    glUseProgram(0);
+
+    update();
+}
+
 void SliceViewGL::initializeGL() {
     initializeOpenGLFunctions();
     is_opengl_initialized = true;
@@ -67,18 +114,11 @@ void SliceViewGL::initializeGL() {
 
     setupBuffers();
     setupVertexArray();
-    setupVertexShader();
-    setupFragmentShader();
-    setupShaderProgram();
+    generateShaderProgram();
 }
 
 void SliceViewGL::resizeGL(int w, int h) {
-    glViewport(0, 0, w, h);
-
-    glUseProgram(m_shaderProgram);
-    const GLuint viewport = glGetUniformLocation(m_shaderProgram, "viewport");
-    glUniform2f(viewport, static_cast<float>(w), static_cast<float>(h));
-    glUseProgram(0);
+    updateViewPortSize(w, h);
 }
 
 void SliceViewGL::paintGL() {
@@ -187,7 +227,7 @@ bool SliceViewGL::setupFragmentShader() {
 
     bool compileStatus = checkShaderCompileStatus(m_fragmentShader);
 
-    if (!compileStatus) {
+    if (!false) {
         qDebug() << fragmenntShaderSource.c_str();
     }
 
@@ -202,6 +242,57 @@ bool SliceViewGL::setupShaderProgram() {
     glLinkProgram(m_shaderProgram);
 
     return checkShaderProgramLinkStatus(m_shaderProgram);
+}
+
+void SliceViewGL::updateViewPortSize(float width, float heigth) {
+    m_settings.viewportSize[0] = width;
+    m_settings.viewportSize[1] = heigth;
+
+    glViewport(0, 0, m_settings.viewportSize[0], m_settings.viewportSize[1]);
+
+    glUseProgram(m_shaderProgram);
+    const GLuint viewport = glGetUniformLocation(m_shaderProgram, "viewport");
+    glUniform2f(viewport, static_cast<float>(m_settings.viewportSize[0]),
+                static_cast<float>(m_settings.viewportSize[1]));
+
+    glUseProgram(0);
+}
+
+void SliceViewGL::updateThreshold(float threshold) {
+    m_settings.threshold = threshold / 1000.0f;
+
+    glUseProgram(m_shaderProgram);
+
+    const GLuint thresholdPosition = glGetUniformLocation(m_shaderProgram, "threshold");
+    glUniform1f(thresholdPosition, m_settings.threshold);
+
+    glUseProgram(0);
+
+    update();
+}
+
+bool SliceViewGL::generateShaderProgram() {
+    if (!setupVertexShader() || !setupFragmentShader()) {
+        return false;
+    }
+
+    if (!setupShaderProgram()) {
+        return false;
+    }
+
+    updateShaderUniforms();
+
+    return true;
+}
+
+void SliceViewGL::updateShaderUniforms() {
+    updateViewPortSize(m_settings.viewportSize[0], m_settings.viewportSize[1]);
+    updateThreshold(m_settings.threshold);
+    setPosition(m_settings.position);
+    updateValueWindowWidth(m_settings.windowSettings.valueWindowWidth);
+    updateValueWindowCenter(m_settings.windowSettings.valueWindowCenter);
+    updateValueWindowOffset(m_settings.windowSettings.valueWindowOffset);
+    update();
 }
 
 bool SliceViewGL::checkShaderCompileStatus(GLuint shader) {
