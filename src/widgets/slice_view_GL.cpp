@@ -227,7 +227,7 @@ bool SliceViewGL::setupFragmentShader() {
 
     bool compileStatus = checkShaderCompileStatus(m_fragmentShader);
 
-    if (!false) {
+    if (!compileStatus) {
         qDebug() << fragmenntShaderSource.c_str();
     }
 
