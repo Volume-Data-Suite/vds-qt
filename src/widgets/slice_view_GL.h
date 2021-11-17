@@ -23,7 +23,6 @@ public slots:
     void setPosition(int position);
     void setSize(VDTK::VolumeSize size);
     void setSpacing(VDTK::VolumeSpacing spacing);
-    void updateThreshold(float threshold);
 
     void applyValueWindow(bool active);
     void setValueWindowMethod(int method);

@@ -310,19 +310,6 @@ void SliceViewGL::updateSpacing() {
     update();
 }
 
-void SliceViewGL::updateThreshold(float threshold) {
-    m_settings.threshold = threshold / 1000.0f;
-
-    glUseProgram(m_shaderProgram);
-
-    const GLuint thresholdPosition = glGetUniformLocation(m_shaderProgram, "threshold");
-    glUniform1f(thresholdPosition, m_settings.threshold);
-
-    glUseProgram(0);
-
-    update();
-}
-
 bool SliceViewGL::generateShaderProgram() {
     if (!setupVertexShader() || !setupFragmentShader()) {
         return false;
@@ -340,7 +327,6 @@ bool SliceViewGL::generateShaderProgram() {
 void SliceViewGL::updateShaderUniforms() {
     updateViewPortSize(m_settings.viewportSize[0], m_settings.viewportSize[1]);
     updateSpacing();
-    updateThreshold(m_settings.threshold);
     setPosition(m_settings.position);
     updateValueWindowWidth(m_settings.windowSettings.valueWindowWidth);
     updateValueWindowCenter(m_settings.windowSettings.valueWindowCenter);

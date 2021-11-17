@@ -57,12 +57,6 @@ MainWindow::MainWindow(QWidget* parent)
     // connect threshold
     connect(ui.horizontalSliderThreshold, &QSlider::valueChanged, this,
             &MainWindow::updateThresholdFromSlider);
-    connect(ui.horizontalSliderThreshold, &QSlider::valueChanged, ui.openGLWidgetSliceRenderX,
-            &SliceViewGL::updateThreshold);
-    connect(ui.horizontalSliderThreshold, &QSlider::valueChanged, ui.openGLWidgetSliceRenderY,
-            &SliceViewGL::updateThreshold);
-    connect(ui.horizontalSliderThreshold, &QSlider::valueChanged, ui.openGLWidgetSliceRenderZ,
-            &SliceViewGL::updateThreshold);
 
     // connect raycast method
     connect(ui.comboBoxShaderMethod,

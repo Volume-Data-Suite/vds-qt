@@ -43,7 +43,6 @@ struct Slice2DShaderSettings {
     VDTK::VolumeSpacing spacing = VDTK::VolumeSpacing{1.0, 1.0, 1.0};
     std::array<float, 2> viewportSize = {100.0f, 100.0f};
     std::uint32_t position = 0;
-    float threshold = 0.05f;
 };
 
 } // namespace VDS
