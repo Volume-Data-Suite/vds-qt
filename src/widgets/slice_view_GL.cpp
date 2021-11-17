@@ -168,7 +168,7 @@ void SliceViewGL::setupBuffers() {
         3.0f,  -1.0f, 0.0f, // 1
         -1.0f, 3.0f,  0.0f, // 2
     };
-    GLuint indices_cube[] = {// front
+    GLuint indices_plane[] = {// front
                              0, 1, 2};
 
     glGenBuffers(1, &m_vbo);
@@ -178,7 +178,7 @@ void SliceViewGL::setupBuffers() {
 
     glGenBuffers(1, &m_ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_cube), indices_cube, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_plane), indices_plane, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 

@@ -53,7 +53,7 @@ static const std::string vertrexBaseRaycasting =
 
     "void main() \n"
     "{ \n"
-    "	gl_Position = projectionViewModelMatrix * vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
+    "	gl_Position = projectionViewModelMatrix * vec4(inPos, 1.0f); \n"
     "} \n";
 
 static const std::string fragmentBaseRaycasting =
