@@ -43,11 +43,20 @@ void SliceViewGL::setPosition(int position) {
 
     glUseProgram(0);
 
+    // TODO: Fix this
+    // Is somehow required, otherwise Slices Views only use the correct spacing after the first resize
+    updateSpacing();
+
     update();
 }
 
 void SliceViewGL::setSize(VDTK::VolumeSize size) {
     m_settings.size = size;
+}
+
+void SliceViewGL::setSpacing(VDTK::VolumeSpacing spacing) {
+    m_settings.spacing = spacing;
+    updateSpacing();
 }
 
 void SliceViewGL::applyValueWindow(bool active) {
@@ -119,6 +128,7 @@ void SliceViewGL::initializeGL() {
 
 void SliceViewGL::resizeGL(int w, int h) {
     updateViewPortSize(w, h);
+    updateSpacing();
 }
 
 void SliceViewGL::paintGL() {
@@ -132,7 +142,7 @@ void SliceViewGL::paintGL() {
 
     glBindTexture(GL_TEXTURE_3D, m_texture);
 
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glBindTexture(GL_TEXTURE_3D, 0);
 
@@ -165,11 +175,12 @@ void SliceViewGL::updateTexture(GLuint texture) {
 void SliceViewGL::setupBuffers() {
     GLfloat vertices[] = {
         -1.0f, -1.0f, 0.0f, // 0
-        3.0f,  -1.0f, 0.0f, // 1
-        -1.0f, 3.0f,  0.0f, // 2
+        1.0f,  -1.0f, 0.0f, // 1
+        1.0f,  1.0f,  0.0f, // 2
+        -1.0f, 1.0f,  0.0f, // 3
     };
     GLuint indices_plane[] = {// front
-                             0, 1, 2};
+                              0, 1, 2, 2, 3, 0};
 
     glGenBuffers(1, &m_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
@@ -258,6 +269,47 @@ void SliceViewGL::updateViewPortSize(float width, float heigth) {
     glUseProgram(0);
 }
 
+void SliceViewGL::updateSpacing() {
+    float imageWidth = 0.0;
+    float imageHeight = 0.0;
+
+    switch (m_settings.axis) {
+    case VDTK::VolumeAxis::XYAxis:
+        imageWidth = static_cast<float>(m_settings.size.getX()) * m_settings.spacing.getX();
+        imageHeight = static_cast<float>(m_settings.size.getY()) * m_settings.spacing.getY();
+        break;
+    case VDTK::VolumeAxis::XZAxis:
+        imageWidth = static_cast<float>(m_settings.size.getX()) * m_settings.spacing.getX();
+        imageHeight = static_cast<float>(m_settings.size.getZ()) * m_settings.spacing.getZ();
+        break;
+    case VDTK::VolumeAxis::YZAxis:
+        imageWidth = static_cast<float>(m_settings.size.getY()) * m_settings.spacing.getY();
+        imageHeight = static_cast<float>(m_settings.size.getZ()) * m_settings.spacing.getZ();
+        break;
+    default:
+        break;
+    }
+
+    const float imgageAspectRatio = imageWidth / imageHeight;
+    const float viewAspectRatio = m_settings.viewportSize[0] / m_settings.viewportSize[1];
+
+    float xScale = 1.0f;
+    float yScale = 1.0f;
+    if (imgageAspectRatio > viewAspectRatio) {
+        yScale = viewAspectRatio / imgageAspectRatio;
+    } else {
+        xScale = imgageAspectRatio / viewAspectRatio;
+    }
+
+    glUseProgram(m_shaderProgram);
+    const GLuint scaleFactorPosition = glGetUniformLocation(m_shaderProgram, "scaleFactor");
+    glUniform2f(scaleFactorPosition, xScale, yScale);
+
+    glUseProgram(0);
+
+    update();
+}
+
 void SliceViewGL::updateThreshold(float threshold) {
     m_settings.threshold = threshold / 1000.0f;
 
@@ -287,6 +339,7 @@ bool SliceViewGL::generateShaderProgram() {
 
 void SliceViewGL::updateShaderUniforms() {
     updateViewPortSize(m_settings.viewportSize[0], m_settings.viewportSize[1]);
+    updateSpacing();
     updateThreshold(m_settings.threshold);
     setPosition(m_settings.position);
     updateValueWindowWidth(m_settings.windowSettings.valueWindowWidth);

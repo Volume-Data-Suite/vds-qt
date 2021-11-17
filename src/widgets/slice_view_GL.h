@@ -22,6 +22,7 @@ public slots:
     void setAxis(VDTK::VolumeAxis axis);
     void setPosition(int position);
     void setSize(VDTK::VolumeSize size);
+    void setSpacing(VDTK::VolumeSpacing spacing);
     void updateThreshold(float threshold);
 
     void applyValueWindow(bool active);
@@ -49,6 +50,7 @@ private:
     bool setupShaderProgram();
     
     void updateViewPortSize(float width, float heigth);
+    void updateSpacing();
 
     bool generateShaderProgram();
     void updateShaderUniforms();

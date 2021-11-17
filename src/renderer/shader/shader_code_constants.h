@@ -8,15 +8,21 @@ static const std::pair<std::string, std::string> glslVersion =
 static const std::string vertrexBaseSlice2D =
     glslVersion.first + "\n"
 
-                        "in vec3 inPos; \n"
+                        "in vec2 inPos; \n"
+
+                        "uniform vec2 scaleFactor; \n"
+
+                        "out vec2 textureCoordinates; \n"
 
                         "void main() \n"
                         "{ \n"
-                        "	gl_Position = vec4(inPos, 1.0f); \n"
+                        "	gl_Position = vec4(scaleFactor * inPos, 0.0f, 1.0f); \n"
+                        "	textureCoordinates = 0.5f * inPos + 0.5f; \n"
                         "} \n";
 
 static const std::string fragmentBaseSlice2D = glslVersion.first +
                                                "\n"
+                                               "in vec2 textureCoordinates; \n"
 
                                                "uniform sampler3D dataTex; \n"
                                                "uniform float threshold; \n"

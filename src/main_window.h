@@ -78,6 +78,7 @@ public slots:
 
     void updateSliceRenderSliderValueRanges();
     void updateSliceRendererSizeParameters();
+    void updateSliceRendererSpacingParameters();
     void updateSliceRendererTexture();
 
 signals:

@@ -811,6 +811,12 @@ void MainWindow::updateSliceRendererSizeParameters() {
     ui.openGLWidgetSliceRenderZ->setSize(m_vdh.getVolumeSize());
 }
 
+void MainWindow::updateSliceRendererSpacingParameters() {
+    ui.openGLWidgetSliceRenderX->setSpacing(m_vdh.getVolumeSpacing());
+    ui.openGLWidgetSliceRenderY->setSpacing(m_vdh.getVolumeSpacing());
+    ui.openGLWidgetSliceRenderZ->setSpacing(m_vdh.getVolumeSpacing());
+}
+
 void MainWindow::updateSliceRendererTexture() {
     const GLuint textureHandle = ui.volumeViewWidget->getTextureHandle();
     ui.openGLWidgetSliceRenderX->updateTexture(textureHandle);
@@ -830,6 +836,7 @@ void MainWindow::updateVolumeData() {
 
     updateSliceRenderSliderValueRanges();
     updateSliceRendererSizeParameters();
+    updateSliceRendererSpacingParameters();
     updateSliceRendererTexture();
 
     computeHistogram();

@@ -139,14 +139,14 @@ void ShaderGenerator::insertSlice2DPosition(std::string& shader, const VDTK::Vol
     std::string position;
     switch (axis) {
     case VDTK::VolumeAxis::YZAxis:
-        position = "vec3(position, gl_FragCoord.x / viewport.x, gl_FragCoord.y / viewport.y)";
+        position = "vec3(position, textureCoordinates.x, textureCoordinates.y)";
         break;
     case VDTK::VolumeAxis::XZAxis:
-        position = "vec3(gl_FragCoord.x / viewport.x, position, gl_FragCoord.y / viewport.y)";
+        position = "vec3(textureCoordinates.x, position, textureCoordinates.y)";
         break;
     case VDTK::VolumeAxis::XYAxis:
     default:
-        position = "vec3(gl_FragCoord.x / viewport.x, gl_FragCoord.y / viewport.y, position)";
+        position = "vec3(textureCoordinates.x, textureCoordinates.y, position)";
         break;
     }
 
