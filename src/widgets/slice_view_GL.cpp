@@ -1,4 +1,3 @@
-#pragma once
 #include "slice_view_GL.h"
 #include "renderer/shader/shader_generator.h"
 
