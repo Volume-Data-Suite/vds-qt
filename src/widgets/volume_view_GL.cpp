@@ -56,6 +56,10 @@ int VolumeViewGL::getTextureSizeMaximum() {
     return m_maxiumTextureSize;
 }
 
+GLuint VolumeViewGL::getTextureHandle() const {
+    return m_rayCastRenderer.getTextureHandle();
+}
+
 void VolumeViewGL::setRenderLoop(bool onlyRerenderOnChange) {
     m_renderloop = !onlyRerenderOnChange;
     if (m_renderloop) {
@@ -67,6 +71,11 @@ void VolumeViewGL::setRenderLoop(bool onlyRerenderOnChange) {
 
 void VolumeViewGL::setBoundingBoxRenderStatus(bool active) {
     m_rayCastRenderer.setBoundingBoxRenderStatus(active);
+    update();
+}
+
+void VolumeViewGL::setRenderSliceBorders(bool active) {
+    m_rayCastRenderer.setRenderSliceBorders(active);
     update();
 }
 
@@ -364,6 +373,21 @@ void VolumeViewGL::recieveVRAMinfoUpdateRequest() {
     emit sendVRAMinfoUpdate(success, dedicatedMemory, totalAvailableMemory,
                             availableDedicatedMemory,
                             envictionCount, envictedMemory);
+}
+
+void VolumeViewGL::setSliceXYPosition(float position) {
+    m_rayCastRenderer.setSliceXYPosition(position);
+    update();
+}
+
+void VolumeViewGL::setSliceXZPosition(float position) {
+    m_rayCastRenderer.setSliceXZPosition(position);
+    update();
+}
+
+void VolumeViewGL::setSliceYZPosition(float position) {
+    m_rayCastRenderer.setSliceYZPosition(position);
+    update();
 }
 
 QVector3D VolumeViewGL::getArcBallVector(QPoint p) {

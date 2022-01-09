@@ -35,11 +35,8 @@ MainWindow::MainWindow(QWidget* parent)
     setupViewMenu();
     setupFileMenu();
     setupToolsMenu();
-    m_actionResizeVolumeData->setEnabled(false);
+    setupRendererView();
     setupShaderEditor();
-
-    // as long as its not functional
-    ui.groupBoxSliceView->hide();
 
     // connect debug infos
     connect(ui.volumeViewWidget, &VolumeViewGL::updateFrametime, this,
@@ -66,7 +63,7 @@ MainWindow::MainWindow(QWidget* parent)
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             ui.volumeViewWidget, &VolumeViewGL::setRaycastMethod);
 
-    // connect value window
+    // connect value window to Volume View
     connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, ui.volumeViewWidget,
             &VolumeViewGL::applyValueWindow);
     connect(ui.spinBoxApplyWindowValueWindowWidth,
@@ -83,6 +80,60 @@ MainWindow::MainWindow(QWidget* parent)
     connect(ui.comboBoxApplyWindowFunction,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             ui.volumeViewWidget, &VolumeViewGL::setValueWindowMethod);
+
+    // connect value window to Slice View X
+    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, ui.openGLWidgetSliceRenderX,
+            &SliceViewGL::applyValueWindow);
+    connect(ui.spinBoxApplyWindowValueWindowWidth,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderX, &SliceViewGL::updateValueWindowWidth);
+    connect(ui.spinBoxApplyWindowValueWindowCenter,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderX, &SliceViewGL::updateValueWindowCenter);
+    connect(ui.spinBoxApplyWindowValueWindowOffset,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderX, &SliceViewGL::updateValueWindowOffset);
+    connect(ui.comboBoxApplyWindowPresets, &QComboBox::currentTextChanged, this,
+            &MainWindow::setValueWindowPreset);
+    connect(ui.comboBoxApplyWindowFunction,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            ui.openGLWidgetSliceRenderX, &SliceViewGL::setValueWindowMethod);
+
+    // connect value window to Slice View Y
+    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, ui.openGLWidgetSliceRenderY,
+            &SliceViewGL::applyValueWindow);
+    connect(ui.spinBoxApplyWindowValueWindowWidth,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderY, &SliceViewGL::updateValueWindowWidth);
+    connect(ui.spinBoxApplyWindowValueWindowCenter,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderY, &SliceViewGL::updateValueWindowCenter);
+    connect(ui.spinBoxApplyWindowValueWindowOffset,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderY, &SliceViewGL::updateValueWindowOffset);
+    connect(ui.comboBoxApplyWindowPresets, &QComboBox::currentTextChanged, this,
+            &MainWindow::setValueWindowPreset);
+    connect(ui.comboBoxApplyWindowFunction,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            ui.openGLWidgetSliceRenderY, &SliceViewGL::setValueWindowMethod);
+
+    // connect value window to Slice View Z
+    connect(ui.groupBoxApplyWindow, &QGroupBox::toggled, ui.openGLWidgetSliceRenderZ,
+            &SliceViewGL::applyValueWindow);
+    connect(ui.spinBoxApplyWindowValueWindowWidth,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderZ, &SliceViewGL::updateValueWindowWidth);
+    connect(ui.spinBoxApplyWindowValueWindowCenter,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderZ, &SliceViewGL::updateValueWindowCenter);
+    connect(ui.spinBoxApplyWindowValueWindowOffset,
+            static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            ui.openGLWidgetSliceRenderZ, &SliceViewGL::updateValueWindowOffset);
+    connect(ui.comboBoxApplyWindowPresets, &QComboBox::currentTextChanged, this,
+            &MainWindow::setValueWindowPreset);
+    connect(ui.comboBoxApplyWindowFunction,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            ui.openGLWidgetSliceRenderZ, &SliceViewGL::setValueWindowMethod);
 
     // connect volume data update
     connect(this, &MainWindow::updateVolumeView, ui.volumeViewWidget,
@@ -139,6 +190,7 @@ MainWindow::MainWindow(QWidget* parent)
     // Disable all exports until a file is loaded
     m_actionExportRAW3D->setEnabled(false);
     m_actionExportBitmapSeries->setEnabled(false);
+    m_actionResizeVolumeData->setEnabled(false);
 }
 
 void MainWindow::setUIPermissions(int read, int write) {
@@ -635,16 +687,162 @@ void MainWindow::errorBinarySlicesImport() {
     msgBox.exec();
 }
 
-void MainWindow::updateVolumeData() {
-    const std::array<std::size_t, 3> size = {m_vdh.getVolumeData().getSize().getX(),
-                                             m_vdh.getVolumeData().getSize().getY(),
-                                             m_vdh.getVolumeData().getSize().getZ()};
+void MainWindow::toggleSliceViewEnabled() {
+    if (m_actionToggleSliceView->isChecked()) {
+        ui.groupBoxSliceRenderX->setHidden(false);
+        ui.groupBoxSliceRenderY->setHidden(false);
+        ui.groupBoxSliceRenderZ->setHidden(false);
+        ui.volumeViewWidget->setRenderSliceBorders(true);
+    } else {
+        ui.groupBoxSliceRenderX->setHidden(true);
+        ui.groupBoxSliceRenderY->setHidden(true);
+        ui.groupBoxSliceRenderZ->setHidden(true);
+        ui.volumeViewWidget->setRenderSliceBorders(false);
+    }
+}
 
-    const std::array<float, 3> spacing = {m_vdh.getVolumeData().getSpacing().getX(),
-                                          m_vdh.getVolumeData().getSpacing().getY(),
-                                          m_vdh.getVolumeData().getSpacing().getZ()};
+void MainWindow::toggleControllViewEnabled() {
+    if (m_actionToggleControlView->isChecked()) {
+        ui.tabSettings->setHidden(false);
+    } else {
+        ui.tabSettings->setHidden(true);
+    }
+}
+
+void MainWindow::enableSliceRendererXMetaInfo() {    
+    ui.groupBoxSliceRenderX->setStyleSheet(
+        "QGroupBox { border: 2px solid red; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 1px solid red; background: red; } "
+        "QSlider::handle:vertical { border: 1px solid red; background: red; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererX->setHidden(false);
+}
+
+void MainWindow::enableSliceRendererYMetaInfo() {    
+    ui.groupBoxSliceRenderY->setStyleSheet(
+        "QGroupBox { border: 2px solid green; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 1px solid green; background: green; } "
+        "QSlider::handle:vertical { border: 1px solid green; background: green; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererY->setHidden(false);
+}
+
+void MainWindow::enableSliceRendererZMetaInfo() {    
+    ui.groupBoxSliceRenderZ->setStyleSheet(
+        "QGroupBox { border: 2px solid blue; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 1px solid blue; background: blue; } "
+        "QSlider::handle:vertical { border: 1px solid blue; background: blue; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererZ->setHidden(false);
+}
+
+void MainWindow::disableSliceRendererXMetaInfo() {
+    ui.groupBoxSliceRenderX->setStyleSheet(
+        "QGroupBox { border: 2px solid red; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 0px solid red; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid red; background: transparent; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererX->setHidden(true);
+}
+
+void MainWindow::disableSliceRendererYMetaInfo() {
+    ui.groupBoxSliceRenderY->setStyleSheet(
+        "QGroupBox { border: 2px solid green; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 0px solid green; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid green; background: transparent; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererY->setHidden(true);
+}
+
+void MainWindow::disableSliceRendererZMetaInfo() {
+    ui.groupBoxSliceRenderZ->setStyleSheet(
+        "QGroupBox { border: 2px solid blue; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 0px solid blue; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid blue; background: transparent; } "
+        "QSlider { background: transparent; }");
+
+    m_labelSliceRendererZ->setHidden(true);
+}
+
+void MainWindow::updateSliceRendererXPosition(int position) {
+    m_labelSliceRendererX->setText("X-Axis: " + QString::number(position));
+    ui.volumeViewWidget->setSliceYZPosition(
+        2.0f -
+        static_cast<float>(position) / static_cast<float>(m_vdh.getVolumeSize().getX()) * 2.0f);
+}
+
+void MainWindow::updateSliceRendererYPosition(int position) {
+    m_labelSliceRendererY->setText("Y-Axis: " + QString::number(position));
+    ui.volumeViewWidget->setSliceXZPosition(
+        2.0f -
+        static_cast<float>(position) / static_cast<float>(m_vdh.getVolumeSize().getY()) * 2.0f);
+}
+
+void MainWindow::updateSliceRendererZPosition(int position) {
+    m_labelSliceRendererZ->setText("Z-Axis: " + QString::number(position));
+    ui.volumeViewWidget->setSliceXYPosition(
+        2.0f -
+        static_cast<float>(position) / static_cast<float>(m_vdh.getVolumeSize().getZ()) * 2.0f);
+}
+
+void MainWindow::updateSliceRenderSliderValueRanges() {
+    m_sliderSliceRendererX->setMinimum(1);
+    m_sliderSliceRendererX->setMaximum(static_cast<int>(m_vdh.getVolumeSize().getX()));
+    m_sliderSliceRendererX->setValue(static_cast<int>(m_vdh.getVolumeSize().getX()) / 2);
+
+    m_sliderSliceRendererY->setMinimum(1);
+    m_sliderSliceRendererY->setMaximum(static_cast<int>(m_vdh.getVolumeSize().getY()));
+    m_sliderSliceRendererY->setValue(static_cast<int>(m_vdh.getVolumeSize().getY()) / 2);
+
+    m_sliderSliceRendererZ->setMinimum(1);
+    m_sliderSliceRendererZ->setMaximum(static_cast<int>(m_vdh.getVolumeSize().getZ()));
+    m_sliderSliceRendererZ->setValue(static_cast<int>(m_vdh.getVolumeSize().getZ()) / 2);
+}
+
+void MainWindow::updateSliceRendererSizeParameters() {
+    ui.openGLWidgetSliceRenderX->setSize(m_vdh.getVolumeSize());
+    ui.openGLWidgetSliceRenderY->setSize(m_vdh.getVolumeSize());
+    ui.openGLWidgetSliceRenderZ->setSize(m_vdh.getVolumeSize());
+}
+
+void MainWindow::updateSliceRendererSpacingParameters() {
+    ui.openGLWidgetSliceRenderX->setSpacing(m_vdh.getVolumeSpacing());
+    ui.openGLWidgetSliceRenderY->setSpacing(m_vdh.getVolumeSpacing());
+    ui.openGLWidgetSliceRenderZ->setSpacing(m_vdh.getVolumeSpacing());
+}
+
+void MainWindow::updateSliceRendererTexture() {
+    const GLuint textureHandle = ui.volumeViewWidget->getTextureHandle();
+    ui.openGLWidgetSliceRenderX->updateTexture(textureHandle);
+    ui.openGLWidgetSliceRenderY->updateTexture(textureHandle);
+    ui.openGLWidgetSliceRenderZ->updateTexture(textureHandle);
+}
+
+void MainWindow::updateVolumeData() {
+    const std::array<std::size_t, 3> size = {
+        m_vdh.getVolumeSize().getX(), m_vdh.getVolumeSize().getY(), m_vdh.getVolumeSize().getZ()};
+
+    const std::array<float, 3> spacing = {m_vdh.getVolumeSpacing().getX(),
+                                          m_vdh.getVolumeSpacing().getY(),
+                                          m_vdh.getVolumeSpacing().getZ()};
 
     emit(updateVolumeView(size, spacing, m_vdh.getVolumeData().getRawVolumeData()));
+
+    updateSliceRenderSliderValueRanges();
+    updateSliceRendererSizeParameters();
+    updateSliceRendererSpacingParameters();
+    updateSliceRendererTexture();
 
     computeHistogram();
 }
@@ -695,6 +893,24 @@ void MainWindow::setupViewMenu() {
     m_menuView->addAction(m_actionResetView);
     connect(m_actionResetView, &QAction::triggered, ui.volumeViewWidget,
             &VolumeViewGL::resetViewMatrixAndUpdate);
+    connect(m_actionResetView, &QAction::triggered, this,
+            &MainWindow::updateSliceRenderSliderValueRanges);
+
+    m_actionToggleControlView = new QAction(m_menuView);
+    m_actionToggleControlView->setText(QString("Show Controls"));
+    m_actionToggleControlView->setCheckable(true);
+    m_actionToggleControlView->setChecked(true);
+    m_menuView->addAction(m_actionToggleControlView);
+    connect(m_actionToggleControlView, &QAction::triggered, this,
+            &MainWindow::toggleControllViewEnabled);
+
+    m_actionToggleSliceView = new QAction(m_menuView);
+    m_actionToggleSliceView->setText(QString("Show Slice View"));
+    m_actionToggleSliceView->setCheckable(true);
+    m_actionToggleSliceView->setChecked(true);
+    m_menuView->addAction(m_actionToggleSliceView);
+    connect(m_actionToggleSliceView, &QAction::triggered, this,
+            &MainWindow::toggleSliceViewEnabled);
 }
 
 void MainWindow::setupToolsMenu() {
@@ -707,6 +923,108 @@ void MainWindow::setupToolsMenu() {
     m_menuTools->addAction(m_actionResizeVolumeData);
     connect(m_actionResizeVolumeData, &QAction::triggered, this,
             &MainWindow::openVolumeDataResizeDialog);
+}
+
+void MainWindow::setupRendererView() {
+    ui.groupBoxRenderer->setStyleSheet("QGroupBox { border: 0px solid white; margin-top: 0ex; } "
+                                       "QGroupBox::title { padding: 0 0px; }");
+    ui.groupBoxSliceRenderX->setStyleSheet(
+        "QGroupBox { border: 2px solid red; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 0px solid red; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid red; background: transparent; } "
+        "QSlider { background: transparent; }");
+    ui.groupBoxSliceRenderY->setStyleSheet(
+        "QGroupBox { border: 2px solid green; margin-top: 0ex; "
+        "} QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 0px solid green; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid green; background: transparent; } "
+        "QSlider { background: transparent; }");
+    ui.groupBoxSliceRenderZ->setStyleSheet(
+        "QGroupBox { border: 2px solid blue; margin-top: 0ex; } "
+        "QGroupBox::title { padding: 0 0px; }"
+        "QSlider::groove:vertical { border: 0px solid blue; background: transparent; } "
+        "QSlider::handle:vertical { border: 0px solid blue; background: transparent; } "
+        "QSlider { background: transparent; }");
+    ui.groupBoxVolumeView->setStyleSheet("QGroupBox { border: 0px solid white; margin-top: 0ex; } "
+                                         "QGroupBox::title { padding: 0 0px; }");
+
+
+    m_labelSliceRendererX = new QLabel(ui.openGLWidgetSliceRenderX);
+    m_labelSliceRendererX->setText("X-Axis");
+    m_labelSliceRendererX->setAttribute(Qt::WA_TranslucentBackground);
+    m_labelSliceRendererX->setStyleSheet("QLabel { color: red; }");
+    m_labelSliceRendererX->move(3, -8);
+    m_labelSliceRendererX->setHidden(true);
+
+    m_labelSliceRendererY = new QLabel(ui.openGLWidgetSliceRenderY);
+    m_labelSliceRendererY->setText("Y-Axis");
+    m_labelSliceRendererY->setAttribute(Qt::WA_TranslucentBackground);
+    m_labelSliceRendererY->setStyleSheet("QLabel { color: green; }");
+    m_labelSliceRendererY->move(3, -8);
+    m_labelSliceRendererY->setHidden(true);
+
+    m_labelSliceRendererZ = new QLabel(ui.openGLWidgetSliceRenderZ);
+    m_labelSliceRendererZ->setText("Z-Axis");
+    m_labelSliceRendererZ->setAttribute(Qt::WA_TranslucentBackground);
+    m_labelSliceRendererZ->setStyleSheet("QLabel { color: blue; }");
+    m_labelSliceRendererZ->move(3, -8);
+    m_labelSliceRendererZ->setHidden(true);
+    
+    m_sliderSliceRendererX = new QSlider();
+    m_sliderSliceRendererX->setMaximum(0);
+    m_sliderSliceRendererXLayout = new QHBoxLayout();
+    m_sliderSliceRendererXLayout->addStretch();
+    m_sliderSliceRendererXLayout->addWidget(m_sliderSliceRendererX);
+    ui.openGLWidgetSliceRenderX->setLayout(m_sliderSliceRendererXLayout);
+        
+    m_sliderSliceRendererY = new QSlider();
+    m_sliderSliceRendererY->setMaximum(0);
+    m_sliderSliceRendererYLayout = new QHBoxLayout();
+    m_sliderSliceRendererYLayout->addStretch();
+    m_sliderSliceRendererYLayout->addWidget(m_sliderSliceRendererY);
+    ui.openGLWidgetSliceRenderY->setLayout(m_sliderSliceRendererYLayout);
+
+    m_sliderSliceRendererZ = new QSlider();
+    m_sliderSliceRendererZ->setMaximum(0);
+    m_sliderSliceRendererZLayout = new QHBoxLayout();
+    m_sliderSliceRendererZLayout->addStretch();
+    m_sliderSliceRendererZLayout->addWidget(m_sliderSliceRendererZ);
+    ui.openGLWidgetSliceRenderZ->setLayout(m_sliderSliceRendererZLayout);
+
+    connect(ui.openGLWidgetSliceRenderX, &SliceViewGL::enterEventSignaled, this,
+            &MainWindow::enableSliceRendererXMetaInfo);
+    connect(ui.openGLWidgetSliceRenderX, &SliceViewGL::leaveEventSignaled, this,
+            &MainWindow::disableSliceRendererXMetaInfo);
+
+    connect(ui.openGLWidgetSliceRenderY, &SliceViewGL::enterEventSignaled, this,
+            &MainWindow::enableSliceRendererYMetaInfo);
+    connect(ui.openGLWidgetSliceRenderY, &SliceViewGL::leaveEventSignaled, this,
+            &MainWindow::disableSliceRendererYMetaInfo);
+
+    connect(ui.openGLWidgetSliceRenderZ, &SliceViewGL::enterEventSignaled, this,
+            &MainWindow::enableSliceRendererZMetaInfo);
+    connect(ui.openGLWidgetSliceRenderZ, &SliceViewGL::leaveEventSignaled, this,
+            &MainWindow::disableSliceRendererZMetaInfo);
+
+    connect(m_sliderSliceRendererX, &QSlider::valueChanged, this,
+            &MainWindow::updateSliceRendererXPosition);
+    connect(m_sliderSliceRendererX, &QSlider::valueChanged, ui.openGLWidgetSliceRenderX,
+            &SliceViewGL::setPosition);
+
+    connect(m_sliderSliceRendererY, &QSlider::valueChanged, this,
+            &MainWindow::updateSliceRendererYPosition);
+    connect(m_sliderSliceRendererY, &QSlider::valueChanged, ui.openGLWidgetSliceRenderY,
+            &SliceViewGL::setPosition);
+
+    connect(m_sliderSliceRendererZ, &QSlider::valueChanged, this,
+            &MainWindow::updateSliceRendererZPosition);
+    connect(m_sliderSliceRendererZ, &QSlider::valueChanged, ui.openGLWidgetSliceRenderZ,
+            &SliceViewGL::setPosition);
+
+    ui.openGLWidgetSliceRenderX->setAxis(VDTK::VolumeAxis::YZAxis);
+    ui.openGLWidgetSliceRenderY->setAxis(VDTK::VolumeAxis::XZAxis);
+    ui.openGLWidgetSliceRenderZ->setAxis(VDTK::VolumeAxis::XYAxis);
 }
 
 void MainWindow::setupShaderEditor() {

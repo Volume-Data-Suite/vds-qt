@@ -5,7 +5,50 @@ namespace VDS::GLSL {
 static const std::pair<std::string, std::string> glslVersion =
     std::make_pair("{{ glslVersion }}", "#version 430 core");
 
-static const std::string vertrexBase =
+static const std::string vertrexBaseSlice2D =
+    glslVersion.first + "\n"
+
+                        "in vec2 inPos; \n"
+
+                        "uniform vec2 scaleFactor; \n"
+
+                        "out vec2 textureCoordinates; \n"
+
+                        "void main() \n"
+                        "{ \n"
+                        "	gl_Position = vec4(scaleFactor * inPos, 0.0f, 1.0f); \n"
+                        "	textureCoordinates = 0.5f * inPos + 0.5f; \n"
+                        "} \n";
+
+static const std::string fragmentBaseSlice2D = glslVersion.first +
+                                               "\n"
+                                               "in vec2 textureCoordinates; \n"
+
+                                               "uniform sampler3D dataTex; \n"
+
+                                               "uniform vec2 viewport; \n"
+
+                                               "uniform float position; \n"
+
+                                               "uniform float valueWindowWidth; \n"
+                                               "uniform float valueWindowCenter; \n"
+                                               "uniform float valueWindowOffset; \n"
+
+                                               "out vec4 FragColor; \n"
+
+                                               "{{ applyWindowFunction }} \n"
+
+                                               "float getVolumeValue(vec3 position) { \n"
+                                               "	return {{ accessVoxel }}; \n"
+                                               "} \n"
+
+                                               "void main() \n"
+                                               "{ \n"
+                                               "float value = getVolumeValue({{ position }}); \n"
+                                               "FragColor = vec4(vec3(value), 1.0f); \n "
+                                               "} \n";
+
+static const std::string vertrexBaseRaycasting =
     glslVersion.first +
     "\n"
 
@@ -14,10 +57,10 @@ static const std::string vertrexBase =
 
     "void main() \n"
     "{ \n"
-    "	gl_Position = projectionViewModelMatrix * vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
+    "	gl_Position = projectionViewModelMatrix * vec4(inPos, 1.0f); \n"
     "} \n";
 
-static const std::string fragmentBase =
+static const std::string fragmentBaseRaycasting =
     glslVersion.first +
     "\n"
 

@@ -62,6 +62,25 @@ public slots:
     void errorRawImport();
     void errorBinarySlicesImport();
 
+    void toggleSliceViewEnabled();
+    void toggleControllViewEnabled();
+
+    void enableSliceRendererXMetaInfo();
+    void enableSliceRendererYMetaInfo();
+    void enableSliceRendererZMetaInfo();
+    void disableSliceRendererXMetaInfo();
+    void disableSliceRendererYMetaInfo();
+    void disableSliceRendererZMetaInfo();
+    
+    void updateSliceRendererXPosition(int position);
+    void updateSliceRendererYPosition(int position);
+    void updateSliceRendererZPosition(int position);
+
+    void updateSliceRenderSliderValueRanges();
+    void updateSliceRendererSizeParameters();
+    void updateSliceRendererSpacingParameters();
+    void updateSliceRendererTexture();
+
 signals:
     void updateHistogram(const std::vector<uint16_t>& histogram, bool ignoreBorders);
     // -1 = allow it, 0 = unchanged, 1 = do not allow it
@@ -81,6 +100,7 @@ private:
     void setupFileMenu();
     void setupViewMenu();
     void setupToolsMenu();
+    void setupRendererView();
     void setupShaderEditor();
 
     bool checkIsBigEndian();
@@ -99,10 +119,23 @@ private:
     // View Menu
     QMenu* m_menuView;
     QAction* m_actionResetView;
+    QAction* m_actionToggleControlView;
+    QAction* m_actionToggleSliceView;
 
     // Tools Menu
     QMenu* m_menuTools;
     QAction* m_actionResizeVolumeData;
+
+    // Renderer View
+    QLabel* m_labelSliceRendererX;
+    QLabel* m_labelSliceRendererY;
+    QLabel* m_labelSliceRendererZ;
+    QSlider* m_sliderSliceRendererX;
+    QSlider* m_sliderSliceRendererY;
+    QSlider* m_sliderSliceRendererZ;
+    QHBoxLayout* m_sliderSliceRendererXLayout;
+    QHBoxLayout* m_sliderSliceRendererYLayout;
+    QHBoxLayout* m_sliderSliceRendererZLayout;
 
     // Debug Shader Editor
     QLabel* m_shaderEditorInfo;

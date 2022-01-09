@@ -5,8 +5,16 @@
 
 namespace VDS {
 
-const std::string ShaderGenerator::getFragmentShaderCode(const RaycastShaderSettings& settings) {
-    std::string fragmentShader = GLSL::fragmentBase;
+const std::string ShaderGenerator::getVertexShaderCodeRaycasting() {
+    std::string vertexShader = GLSL::vertrexBaseRaycasting;
+
+    insertGLSLVerion(vertexShader);
+
+    return vertexShader;
+}
+const std::string ShaderGenerator::getFragmentShaderCodeRaycasting(
+    const RaycastShaderSettings& settings) {
+    std::string fragmentShader = GLSL::fragmentBaseRaycasting;
 
     insertGLSLVerion(fragmentShader);
     insertRaycastMethod(fragmentShader, settings.method);
@@ -15,19 +23,29 @@ const std::string ShaderGenerator::getFragmentShaderCode(const RaycastShaderSett
 
     return fragmentShader;
 }
-const std::string ShaderGenerator::getVertexShaderCode() {
-    std::string vertexShader = GLSL::vertrexBase;
+const std::string ShaderGenerator::getVertexShaderCodeSlice2D() {
+    std::string vertexShader = GLSL::vertrexBaseSlice2D;
 
     insertGLSLVerion(vertexShader);
 
     return vertexShader;
+}
+const std::string ShaderGenerator::getFragmentShaderCodeSlice2D(
+    const Slice2DShaderSettings& settings) {
+    std::string fragmentShader = GLSL::fragmentBaseSlice2D;
+
+    insertGLSLVerion(fragmentShader);
+    insertSlice2DPosition(fragmentShader, settings.axis);
+    insertApplyWindowMethod(fragmentShader, settings.windowSettings);
+
+    return fragmentShader;
 }
 
 void ShaderGenerator::insertGLSLVerion(std::string& shader) {
     shader.replace(shader.find(GLSL::glslVersion.first), GLSL::glslVersion.first.length(),
                    GLSL::glslVersion.second);
 }
-void ShaderGenerator::insertRaycastMethod(std::string& shader, RayCastMethods method) {
+void ShaderGenerator::insertRaycastMethod(std::string& shader, const RayCastMethods method) {
     switch (method) {
     case VDS::RayCastMethods::MIP: {
         shader.replace(shader.find(GLSL::raycastinMethodMID.first),
@@ -116,5 +134,22 @@ void ShaderGenerator::insertPhongShading(std::string& shader, const bool precomp
     }
     shader.replace(shader.find(GLSL::getPhongShading.first), GLSL::getPhongShading.first.length(),
                    GLSL::getPhongShading.second);
+}
+void ShaderGenerator::insertSlice2DPosition(std::string& shader, const VDTK::VolumeAxis axis) {
+    std::string position;
+    switch (axis) {
+    case VDTK::VolumeAxis::YZAxis:
+        position = "vec3(position, textureCoordinates.x, textureCoordinates.y)";
+        break;
+    case VDTK::VolumeAxis::XZAxis:
+        position = "vec3(textureCoordinates.x, position, textureCoordinates.y)";
+        break;
+    case VDTK::VolumeAxis::XYAxis:
+    default:
+        position = "vec3(textureCoordinates.x, textureCoordinates.y, position)";
+        break;
+    }
+
+    shader.replace(shader.find("{{ position }}"), std::string("{{ position }}").length(), position);
 }
 } // namespace VDS

@@ -220,7 +220,7 @@ void HistogramViewGL::setupVertexShader() {
 
                                      "void main() \n"
                                      "{ \n"
-                                     "	gl_Position = vec4(inPos.x, inPos.y, inPos.z, 1.0f); \n"
+                                     "	gl_Position = vec4(inPos, 1.0f); \n"
                                      "} \n";
 
     m_vertexShader = glCreateShader(GL_VERTEX_SHADER);

@@ -16,12 +16,14 @@ class VolumeViewGL : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core {
 public:
     VolumeViewGL(QWidget* parent);
     int getTextureSizeMaximum();
+    GLuint getTextureHandle() const;
 
 public slots:
     void updateVolumeData(const std::array<std::size_t, 3> size, const std::array<float, 3> spacing,
                           const std::vector<uint16_t>& volumeData);
     void setRenderLoop(bool onlyRerenderOnChange);
     void setBoundingBoxRenderStatus(bool active);
+    void setRenderSliceBorders(bool active);
     void setSampleStepLength(double stepLength);
     void setThreshold(double threshold);
     void setRecommendedSampleStepLength(int factor);
@@ -37,6 +39,10 @@ public slots:
     void recieveFragmentShaderFromUI(const QString& fragmentShaderSource);
     void resetViewMatrixAndUpdate();
     void recieveVRAMinfoUpdateRequest();
+
+    void setSliceXYPosition(float position);
+    void setSliceXZPosition(float position);
+    void setSliceYZPosition(float position);
 
 protected:
     void initializeGL() override;
