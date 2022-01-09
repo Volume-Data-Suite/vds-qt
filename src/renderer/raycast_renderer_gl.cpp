@@ -20,19 +20,28 @@ RayCastRenderer::RayCastRenderer(const QMatrix4x4* const projectionMatrix,
     : m_projectionMatrix(projectionMatrix), m_viewMatrix(viewMatrix),
       m_noiseTexture(9) {
     m_renderBoundingBox = false;
+    m_renderSliceBorders = true;
+
+    m_sliceXYposition = 1.0f;
+    m_sliceXZposition = 1.0f;
+    m_sliceYZposition = 1.0f;
 }
 
 RayCastRenderer::~RayCastRenderer() {}
 void RayCastRenderer::render() {
+    renderVolume();
+
     if (m_renderBoundingBox) {
         setupVertexArray(RenderModes::Borders);
-        glCullFace(GL_BACK);
+        setBoundingBoxColor({1.0f, 1.0f, 1.0f, 1.0f});
         renderVolumeBorders();
-        glCullFace(GL_FRONT);
         setupVertexArray(RenderModes::Mesh);
     }
-    
-    renderVolume();
+
+    if (m_renderSliceBorders) {
+        renderAllVolumeSliceBorders();
+        setupVertexArray(RenderModes::Mesh);
+    }
 }
 
 bool RayCastRenderer::setup() {
@@ -116,13 +125,84 @@ void RayCastRenderer::renderMesh() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 void RayCastRenderer::renderVolumeBorders() {
+    // Always draw lines on top of everything
+    glClear(GL_DEPTH_BUFFER_BIT);
+
     glUseProgram(m_shaderProgramBoundingBox);
 
     // Bind vertex data
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_lines_elements);
     glBindVertexArray(m_vao_cube_vertices);
 
-    glDrawElements(GL_LINES, 36, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, 0);
+
+    // Unbind vertex data
+    glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    // unbind shader programm
+    glUseProgram(0);
+}
+void RayCastRenderer::renderAllVolumeSliceBorders() {
+    QMatrix4x4 translationMatrix;
+
+    translationMatrix = m_translationMatrix;
+    // apply the scale of the volume according to the spacing as well
+    translationMatrix.translate(
+        QVector3D(0.0f, 0.0f, -m_sliceXYposition * m_texture.getExtent()[2]));
+    setBoundingBoxColor({0.0f, 0.0f, 1.0f, 1.0f});
+    renderVolumeSliceBorders(m_shaderProgramBoundingBox, m_ibo_lines_plane_xy_elements,
+                             translationMatrix);
+
+    translationMatrix = m_translationMatrix;
+    // apply the scale of the volume according to the spacing as well
+    translationMatrix.translate(
+        QVector3D(0.0f, -m_sliceXZposition * m_texture.getExtent()[1], 0.0f));
+    setBoundingBoxColor({0.0f, 1.0f, 0.0f, 1.0f});
+    renderVolumeSliceBorders(m_shaderProgramBoundingBox, m_ibo_lines_plane_xz_elements,
+                             translationMatrix);
+
+    translationMatrix = m_translationMatrix;
+    // apply the scale of the volume according to the spacing as well
+    translationMatrix.translate(
+        QVector3D(-m_sliceYZposition * m_texture.getExtent()[0], 0.0f, 0.0f));
+    setBoundingBoxColor({1.0f, 0.0f, 0.0f, 1.0f});
+    renderVolumeSliceBorders(m_shaderProgramBoundingBox, m_ibo_lines_plane_yz_elements,
+                             translationMatrix);
+
+    // reset Matrix
+    applyMatrices();
+}
+void RayCastRenderer::renderVolumeSliceBorders(GLuint shader, GLuint ibo,
+                                               const QMatrix4x4& translationMatrix) {    
+    const QMatrix4x4 projectionViewModelMatrix =
+        *m_projectionMatrix * *m_viewMatrix *
+        (m_rotationMatrix * translationMatrix * m_scaleMatrix);
+
+
+    // Always draw lines on top of everything
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(shader);
+
+    const GLuint projectionViewModelMatrixID =
+        glGetUniformLocation(m_shaderProgramBoundingBox, "projectionViewModelMatrix");
+    glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE, projectionViewModelMatrix.data());
+
+    glGenVertexArrays(1, &m_vao_cube_vertices);
+
+    glBindVertexArray(m_vao_cube_vertices);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cube_vertices);
+
+    // Bind vertex data
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    // set the vertex attributes pointers
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(m_vao_cube_vertices);
+
+    glDrawElements(GL_LINES, 8, GL_UNSIGNED_INT, 0);
 
     // Unbind vertex data
     glBindVertexArray(0);
@@ -148,8 +228,6 @@ void RayCastRenderer::applyMatrices() {
     {
         const GLuint projectionViewModelMatrixID =
             glGetUniformLocation(m_shaderProgramBoundingBox, "projectionViewModelMatrix");
-        const GLuint viewModelMatrixWithoutModleScaleID =
-            glGetUniformLocation(m_shaderProgramBoundingBox, "viewModelMatrixWithoutModleScale");
         glUniformMatrix4fv(projectionViewModelMatrixID, 1, GL_FALSE,
                            projectionViewModelMatrix.data());
     }
@@ -344,6 +422,18 @@ void RayCastRenderer::setBoundingBoxColor(const std::array<float, 4>& color) {
 void RayCastRenderer::setBoundingBoxRenderStatus(bool active) {
     m_renderBoundingBox = active;
 }
+void RayCastRenderer::setRenderSliceBorders(bool active) {
+    m_renderSliceBorders = active;
+}
+void RayCastRenderer::setSliceXYPosition(float position) {
+    m_sliceXYposition = position;
+}
+void RayCastRenderer::setSliceXZPosition(float position) {
+    m_sliceXZposition = position;
+}
+void RayCastRenderer::setSliceYZPosition(float position) {
+    m_sliceYZposition = position;
+}
 GLuint RayCastRenderer::getTextureHandle() const {
     return m_texture.getTextureHandle();
 }
@@ -422,6 +512,13 @@ void RayCastRenderer::setupBuffers() {
                                    // connect front an back
                                    0, 4, 1, 5, 2, 6, 3, 7};
 
+    GLuint m_ibo_lines_plane_xy[] = {// front
+                                     0, 1, 0, 3, 2, 1, 2, 3};
+    GLuint m_ibo_lines_plane_xz[] = {// top
+                                     3, 2, 3, 7, 6, 2, 6, 7};
+    GLuint m_ibo_lines_plane_yz[] = {// right
+                                     1, 5, 1, 2, 6, 2, 6, 5};
+
     glGenBuffers(1, &m_vbo_cube_vertices);
     glBindBuffer(GL_ARRAY_BUFFER, m_vbo_cube_vertices);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -435,6 +532,24 @@ void RayCastRenderer::setupBuffers() {
     glGenBuffers(1, &m_ibo_cube_lines_elements);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_cube_lines_elements);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_cube_lines), indices_cube_lines,
+                 GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    glGenBuffers(1, &m_ibo_lines_plane_xy_elements);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_lines_plane_xy_elements);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_ibo_lines_plane_xy), m_ibo_lines_plane_xy,
+                 GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    glGenBuffers(1, &m_ibo_lines_plane_xz_elements);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_lines_plane_xz_elements);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_ibo_lines_plane_xz), m_ibo_lines_plane_xz,
+                 GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    glGenBuffers(1, &m_ibo_lines_plane_yz_elements);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ibo_lines_plane_yz_elements);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_ibo_lines_plane_yz), m_ibo_lines_plane_yz,
                  GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

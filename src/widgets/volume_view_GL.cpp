@@ -74,6 +74,11 @@ void VolumeViewGL::setBoundingBoxRenderStatus(bool active) {
     update();
 }
 
+void VolumeViewGL::setRenderSliceBorders(bool active) {
+    m_rayCastRenderer.setRenderSliceBorders(active);
+    update();
+}
+
 void VolumeViewGL::setSampleStepLength(double stepLength) {
     m_rayCastRenderer.updateSampleStepLength(static_cast<float>(stepLength));
     update();
@@ -368,6 +373,21 @@ void VolumeViewGL::recieveVRAMinfoUpdateRequest() {
     emit sendVRAMinfoUpdate(success, dedicatedMemory, totalAvailableMemory,
                             availableDedicatedMemory,
                             envictionCount, envictedMemory);
+}
+
+void VolumeViewGL::setSliceXYPosition(float position) {
+    m_rayCastRenderer.setSliceXYPosition(position);
+    update();
+}
+
+void VolumeViewGL::setSliceXZPosition(float position) {
+    m_rayCastRenderer.setSliceXZPosition(position);
+    update();
+}
+
+void VolumeViewGL::setSliceYZPosition(float position) {
+    m_rayCastRenderer.setSliceYZPosition(position);
+    update();
 }
 
 QVector3D VolumeViewGL::getArcBallVector(QPoint p) {

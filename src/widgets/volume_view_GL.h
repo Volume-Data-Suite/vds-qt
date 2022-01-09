@@ -23,6 +23,7 @@ public slots:
                           const std::vector<uint16_t>& volumeData);
     void setRenderLoop(bool onlyRerenderOnChange);
     void setBoundingBoxRenderStatus(bool active);
+    void setRenderSliceBorders(bool active);
     void setSampleStepLength(double stepLength);
     void setThreshold(double threshold);
     void setRecommendedSampleStepLength(int factor);
@@ -38,6 +39,10 @@ public slots:
     void recieveFragmentShaderFromUI(const QString& fragmentShaderSource);
     void resetViewMatrixAndUpdate();
     void recieveVRAMinfoUpdateRequest();
+
+    void setSliceXYPosition(float position);
+    void setSliceXZPosition(float position);
+    void setSliceYZPosition(float position);
 
 protected:
     void initializeGL() override;

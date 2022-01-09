@@ -692,10 +692,12 @@ void MainWindow::toggleSliceViewEnabled() {
         ui.groupBoxSliceRenderX->setHidden(false);
         ui.groupBoxSliceRenderY->setHidden(false);
         ui.groupBoxSliceRenderZ->setHidden(false);
+        ui.volumeViewWidget->setRenderSliceBorders(true);
     } else {
         ui.groupBoxSliceRenderX->setHidden(true);
         ui.groupBoxSliceRenderY->setHidden(true);
         ui.groupBoxSliceRenderZ->setHidden(true);
+        ui.volumeViewWidget->setRenderSliceBorders(false);
     }
 }
 
@@ -775,14 +777,23 @@ void MainWindow::disableSliceRendererZMetaInfo() {
 
 void MainWindow::updateSliceRendererXPosition(int position) {
     m_labelSliceRendererX->setText("X-Axis: " + QString::number(position));
+    ui.volumeViewWidget->setSliceYZPosition(
+        2.0f -
+        static_cast<float>(position) / static_cast<float>(m_vdh.getVolumeSize().getX()) * 2.0f);
 }
 
 void MainWindow::updateSliceRendererYPosition(int position) {
     m_labelSliceRendererY->setText("Y-Axis: " + QString::number(position));
+    ui.volumeViewWidget->setSliceXZPosition(
+        2.0f -
+        static_cast<float>(position) / static_cast<float>(m_vdh.getVolumeSize().getY()) * 2.0f);
 }
 
 void MainWindow::updateSliceRendererZPosition(int position) {
     m_labelSliceRendererZ->setText("Z-Axis: " + QString::number(position));
+    ui.volumeViewWidget->setSliceXYPosition(
+        2.0f -
+        static_cast<float>(position) / static_cast<float>(m_vdh.getVolumeSize().getZ()) * 2.0f);
 }
 
 void MainWindow::updateSliceRenderSliderValueRanges() {

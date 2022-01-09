@@ -72,6 +72,11 @@ public:
     void setBoundingBoxColor(const std::array<float, 4>& color);
 
     void setBoundingBoxRenderStatus(bool active);
+    void setRenderSliceBorders(bool active);
+
+    void setSliceXYPosition(float position);
+    void setSliceXZPosition(float position);
+    void setSliceYZPosition(float position);
 
     GLuint getTextureHandle() const;
 
@@ -79,6 +84,8 @@ private:
     void renderVolume();
     void renderMesh();
     void renderVolumeBorders();
+    void renderAllVolumeSliceBorders();
+    void renderVolumeSliceBorders(GLuint shader, GLuint ibo, const QMatrix4x4& translationMatrix);
 
     void setupBuffers();
     void setupVertexArray(RenderModes renderMode);
@@ -111,6 +118,9 @@ private:
     GLuint m_vbo_cube_vertices;
     GLuint m_ibo_cube_elements;
     GLuint m_ibo_cube_lines_elements;
+    GLuint m_ibo_lines_plane_xy_elements;
+    GLuint m_ibo_lines_plane_xz_elements;
+    GLuint m_ibo_lines_plane_yz_elements;
     // global shader hanldes
     GLuint m_vertexShaderRayCasting;
     GLuint m_fragmentShaderRayCasting;
@@ -136,5 +146,11 @@ private:
     RaycastShaderSettings m_settings;
 
     bool m_renderBoundingBox;
+    bool m_renderSliceBorders;
+
+    // slice positions (between 0.0f and 2.0f)
+    float m_sliceXYposition;
+    float m_sliceXZposition;
+    float m_sliceYZposition;
 };
 } // namespace VDS
