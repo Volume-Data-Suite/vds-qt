@@ -153,7 +153,7 @@ void SliceViewGL::paintGL() {
     glUseProgram(0);
 }
 
-void SliceViewGL::enterEvent(QEvent* ev) {
+void SliceViewGL::enterEvent(QEnterEvent* ev) {
     emit(enterEventSignaled());
 }
 

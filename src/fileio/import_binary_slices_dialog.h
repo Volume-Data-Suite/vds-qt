@@ -90,7 +90,7 @@ private:
     QLineEdit* m_textSpacingX;
     QLineEdit* m_textSpacingY;
     QLineEdit* m_textSpacingZ;
-    QRegExpValidator* m_validatorSpacing;
+    QRegularExpressionValidator* m_validatorSpacing;
 
     // File Import Order Preview
     QGroupBox* m_groupFileImportPreview;

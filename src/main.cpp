@@ -2,6 +2,7 @@
 
 #include <QSurfaceFormat>
 #include <QThread>
+#include <QFile>
 #include <QtWidgets/QApplication>
 
 int main(int argc, char* argv[]) {

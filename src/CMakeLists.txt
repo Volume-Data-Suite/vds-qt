@@ -7,7 +7,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-find_package(Qt5 COMPONENTS REQUIRED Core Gui Widgets Concurrent)
+find_package(Qt6 COMPONENTS REQUIRED Core Gui Widgets Concurrent OpenGL OpenGLWidgets)
 
 add_executable(VDS 
 	main.cpp
@@ -65,7 +65,7 @@ set(RESOURCE_FILES
 	qt_resources/resources.qrc
 	qt_resources/stylesheets/style.qss)
 
-qt5_wrap_ui(UI_HDRS ${UI_FILES})
+qt6_wrap_ui(UI_HDRS ${UI_FILES})
 
 target_sources(VDS
     PRIVATE
@@ -76,7 +76,7 @@ target_sources(VDS
 
 replicate_directory_structure(VDS)
 
-target_link_libraries(VDS PRIVATE vdtk_lib Threads::Threads Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Concurrent)
+target_link_libraries(VDS PRIVATE vdtk_lib Threads::Threads Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Concurrent Qt6::OpenGL Qt6::OpenGLWidgets)
 
 
 # set C++ language standard to c++17

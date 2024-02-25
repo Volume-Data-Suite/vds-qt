@@ -1,0 +1,27 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libgl1-mesa-dev qt6-base-dev
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure and build
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=/home/runner/work/access/build/ext_install
+          make -j8
+

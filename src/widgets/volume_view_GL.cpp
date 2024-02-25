@@ -218,7 +218,7 @@ void VolumeViewGL::paintGL() {
     // check OpenGL error
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        qDebug() << "OpenGL error: " << err << endl;
+        qDebug() << "OpenGL error: " << err << "\n";
     }
 #endif // _DEBUG
 

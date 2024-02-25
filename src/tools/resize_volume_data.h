@@ -100,7 +100,7 @@ private:
     QLabel* m_labelMetaDataNewSpacingY;
     QLabel* m_labelMetaDataNewSpacingZ;
     QIntValidator* m_validatorSize;
-    QRegExpValidator* m_validatorSpacing;
+    QRegularExpressionValidator* m_validatorSpacing;
 
     // Interpolation Method
     QGroupBox* m_groupInterpolationMethod;
