@@ -10,4 +10,4 @@ Supports various raymarching techniques for medical imaging visualisations and i
 
 ![Histogram](assets/mecanix.png "Histogram")
 
-![Usage Video](assets/vds-qt.mp4 "Usage Video")
+https://github.com/Volume-Data-Suite/vds-qt/assets/27208977/fff2eee1-8aac-4890-ab8b-126bb153b645
