@@ -332,3 +332,4 @@ ASALocalRun/
 # Local Builds
 build/
 out/
+**/CMakeSettings.json
