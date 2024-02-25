@@ -34,7 +34,7 @@ protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
-    void enterEvent(QEvent* ev) override;
+    void enterEvent(QEnterEvent* ev) override;
     void leaveEvent(QEvent* ev) override;
 
 signals:

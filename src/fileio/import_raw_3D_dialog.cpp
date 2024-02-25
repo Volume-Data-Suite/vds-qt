@@ -202,7 +202,7 @@ void DialogImportRAW3D::setupSectionSpacing() {
     m_labelSpacing->setText(QString("Spacing in cm:"));
 
     // TODO: account float precision
-    m_validatorSpacing = new QRegExpValidator(QRegExp("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?"));
+    m_validatorSpacing = new QRegularExpressionValidator(QRegularExpression("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?"));
 
     m_textSpacingX = new QLineEdit;
     m_textSpacingX->setPlaceholderText(QString("X-Dimension"));

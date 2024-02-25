@@ -199,7 +199,7 @@ void DialogResizeVolumeData::setupSectionmetaDataOriginal() {
 void DialogResizeVolumeData::setupSectionMetaDataNew() {
     // Validators
     m_validatorSize = new QIntValidator(0, std::numeric_limits<int>::max(), this);
-    m_validatorSpacing = new QRegExpValidator(QRegExp("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?"));
+    m_validatorSpacing = new QRegularExpressionValidator(QRegularExpression("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?"));
 
     // Size
     m_labelMetaDataNewSizeX = new QLabel;
